@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubernetesClient" Version="10.1.19" />
+      <PackageReference Include="Neon.Common" Version="$(NeonSdkVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+      <PackageReference Include="Neon.Kube.Resources" Version="$(NeonKubeVersion)" Condition="'$(SolutionName)' != 'neonCLOUD'" />
+      <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+  </ItemGroup>
+
+</Project>

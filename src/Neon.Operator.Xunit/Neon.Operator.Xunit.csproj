@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Neon.Kube.Xunit</RootNamespace>
+        <PackageId>Neon.Kube.Xunit</PackageId>
+        <Version>0.9.2-alpha</Version>
+        <Description>INTERNAL USE ONLY: Xunit extensions for neonKUBE</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <IsPackable>true</IsPackable>
+        <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Kube.Xunit/README.md</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <Configurations>Debug;Release</Configurations>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <PackageTags>xunit kubernetes operator sdk neonkube k8s</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient" Version="10.1.19" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.5" />
+        <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
+        <PackageReference Include="xunit.extensibility.execution" Version="2.4.2" />
+        <PackageReference Include="YamlDotNet" Version="13.0.2" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SolutionName)' != 'neonCLOUD'">
+        <PackageReference Include="Neon.Common" Version="$(NeonSdkVersion)" />
+        <PackageReference Include="Neon.Xunit" Version="$(NeonSdkVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Neon.K8s\Neon.K8s.csproj" />
+        <ProjectReference Include="..\Neon.Operator\Neon.Operator.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SolutionName)' == 'neonCLOUD'">
+        <ProjectReference Include="$(NK_ROOT)\Lib\Neon.Kube\Neon.Kube.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Deployment\Neon.Deployment.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.SSH\Neon.SSH.csproj" />
+        <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,159 @@
+################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################=
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Files
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*_i.c
+*_p.c
+*_i.h
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+*.psess
+*.vsp
+*.vspx
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+*.opensdf
+*.sdf
+*.jmconfig
+*.suo
+**/launchSettings.json
+**/.vs/**
+**/.vscode/**
+# *.pubxml
+
+# Nuget Packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+# except build/, which is used as an MSBuild target.
+!**/packages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+# !**/packages/repositories.config
+
+# Random [.rnd] files are generated sometimes while building Docker
+# images.  I'm not sure where they're coming from and deleting them
+# in the image build scripts doesn't always seem to take.  We'll
+# just ignore these.
+
+*.rnd
+
+# Common ASP.NET 5 Rules
+
+bower_components/
+node_modules/
+wwwroot/
+
+################################################################################
+# Custom rules added for this repository.
+################################################################################
+
+# Build/test artifacts: 
+#
+# NOTE: This assumes that we'll never want to commit folders named: [bin] or [obj]
+
+**/bin/**
+**/obj/**
+
+/Build/**
+/Build-Cache/**
+*.mg.cs
+GeneratedEntities.cs
+GeneratedTypes.cs
+GeneratedUxTypes.cs
+/Test/**/TestResults/**
+
+###################
+### Go Projects ###
+###################
+
+*.test
+Go/pkg/**
+Go/**/test/logs/**
+Go/**/__debug_bin
+
+####################
+### Neon.Cadence ###
+####################
+
+# These files are created during the build and will be embedded
+# into the [Neon.Cadence] assembly as resources.
+
+/Lib/Neon.Cadence/Resources/**
+/Test/Test.Neon.Models/GeneratedUxTypes.cs
+/Lib/Neon.Cadence2/Resources/cadence-proxy.win.exe.gz
+/Lib/Neon.Cadence2/Resources/cadence-proxy.osx.gz
+/Lib/Neon.Cadence2/Resources/cadence-proxy.linux.gz
+.vscode/settings.json
+/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/settings.json
+/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/launch.json
+
+#####################
+### Neon.Temporal ###
+#####################
+
+/Lib/Neon.Temporal/Resources/**
+
+# OS/X related files
+.DS_Store
+
+###########################
+### Neon.ModelGenerator ###
+###########################
+
+# This library includes binaries that shouldn't be committed.
+
+/Lib/Neon.ModelGenerator/linux-x64/**
+/Lib/Neon.ModelGenerator/osx-x64/**
+/Lib/Neon.ModelGenerator/win-x64/**
+/Lib/**/*.bak
+
+###################
+# Neon.Kube.Setup #
+###################
+
+# All neonKUBE CRDs are defined in the [Neon.Kube] library and are generated
+# when [neon-cluster-operator] is built and copied into the [neon-cluster-operator]
+# Helm chart which will be used to install the CRDs as well as the operator.
+
+/Lib/Neon.Kube.Setup/Resources/Helm/neon-cluster-operator/crds/*
+
+#############################
+### Other generated files ###
+#############################
+
+cluster-manifest.json
+KubernetesWithRetry.cs
+/**/*.gitignore/**
+/UpgradeLog.htm
+/ToolBin/nuget.config
+/Lib/Neon.Blazor/IntersectionObserver
+/src/Neon.Operator/Tasks
+/test/test-operator/examples.example.neonkube.io.yaml

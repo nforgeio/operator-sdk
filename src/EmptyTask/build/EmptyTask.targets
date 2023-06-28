@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+ <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+ <!--Defining all the text files input parameters-->
+ <ItemGroup>
+ 	<SettingFiles Include="$(RootFolder)\*.$(SettingExtensionFile)" />
+ </ItemGroup>
+
+ <!--A target that generates code, which is executed before the compilation--><!--
+ <Target Name="BeforeCompile" Inputs="@(SettingFiles)" Outputs="$(RootFolder)\$(SettingClass).generated.cs">
+ 	--><!--Calling our custom task--><!--
+ 	<EmptyTask SettingClassName="$(SettingClass)" SettingNamespaceName="$(SettingNamespace)" SettingFiles="@(SettingFiles)">
+ 		<Output TaskParameter="ClassNameFile" PropertyName="SettingClassFileName" />
+ 	</EmptyTask>
+ 	--><!--Our generated file is included to be compiled--><!--
+ 	<ItemGroup>
+ 		<Compile Remove="$(SettingClassFileName)" />
+ 		<Compile Include="$(SettingClassFileName)" />
+ 	</ItemGroup>
+ </Target>-->
+
+<Target Name="_GenerateEmptyTasks" AfterTargets="AfterBuild">
+    <Message Importance="high" Text="testaroo EmptyTasks" />
+    <TestTask InputText="foo testaroo"/>
+</Target>
+
+ <!--The generated file is deleted after a general clean. It will force the regeneration on rebuild-->
+ <Target Name="AfterClean">
+ 	<Delete Files="$(RootFolder)\$(SettingClass).generated.cs" />
+ </Target>
+ </Project>
