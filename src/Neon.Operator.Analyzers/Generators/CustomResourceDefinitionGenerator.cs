@@ -191,7 +191,7 @@ namespace Neon.Operator.Analyzers
             }
             catch (Exception ex)
             {
-                throw new Exception();
+                throw new Exception(ex.Message);
             }
 
             if (props.Description == null)
@@ -370,46 +370,18 @@ namespace Neon.Operator.Analyzers
 
         private static void SetEmbeddedResourceProperties(V1JSONSchemaProps props)
         {
-            props.Type = Constants.ObjectTypeString;
-            props.Properties = null;
+            props.Type                             = Constants.ObjectTypeString;
+            props.Properties                       = null;
             props.XKubernetesPreserveUnknownFields = true;
-            props.XKubernetesEmbeddedResource = true;
+            props.XKubernetesEmbeddedResource      = true;
         }
-
-
-        private void ProcessType(
-            Type type,
-            V1JSONSchemaProps props,
-            IList<V1CustomResourceColumnDefinition> additionalColumns,
-            string jsonPath)
-        {
-            
-        }
-
         
-
         private static string GetPropertyName(PropertyInfo property)
         {
-            var attribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+            var attribute    = property.GetCustomAttribute<JsonPropertyNameAttribute>();
             var propertyName = attribute?.Name ?? property.Name;
+
             return ToCamelCase(propertyName);
-        }
-
-        private static bool IsGenericEnumerableType(Type type, out Type? closingType)
-        {
-            if (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()))
-            {
-                closingType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            closingType = type
-                .GetInterfaces()
-                .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                .Select(t => t.GetGenericArguments()[0])
-                .FirstOrDefault();
-
-            return closingType != null;
         }
 
         public static string ToCamelCase(string value)

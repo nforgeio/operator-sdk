@@ -176,9 +176,9 @@ try
 
     $msbuild     = $env:MSBUILDPATH
     $config      = "Release"
-    $nkRoot      = "C:\src\neon-operator-sdk"
-    $nkSolution  = "$nkRoot\Neon.Operator.sln"
-    $branch      = GitBranch $nkRoot
+    $noRoot      = "C:\src\neon-operator-sdk"
+    $nkSolution  = "$noRoot\Neon.Operator.sln"
+    $branch      = GitBranch $noRoot
 
     if ($localVersion)
     {
@@ -258,8 +258,8 @@ try
     # Save the publish version to [$/build/nuget/version.text] so release tools can
     # determine the current release.
 
-    [System.IO.Directory]::CreateDirectory("$nkRoot\build\nuget") | Out-Null
-    [System.IO.File]::WriteAllText("$nkRoot\build\nuget\version.txt", $neonkubeVersion)
+    [System.IO.Directory]::CreateDirectory("$noRoot\build\nuget") | Out-Null
+    [System.IO.File]::WriteAllText("$noRoot\build\nuget\version.txt", $neonkubeVersion)
 
     #--------------------------------------------------------------------------
     # SourceLink configuration: We need to decide whether to set the environment variable 
@@ -314,7 +314,7 @@ try
 
     # Remove all of the generated nuget files so these don't accumulate.
 
-    Remove-Item "$env:NK_BUILD\nuget\*.nupkg"
+    #Remove-Item "$env:NO_BUILD\nuget\*.nupkg"
 
     ""
     "** Package publication completed"

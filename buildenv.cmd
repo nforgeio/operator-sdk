@@ -107,6 +107,7 @@ echo.
 
 REM Configure the environment variables.
 
+set NO_BUILD=%NO_ROOT%\Build
 set NO_TEST=%NO_ROOT%\Test
 set NO_TEMP=C:\Temp
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
@@ -118,14 +119,9 @@ setx GITHUB_USERNAME "%GITHUB_USERNAME%" /M       > nul
 setx GITHUB_EMAIL "%GITHUB_EMAIL%" /M             > nul
 setx NF_MAINTAINER "%NF_MAINTAINER%" /M           > nul              
 setx NF_REPOS "%NF_REPOS%" /M                     > nul
-setx NF_ROOT "%NF_ROOT%" /M                       > nul
-setx NF_TOOLBIN "%NF_TOOLBIN%" /M                 > nul
-setx NF_BUILD "%NF_BUILD%" /M                     > nul
-setx NF_CACHE "%NF_CACHE%" /M                     > nul
-setx NF_SNIPPETS "%NF_SNIPPETS%" /M               > nul
+setx NO_ROOT "%NO_ROOT%" /M                       > nul
+setx NO_BUILD "%NO_BUILD%" /M                     > nul
 setx NF_TEST "%NF_TEST%" /M                       > nul
-setx NF_TEMP "%NF_TEMP%" /M                       > nul
-setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M > nul
 
 if "%NF_MAINTAINER%"=="1" (
     setx NC_USER "%NC_USER%" /M > nul

@@ -107,12 +107,15 @@ namespace Neon.Operator.Entities
         /// Generates a <see cref="V1CustomResourceDefinition"/> for a Kubernetes custom resource entity.
         /// </summary>
         /// <param name="resourceType">Specifies the resource type.</param>
+        /// <param name="entity"></param>
+        /// <param name="versionAttribute"></param>
+        /// <param name="scaleAttribute"></param>
         /// <returns>The <see cref="V1CustomResourceDefinition"/>.</returns>
         public V1CustomResourceDefinition GenerateCustomResourceDefinition(
-            Type resourceType,
-            KubernetesEntityAttribute entity = null,
-            EntityVersionAttribute versionAttribute = null,
-            ScaleAttribute scaleAttribute = null)
+            Type                      resourceType,
+            KubernetesEntityAttribute entity           = null,
+            EntityVersionAttribute    versionAttribute = null,
+            ScaleAttribute            scaleAttribute   = null)
         {
             Covenant.Requires<ArgumentNullException>(resourceType != null, nameof(resourceType));
 

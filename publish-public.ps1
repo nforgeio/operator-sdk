@@ -141,7 +141,6 @@ try
     $nkBuild         = "$env:NK_BUILD"
     $nkLib           = "$nkRoot\Lib"
     $nkTools         = "$nkRoot\Tools"
-    $nkToolBin       = "$nkRoot\ToolBin"
     $neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonSdkVersion)
     $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
 
