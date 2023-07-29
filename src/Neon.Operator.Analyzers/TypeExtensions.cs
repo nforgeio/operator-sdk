@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using Roslyn.Reflection;
+using Neon.Roslyn;
 
 namespace Neon.Operator.Analyzers
 {

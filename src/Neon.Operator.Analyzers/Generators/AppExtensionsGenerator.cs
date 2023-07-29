@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Webhooks;
 
-using Roslyn.Reflection;
+using Neon.Roslyn;
 
 namespace Neon.Operator.Analyzers
 {

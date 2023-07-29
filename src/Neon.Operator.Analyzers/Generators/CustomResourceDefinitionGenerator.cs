@@ -24,8 +24,8 @@ using Newtonsoft.Json;
 
 using Newtonsoft.Json.Serialization;
 
-using Roslyn.Reflection;
-using MetadataLoadContext = Roslyn.Reflection.MetadataLoadContext;
+using Neon.Roslyn;
+using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 using Newtonsoft.Json.Converters;
 using System.Text.Json.Serialization;
 using JsonConverter = Newtonsoft.Json.JsonConverter;

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-using MetadataLoadContext = Roslyn.Reflection.MetadataLoadContext;
+using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 
 namespace Neon.Operator.Analyzers
 {

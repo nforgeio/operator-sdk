@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ namespace Test.Neon.Operator
         /// </summary>
         public TestDatabaseController(IKubernetes k8s)
         {
-            Covenant.Requires(k8s != null, nameof(k8s));
+            Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             this.k8s = k8s;
         }
 

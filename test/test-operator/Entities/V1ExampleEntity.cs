@@ -8,7 +8,7 @@ using Neon.Operator.Attributes;
 
 using RangeAttribute = Neon.Operator.Attributes.RangeAttribute;
 
-namespace test_operator
+namespace TestOperator
 {
     /// <summary>
     /// This is an example description.

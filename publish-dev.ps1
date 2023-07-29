@@ -1,7 +1,7 @@
 #Requires -Version 7.1.3 -RunAsAdministrator
 #------------------------------------------------------------------------------
-# FILE:         neonkube-nuget-dev.ps1
-# CONTRIBUTOR:  Jeff Lill
+# FILE:         publish-dev.ps1
+# CONTRIBUTOR:  NeonFORGE Team
 # COPYRIGHT:    Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -305,13 +305,12 @@ try
 
     # Build and publish the projects.
 
+    Publish Neon.Kubernetes                $neonkubeVersion
     Publish Neon.Operator                  $neonkubeVersion
     Publish Neon.Operator.Analyzers        $neonkubeVersion
     Publish Neon.Operator.Core             $neonkubeVersion
-    Publish Neon.Operator.MSBuild          $neonkubeVersion
-    Publish Neon.Operator.Tasks            $neonkubeVersion
-    #Publish Neon.Operator.Templates        $neonkubeVersion
-    #Publish Neon.Operator.Xunit            $neonkubeVersion
+    Publish Neon.Operator.Templates        $neonkubeVersion
+    Publish Neon.Operator.Xunit            $neonkubeVersion
 
     # Remove all of the generated nuget files so these don't accumulate.
 

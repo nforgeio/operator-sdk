@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:	    Test_Operator.cs
+// FILE:	    TestOperator.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -26,11 +26,11 @@ using Xunit;
 
 namespace Test.Neon.Operator
 {
-    public class Test_Operator : IClassFixture<TestOperatorFixture>
+    public class TestOperator : IClassFixture<TestOperatorFixture>
     {
         private TestOperatorFixture fixture;
 
-        public Test_Operator(TestOperatorFixture fixture) 
+        public TestOperator(TestOperatorFixture fixture) 
         { 
             this.fixture = fixture;
             fixture.Operator.AddController<TestResourceController>();

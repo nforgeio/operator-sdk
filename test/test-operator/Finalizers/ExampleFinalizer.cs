@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Operator.Finalizers;
 using Neon.Tasks;
 
-namespace test_operator
+namespace TestOperator
 {
     public class ExampleFinalizer : ResourceFinalizerBase<V1ExampleEntity>
     {

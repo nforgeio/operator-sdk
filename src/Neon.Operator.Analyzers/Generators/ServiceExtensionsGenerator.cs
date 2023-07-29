@@ -13,9 +13,9 @@ using Neon.Operator.Controllers;
 using Neon.Operator.Finalizers;
 using Neon.Operator.Webhooks;
 
-using Roslyn.Reflection;
+using Neon.Roslyn;
 
-using MetadataLoadContext = Roslyn.Reflection.MetadataLoadContext;
+using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 
 namespace Neon.Operator.Analyzers
 {

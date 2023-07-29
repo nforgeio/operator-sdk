@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 using Neon.Operator.Webhooks;
 
-namespace test_operator
+namespace TestOperator
 {
     [Webhook(
         name: "testaroo-hook.neonkube.io",

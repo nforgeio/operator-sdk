@@ -9,7 +9,7 @@ using Neon.Operator.Controllers;
 using Neon.Operator.Finalizers;
 using Neon.Tasks;
 
-namespace test_operator
+namespace TestOperator
 {
     public class ExampleController : ResourceControllerBase<V1ExampleEntity>
     {

@@ -24,7 +24,7 @@ using k8s.Models;
 using Neon.Operator.Webhooks;
 using System.Threading.Tasks;
 
-namespace test_operator
+namespace TestOperator
 {
     public class PodWebhook : IMutatingWebhook<V1Pod>
     {
@@ -77,7 +77,7 @@ using Neon.Operator.Webhooks;
 
 using Prometheus;
 
-namespace test_operator.Controllers
+namespace TestOperator.Controllers
 {
     [ApiController]
     public class PodWebhookController : ControllerBase
@@ -187,7 +187,7 @@ using k8s.Models;
 using Neon.Operator.Webhooks;
 using System.Threading.Tasks;
 
-namespace test_operator
+namespace TestOperator
 {
     public class PodWebhook : MutatingWebhookBase<V1Pod>
     {
@@ -240,7 +240,7 @@ using Neon.Operator.Webhooks;
 
 using Prometheus;
 
-namespace test_operator.Controllers
+namespace TestOperator.Controllers
 {
     [ApiController]
     public class PodWebhookController : ControllerBase

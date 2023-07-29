@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 
 using Neon.Operator;
 
-namespace test_operator
+namespace TestOperator
 {
     public static partial class Program
     {
