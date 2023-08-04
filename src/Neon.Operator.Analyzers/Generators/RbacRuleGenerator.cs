@@ -341,17 +341,17 @@ namespace Neon.Operator.Analyzers
                             ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
                             Verbs         = group.Verbs.ToStrings(),
                         })
-                    .Distinct(new PolicyRuleComparer())
-                    .OrderBy(pr => pr.ApiGroups.First())
-                    .ThenBy(pr => pr.Resources.First())
-                    .ToList();
+                    .Distinct(new PolicyRuleComparer());
 
                 if (clusterRules.Any())
                 {
                     var clusterRole = new V1ClusterRole().Initialize();
 
                     clusterRole.Metadata.Name = operatorName;
-                    clusterRole.Rules = clusterRules.ToList();
+                    clusterRole.Rules = clusterRules
+                                            .OrderBy(pr => pr.ApiGroups.First())
+                                            .ThenBy(pr => pr.Resources.First())
+                                            .ToList();
 
                     clusterRoles.Add(clusterRole);
 
@@ -396,8 +396,6 @@ namespace Neon.Operator.Analyzers
                                 Verbs         = group.Verbs.ToStrings(),
                             })
                         .Distinct(new PolicyRuleComparer())
-                        .OrderBy(pr => pr.ApiGroups.First())
-                        .ThenBy(pr => pr.Resources.First())
                         .ToList();
 
                 if (namespaceRules.Keys.Any())
@@ -407,7 +405,10 @@ namespace Neon.Operator.Analyzers
                         var namespacedRole = new V1Role().Initialize();
 
                         namespacedRole.Metadata.Name = operatorName;
-                        namespacedRole.Rules         = namespaceRules[@namespace].ToList();
+                        namespacedRole.Rules         = namespaceRules[@namespace]
+                                                            .OrderBy(pr => pr.ApiGroups.First())
+                                                            .ThenBy(pr => pr.Resources.First())
+                                                            .ToList();
 
                         if (!string.IsNullOrEmpty(operatorNamespace))
                         {
