@@ -340,7 +340,11 @@ namespace Neon.Operator.Analyzers
                             Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x=>x).ToList(),
                             ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
                             Verbs         = group.Verbs.ToStrings(),
-                        }).Distinct(new PolicyRuleComparer());
+                        })
+                    .Distinct(new PolicyRuleComparer())
+                    .OrderBy(pr => pr.ApiGroups.First())
+                    .ThenBy(pr => pr.Resources.First())
+                    .ToList();
 
                 if (clusterRules.Any())
                 {
@@ -390,7 +394,11 @@ namespace Neon.Operator.Analyzers
                                 Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
                                 ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
                                 Verbs         = group.Verbs.ToStrings(),
-                            }).Distinct(new PolicyRuleComparer()).ToList();
+                            })
+                        .Distinct(new PolicyRuleComparer())
+                        .OrderBy(pr => pr.ApiGroups.First())
+                        .ThenBy(pr => pr.Resources.First())
+                        .ToList();
 
                 if (namespaceRules.Keys.Any())
                 {
