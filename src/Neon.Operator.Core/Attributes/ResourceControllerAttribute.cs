@@ -39,7 +39,7 @@ namespace Neon.Operator.Attributes
         /// <summary>
         /// Specifies whether Kubernetes custom resources should be created.
         /// </summary>
-        public bool ManageCustomResourceDefinitions { get; set; } = true;
+        public bool ManageCustomResourceDefinitions { get; set; } = false;
 
         /// <summary>
         /// An optional label selector to be applied to the watcher. This can be used for filtering.

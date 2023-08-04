@@ -81,7 +81,7 @@ function SetVersion
     )
 
     "$project"
-	neon-build pack-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" NeonKube "$env:NK_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" NeonKube "$env:NO_ROOT\src\$project\$project.csproj"
     ThrowOnExitCode
 }
 
@@ -98,31 +98,16 @@ function Publish
         [string]$version
     )
 
-    $projectPath = [io.path]::combine($env:NK_ROOT, "Lib", "$project", "$project" + ".csproj")
+    $projectPath = [io.path]::combine($env:NO_ROOT, "src", "$project", "$project" + ".csproj")
 
     # Disabling symbol packages now that we're embedding PDB files.
     #
-    # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NK_BUILD\nuget"
+    # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NO_BUILD\nuget"
 
-    dotnet pack $projectPath -c Release -o "$env:NK_BUILD\nuget" -p:SolutionName=$env:SolutionName
+    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName
     ThrowOnExitCode
 
-    if (Test-Path "$env:NK_ROOT\Lib\$project\prerelease.txt")
-    {
-        $prerelease = Get-Content "$env:NK_ROOT\Lib\$project\prerelease.txt" -First 1
-        $prerelease = $prerelease.Trim()
-
-        if ($prerelease -ne "")
-        {
-            $prerelease = "-" + $prerelease
-        }
-    }
-    else
-    {
-        $prerelease = ""
-    }
-
-	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NK_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
+	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NO_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
     ThrowOnExitCode
 }
 
@@ -217,7 +202,7 @@ try
     #------------------------------------------------------------------------------
     # Remove all of the generated nuget files so these don't accumulate.
 
-    Remove-Item "$env:NK_BUILD\nuget\*.nupkg"
+    Remove-Item "$env:NO_BUILD\nuget\*.nupkg"
 
     ""
     "** Package publication completed"

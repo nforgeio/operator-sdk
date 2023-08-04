@@ -24,9 +24,6 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="KubernetesClient.Basic" Version="10.1.19" />
-        <PackageReference Include="KubernetesClient.Classic" Version="10.1.19" PrivateAssets="compile" />
-        <PackageReference Include="KubernetesClient.Models" Version="10.1.19" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" />
@@ -49,7 +46,7 @@
     </Choose>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
     </ItemGroup>
 
 </Project>

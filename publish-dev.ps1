@@ -85,7 +85,8 @@ param
     [switch]$localVersion   = $false, # use a local version counter (emergency only)
     [switch]$dirty          = $false, # use GitHub sources for SourceLink even if local repo is dirty
     [switch]$release        = $false, # RELEASE build instead of DEBUG (the default)
-    [string]$neonSdkVersion           # Just restore the CSPROJ files after cancelling publish
+    [string]$neonSdkVersion,
+    [string]$neonKubeVersion
 )
 
 # Import the global solution include file.
@@ -116,11 +117,22 @@ if (!(Test-Path env:NC_ROOT))
     return 1
 }
 
+$neonBuildUseNugetsParameter = ""
+
 $neonSdkVersionParameter = ""
 
 if ($neonSdkVersion)
 {
     $neonSdkVersionParameter = "/p:NeonSdkPackageVersion=$neonSdkVersion"
+    $neonBuildUseNugetsParameter = "/p:NeonBuildUseNugets=true"
+}
+
+$neonKubeVersionParameter = ""
+
+if ($neonKubeVersion)
+{
+    $neonKubeVersionParameter = "/p:NeonKubePackageVersion=$neonKubeVersion"
+    $neonBuildUseNugetsParameter = "/p:NeonBuildUseNugets=true"
 }
 
 #------------------------------------------------------------------------------
@@ -148,12 +160,12 @@ function Publish
     "* Publishing: ${project}:${version}${localIndicator}"
     "==============================================================================="
 
-    $projectPath = [io.path]::combine("C:\src\neon-operator-sdk\src", "$project", "$project" + ".csproj")
+    $projectPath = [io.path]::combine("$env:NO_ROOT\src", "$project", "$project" + ".csproj")
 
-    dotnet pack $projectPath -c $config -o "$env:NK_BUILD\nuget" -p:PackageVersion=$version $neonSdkVersionParameter -p:SolutionName=$env:SolutionName
+    dotnet pack $projectPath -c $config -o "$env:NO_BUILD\nuget" -p:PackageVersion=$version $neonBuildUseNugetsParameter $neonSdkVersionParameter $neonKubeVersionParameter -p:SolutionName=$env:SolutionName
     ThrowOnExitCode
 
-    $nugetPath = "$env:NK_BUILD\nuget\$project.$version.nupkg"
+    $nugetPath = "$env:NO_BUILD\nuget\$project.$version.nupkg"
 
     if ($local)
     {
@@ -171,13 +183,13 @@ try
 {
     if ([System.String]::IsNullOrEmpty($env:SolutionName))
     {
-        $env:SolutionName = "neonKUBE"
+        $env:SolutionName = "Neon.Operator"
     }
 
     $msbuild     = $env:MSBUILDPATH
     $config      = "Release"
-    $noRoot      = "C:\src\neon-operator-sdk"
-    $nkSolution  = "$noRoot\Neon.Operator.sln"
+    $noRoot      = "$env:NO_ROOT"
+    $noSolution  = "$noRoot\Neon.Operator.sln"
     $branch      = GitBranch $noRoot
 
     if ($localVersion)
@@ -250,8 +262,8 @@ try
         # Submit PUT requests to the versioner service, specifying the counter name.  The service will
         # atomically increment the counter and return the next value.
 
-        $reply           = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/neonKUBE-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
-        $neonkubeVersion = "10000.1.$reply-dev-$branch"
+        $reply               = Invoke-WebRequest -Uri "$env:NC_NUGET_VERSIONER/counter/NeonOperator-dev" -Method 'PUT' -Headers @{ 'Authorization' = "Bearer $versionerKeyBase64" } 
+        $neonOperatorVersion = "10000.1.$reply-dev-$branch"
     }
 
     #------------------------------------------------------------------------------
@@ -283,7 +295,7 @@ try
     Write-Info "********************************************************************************"
     Write-Info ""
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
+    & "$msbuild" "$noSolution" -p:Configuration=$config -t:Clean -m -verbosity:quiet
 
     if (-not $?)
     {
@@ -296,7 +308,7 @@ try
     Write-Info  "*******************************************************************************"
     Write-Info  ""
 
-    & "$msbuild" "$nkSolution" -p:Configuration=$config -restore -m -verbosity:quiet $neonSdkVersionParameter
+    & "$msbuild" "$noSolution" -p:Configuration=$config -restore -m -verbosity:quiet $neonBuildUseNugetsParameter $neonSdkVersionParameter $neonKubeVersionParameter
 
     if (-not $?)
     {
@@ -305,16 +317,16 @@ try
 
     # Build and publish the projects.
 
-    Publish Neon.Kubernetes                $neonkubeVersion
-    Publish Neon.Operator                  $neonkubeVersion
-    Publish Neon.Operator.Analyzers        $neonkubeVersion
-    Publish Neon.Operator.Core             $neonkubeVersion
-    Publish Neon.Operator.Templates        $neonkubeVersion
-    Publish Neon.Operator.Xunit            $neonkubeVersion
+    Publish Neon.Kubernetes                $neonOperatorVersion
+    Publish Neon.Operator                  $neonOperatorVersion
+    Publish Neon.Operator.Analyzers        $neonOperatorVersion
+    Publish Neon.Operator.Core             $neonOperatorVersion
+    Publish Neon.Operator.Templates        $neonOperatorVersion
+    Publish Neon.Operator.Xunit            $neonOperatorVersion
 
     # Remove all of the generated nuget files so these don't accumulate.
 
-    #Remove-Item "$env:NO_BUILD\nuget\*.nupkg"
+    Remove-Item "$env:NO_BUILD\nuget\*.nupkg"
 
     ""
     "** Package publication completed"

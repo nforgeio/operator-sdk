@@ -22,18 +22,7 @@ namespace Neon.Operator.Analyzers
     [Generator]
     public class ServiceExtensionsGenerator : ISourceGenerator
     {
-        private List<ClassDeclarationSyntax> webhooks = new List<ClassDeclarationSyntax>();
-        private MetadataLoadContext metadataLoadContext { get; set; }
-        private GeneratorExecutionContext context { get; set; }
-
-        private IEnumerable<INamedTypeSymbol> namedTypeSymbols { get; set; }
-
-        private StringBuilder logString { get; set; }
-
-        private Dictionary<Type, Type> webhookSystemTypes = new Dictionary<Type, Type>();
-
-        private List<Type> baseNames = new List<Type>();
-
+        private List<Type> baseNames;
         public void Initialize(GeneratorInitializationContext context)
         {
             //System.Diagnostics.Debugger.Launch();
@@ -56,12 +45,8 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            this.context = context;
-            this.metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            this.namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
-
-            logString = new StringBuilder();
-            bool hasErrors = false;
+            var metadataLoadContext = new MetadataLoadContext(context.Compilation);
+            var namedTypeSymbols    = context.Compilation.GetNamedTypeSymbols();
 
             if (((ServiceExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister.Any() == true)
             {
@@ -109,109 +94,108 @@ namespace Neon.Operator
             return new OperatorBuilder(services).AddOperatorBase().AddServiceComponents();
         }}
 
+        /// <summary>
+        /// Adds the service components to the operator.
+        /// </summary>
+        /// <param name=""builder"">The <see cref=""IOperatorBuilder""/>.</param>
+        /// <returns>The <see cref=""OperatorBuilder""/>.</returns>
         public static IOperatorBuilder AddServiceComponents(this IOperatorBuilder builder)
         {{");
                 foreach (var component in ((ServiceExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister)
                 {
-                    try
+                    var componentNs = component.GetNamespace();
+                    usings.Add(componentNs);
+                    var componentSystemType = metadataLoadContext.ResolveType($"{componentNs}.{component.Identifier.ValueText}");
+
+                    var interfaces = componentSystemType.GetInterfaces().ToList();
+
+                    if (componentSystemType.BaseType != null)
                     {
-                        var componentNs = component.GetNamespace();
-                        usings.Add(componentNs);
-                        var componentSystemType = metadataLoadContext.ResolveType($"{componentNs}.{component.Identifier.ValueText}");
-
-                        var interfaces = componentSystemType.GetInterfaces().ToList();
-
-                        if (componentSystemType.BaseType != null)
+                        Type baseType = componentSystemType.BaseType;
+                            
+                        while (baseType != null)
                         {
-                            Type baseType = componentSystemType.BaseType;
-                            
-                            while (baseType != null)
-                            {
-                                interfaces.AddRange(baseType.GetInterfaces());
-                                baseType = baseType.BaseType;
-                            }
-                            
+                            interfaces.AddRange(baseType.GetInterfaces());
+                            baseType = baseType.BaseType;
                         }
+                            
+                    }
 
-                        var componentInterfaceType = (OperatorComponentType)interfaces
-                            .Where(i =>
-                                i.IsGenericType && baseNames.Any(bn => bn.FullName == i.FullName))
-                            .Select(i => i.CustomAttributes?
-                                            .Where(a => a.AttributeType.Equals(typeof(OperatorComponentAttribute)))
-                                            .FirstOrDefault().ConstructorArguments.First().Value)
-                            .FirstOrDefault();
+                    var componentInterfaceType = (OperatorComponentType)interfaces
+                        .Where(i =>
+                            i.IsGenericType && baseNames.Any(bn => bn.FullName == i.FullName))
+                        .Select(i => i.CustomAttributes?
+                                        .Where(a => a.AttributeType.Equals(typeof(OperatorComponentAttribute)))
+                                        .FirstOrDefault().ConstructorArguments.First().Value)
+                        .FirstOrDefault();
 
-                        IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
-                        var members = assemblySymbol.GlobalNamespace.
-                             GetNamespaceMembers();
+                    IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
+                    var members = assemblySymbol.GlobalNamespace.
+                            GetNamespaceMembers();
 
-                        var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols.SelectMany(
-                            ras => ras.GlobalNamespace.GetNamespaceMembers())
-                            .SelectMany(nsm => nsm.GetTypeMembers());
+                    var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols.SelectMany(
+                        ras => ras.GlobalNamespace.GetNamespaceMembers())
+                        .SelectMany(nsm => nsm.GetTypeMembers());
 
-                        var componentEntityType = component
-                            .DescendantNodes()?
-                            .OfType<BaseListSyntax>()?
-                            .Where(dn => dn.DescendantNodes()
-                                    ?.OfType<GenericNameSyntax>()
-                                    ?.Any(gns => gns.Identifier.ValueText.EndsWith(typeof(IMutatingWebhook<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(MutatingWebhookBase<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(IValidatingWebhook<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(IResourceController).Name)
-                                                || gns.Identifier.ValueText.EndsWith(typeof(IResourceController<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(ResourceControllerBase<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(IResourceFinalizer<>).Name.Replace("`1", ""))
-                                                || gns.Identifier.ValueText.EndsWith(typeof(ResourceFinalizerBase<>).Name.Replace("`1", ""))
-                                                ) == true).FirstOrDefault();
+                    var componentEntityType = component
+                        .DescendantNodes()?
+                        .OfType<BaseListSyntax>()?
+                        .Where(dn => dn.DescendantNodes()
+                                ?.OfType<GenericNameSyntax>()
+                                ?.Any(gns => gns.Identifier.ValueText.EndsWith(typeof(IMutatingWebhook<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(MutatingWebhookBase<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(IValidatingWebhook<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(IResourceController).Name)
+                                            || gns.Identifier.ValueText.EndsWith(typeof(IResourceController<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(ResourceControllerBase<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(IResourceFinalizer<>).Name.Replace("`1", ""))
+                                            || gns.Identifier.ValueText.EndsWith(typeof(ResourceFinalizerBase<>).Name.Replace("`1", ""))
+                                            ) == true).FirstOrDefault();
 
-                        var componentTypeIdentifier          = componentEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
+                    var componentTypeIdentifier          = componentEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
 
-                        var componentTypeIdentifierNamespace = componentTypeIdentifier.GetNamespace();
+                    var componentTypeIdentifierNamespace = componentTypeIdentifier.GetNamespace();
 
-                        var componentEntityTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == componentTypeIdentifier.Identifier.ValueText).SingleOrDefault();
-                        var componentEntityFullyQualifiedName = componentEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
+                    var componentEntityTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == componentTypeIdentifier.Identifier.ValueText).SingleOrDefault();
+                    var componentEntityFullyQualifiedName = componentEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
 
-                        var entitySystemType = metadataLoadContext.ResolveType(componentEntityTypeIdentifier);
+                    var entitySystemType = metadataLoadContext.ResolveType(componentEntityTypeIdentifier);
+                    usings.Add(entitySystemType.Namespace);
 
-                        switch (componentInterfaceType)
-                        {
-                            case OperatorComponentType.Controller:
+                    switch (componentInterfaceType)
+                    {
+                        case OperatorComponentType.Controller:
 
-                                sb.Append($@"
+                            sb.Append($@"
             builder.AddController<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
 
-                                break;
+                            break;
 
-                            case OperatorComponentType.Finalizer:
+                        case OperatorComponentType.Finalizer:
 
-                                sb.Append($@"
+                            sb.Append($@"
             builder.AddFinalizer<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
 
-                                break;
+                            break;
 
-                            case OperatorComponentType.MutationWebhook:
+                        case OperatorComponentType.MutationWebhook:
 
-                                sb.Append($@"
+                            sb.Append($@"
             builder.AddMutatingWebhook<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
 
-                                break;
+                            break;
 
-                            case OperatorComponentType.ValidationWebhook:
+                        case OperatorComponentType.ValidationWebhook:
 
-                                sb.Append($@"
+                            sb.Append($@"
             builder.AddValidatingWebhook<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
 
-                                break;
+                            break;
 
-                            default:
+                        default:
 
-                                break;
-                        }
-                    }
-                        catch (Exception e)
-                    {
-                        logString.AppendLine(e.Message);
+                            break;
                     }
                 }
                 sb.Append($@"
@@ -248,10 +232,6 @@ namespace Neon.Operator
 
                 context.AddSource($"ServiceCollectionExtensions.g.cs", SourceText.From(source, Encoding.UTF8, SourceHashAlgorithm.Sha256));
 
-            }
-            if (hasErrors)
-            {
-                context.AddSource("log", logString.ToString());
             }
         }
     }

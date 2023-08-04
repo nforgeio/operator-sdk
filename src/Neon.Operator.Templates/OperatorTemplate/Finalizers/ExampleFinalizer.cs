@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -11,10 +11,11 @@ using k8s.Models;
 
 namespace OperatorTemplate
 {
-    public class ExampleFinalizer : IResourceFinalizer<V1ExampleEntity>
+    public class ExampleFinalizer : ResourceFinalizerBase<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;
         private readonly ILogger<ExampleController> logger;
+
         public ExampleFinalizer(
             IKubernetes k8s,
             ILogger<ExampleController> logger)
@@ -23,7 +24,7 @@ namespace OperatorTemplate
             this.logger = logger;
         }
 
-        public async Task FinalizeAsync(V1ExampleEntity resource)
+        public override async Task FinalizeAsync(V1ExampleEntity resource)
         {
             await SyncContext.Clear;
 

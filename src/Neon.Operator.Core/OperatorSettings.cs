@@ -34,7 +34,7 @@ namespace Neon.Operator
     {
         internal bool certManagerEnabled              = false;
         internal bool leaderElectionEnabled           = false;
-        internal bool manageCustomResourceDefinitions = true;
+        internal bool manageCustomResourceDefinitions = false;
         internal bool hasMutatingWebhooks             = false;
         internal bool hasValidatingWebhooks           = false;
 

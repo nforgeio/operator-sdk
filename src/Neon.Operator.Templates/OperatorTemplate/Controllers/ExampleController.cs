@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,7 +14,7 @@ using k8s.Models;
 
 namespace OperatorTemplate
 {
-    public class ExampleController : IResourceController<V1ExampleEntity>
+    public class ExampleController : ResourceControllerBase<V1ExampleEntity>
     {
         private readonly IKubernetes k8s;
         private readonly IFinalizerManager<V1ExampleEntity> finalizerManager;
@@ -30,7 +30,7 @@ namespace OperatorTemplate
             this.logger = logger;
         }
 
-        public async Task<ResourceControllerResult> ReconcileAsync(V1ExampleEntity resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1ExampleEntity resource)
         {
             await SyncContext.Clear;
 

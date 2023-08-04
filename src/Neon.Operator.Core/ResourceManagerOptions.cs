@@ -40,7 +40,7 @@ namespace Neon.Operator.ResourceManager
         /// <summary>
         /// Specifies whether Kubernetes custom resources should be created.
         /// </summary>
-        public bool ManageCustomResourceDefinitions { get; set; } = true;
+        public bool ManageCustomResourceDefinitions { get; set; } = false;
 
         /// <summary>
         /// Optionally disable automatic finalizer registration. If enabled, all finalizers currently deployed by the operator
@@ -52,11 +52,6 @@ namespace Neon.Operator.ResourceManager
         /// Specify dependent resource types and where to watch them.
         /// </summary>
         public List<IDependentResource> DependentResources { get; set; } = new List<IDependentResource>();
-
-        /// <summary>
-        /// Specify RbacRules.
-        /// </summary>
-        public List<IRbacRule> RbacRules { get; set; } = new List<IRbacRule>();
 
         /// <summary>
         /// WatchNamespace to watch.

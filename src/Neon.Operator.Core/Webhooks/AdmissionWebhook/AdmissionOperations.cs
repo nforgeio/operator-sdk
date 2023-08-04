@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
 
 namespace Neon.Operator.Webhooks
 {
@@ -28,26 +29,31 @@ namespace Neon.Operator.Webhooks
         /// <summary>
         /// None.
         /// </summary>
+        [EnumMember(Value = "None")]
         None = 0,
 
         /// <summary>
         /// All.
         /// </summary>
-        All = 1 << 0,
+        [EnumMember(Value = "All")]
+        All = 1,
 
         /// <summary>
         /// Create.
         /// </summary>
-        Create = 1 << 1,
+        [EnumMember(Value = "Create")]
+        Create = 2,
 
         /// <summary>
         /// Update.
         /// </summary>
-        Update = 1 << 2,
+        [EnumMember(Value = "Update")]
+        Update = 4,
 
         /// <summary>
         /// Delete.
         /// </summary>
-        Delete = 1 << 3,
+        [EnumMember(Value = "Delete")]
+        Delete = 8,
     }
 }

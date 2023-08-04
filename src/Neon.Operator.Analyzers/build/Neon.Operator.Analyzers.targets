@@ -1,0 +1,15 @@
+<Project>
+    <ItemGroup>
+        <CompilerVisibleProperty Include="NeonOperatorCrdOutputDir" />
+        <CompilerVisibleProperty Include="NeonOperatorManifestOutputDir" />
+        <CompilerVisibleProperty Include="NeonOperatorRbacOutputDir" />
+        <CompilerVisibleProperty Include="NeonOperatorWebhookOutputDir" />
+        <CompilerVisibleProperty Include="NeonOperatorLeaderElectionDisabled" />
+        <CompilerVisibleProperty Include="NeonOperatorAutoRegisterWebhooks" />
+        <CompilerVisibleProperty Include="NeonOperatorNamespace" />
+        <CompilerVisibleProperty Include="NeonOperatorName" />
+        <CompilerVisibleProperty Include="NeonOperatorCertManagerDisabled" />
+        <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingEnabled" />
+        <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingDir" />
+    </ItemGroup>
+</Project>

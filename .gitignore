@@ -156,4 +156,6 @@ KubernetesWithRetry.cs
 /ToolBin/nuget.config
 /Lib/Neon.Blazor/IntersectionObserver
 /src/Neon.Operator/Tasks
-/test/test-operator/examples.example.neonkube.io.yaml
+/test/test-operator/CRDs
+/test/test-operator/Manifests
+/test/test-operator/RBAC

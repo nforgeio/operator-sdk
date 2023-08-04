@@ -116,224 +116,183 @@ namespace Neon.Operator.Rbac
         /// </summary>
         public void Build()
         {
-            var serviceAccount = new V1ServiceAccount().Initialize();
+            //var serviceAccount = new V1ServiceAccount().Initialize();
 
-            serviceAccount.Metadata.Name              = operatorSettings.Name;
-            serviceAccount.Metadata.NamespaceProperty = @namespace;
+            //serviceAccount.Metadata.Name              = operatorSettings.Name;
+            //serviceAccount.Metadata.NamespaceProperty = @namespace;
 
-            ServiceAccounts.Add(serviceAccount);
+            //ServiceAccounts.Add(serviceAccount);
 
-            if (assemblyTypes == null)
-            {
-                assemblyTypes = AppDomain.CurrentDomain.GetAssemblies()
-                        .SelectMany(assembly => assembly.GetTypes()).Where(type => type != null).ToList();
-            }
+            //if (assemblyTypes == null)
+            //{
+            //    assemblyTypes = AppDomain.CurrentDomain.GetAssemblies()
+            //            .SelectMany(assembly => assembly.GetTypes()).Where(type => type != null).ToList();
+            //}
 
-            var attributes = assemblyTypes
+            //var attributes = assemblyTypes
                 
-                .SelectMany(type => type
-                            .GetCustomAttributes()
-                            .Where(attribute => attribute
+            //    .SelectMany(type => type
+            //                .GetCustomAttributes()
+            //                .Where(attribute => attribute
                                     
-                                    .GetType().IsGenericType 
-                                    && attribute.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>))
-                            )
-                )
-                .Select(attribute => (IRbacRule)attribute)
-                .ToList();
+            //                        .GetType().IsGenericType 
+            //                        && attribute.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(RbacRuleAttribute<>))
+            //                )
+            //    )
+            //    .Select(attribute => (IRbacRule)attribute)
+            //    .ToList();
 
-            if (operatorSettings.leaderElectionEnabled)
-            {
-                attributes.Add(
-                    new RbacRule<V1Lease>(
-                        verbs: RbacVerb.All,
-                        scope: EntityScope.Cluster));
-            }
+            //if (operatorSettings.leaderElectionEnabled)
+            //{
+            //    attributes.Add(
+            //        new RbacRule<V1Lease>(
+            //            verbs: RbacVerb.All,
+            //            scope: EntityScope.Cluster));
+            //}
 
-            if (operatorSettings.manageCustomResourceDefinitions)
-            {
-                attributes.Add(
-                    new RbacRule<V1CustomResourceDefinition>(
-                        verbs: RbacVerb.All,
-                        scope: EntityScope.Cluster));
-            }
-            else
-            {
-                attributes.Add(
-                    new RbacRule<V1CustomResourceDefinition>(
-                        verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
-                        scope: EntityScope.Cluster));
-            }
+            //if (operatorSettings.manageCustomResourceDefinitions)
+            //{
+            //    attributes.Add(
+            //        new RbacRule<V1CustomResourceDefinition>(
+            //            verbs: RbacVerb.All,
+            //            scope: EntityScope.Cluster));
+            //}
+            //else
+            //{
+            //    attributes.Add(
+            //        new RbacRule<V1CustomResourceDefinition>(
+            //            verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
+            //            scope: EntityScope.Cluster));
+            //}
 
-            if (operatorSettings.hasMutatingWebhooks)
-            {
-                attributes.Add(
-                    new RbacRule<V1MutatingWebhookConfiguration>(
-                        verbs: RbacVerb.All,
-                        scope: EntityScope.Cluster));
-            }
+            //if (operatorSettings.hasMutatingWebhooks)
+            //{
+            //    attributes.Add(
+            //        new RbacRule<V1MutatingWebhookConfiguration>(
+            //            verbs: RbacVerb.All,
+            //            scope: EntityScope.Cluster));
+            //}
 
-            if (operatorSettings.hasValidatingWebhooks)
-            {
-                attributes.Add(
-                    new RbacRule<V1ValidatingWebhookConfiguration>(
-                        verbs: RbacVerb.All,
-                        scope: EntityScope.Cluster));
-            }
+            //if (operatorSettings.hasValidatingWebhooks)
+            //{
+            //    attributes.Add(
+            //        new RbacRule<V1ValidatingWebhookConfiguration>(
+            //            verbs: RbacVerb.All,
+            //            scope: EntityScope.Cluster));
+            //}
 
-            if (operatorSettings.certManagerEnabled)
-            {
-                attributes.Add(
-                    new RbacRule<V1Certificate>(
-                        verbs: RbacVerb.All,
-                        scope: EntityScope.Namespaced,
-                        namespaces: @namespace));
+            //if (operatorSettings.certManagerEnabled)
+            //{
+            //    attributes.Add(
+            //        new RbacRule<V1Certificate>(
+            //            verbs: RbacVerb.All,
+            //            scope: EntityScope.Namespaced,
+            //            namespaces: @namespace));
 
-                attributes.Add(
-                    new RbacRule<V1Secret>(
-                        verbs: RbacVerb.Watch,
-                        scope: EntityScope.Namespaced,
-                        namespaces: @namespace,
-                        resourceNames: $"{operatorSettings.Name}-webhook-tls"));
-            }
+            //    attributes.Add(
+            //        new RbacRule<V1Secret>(
+            //            verbs: RbacVerb.Watch,
+            //            scope: EntityScope.Namespaced,
+            //            namespaces: @namespace,
+            //            resourceNames: $"{operatorSettings.Name}-webhook-tls"));
+            //}
 
-            var clusterRules = attributes.Where(attr => attr.Scope == EntityScope.Cluster)
-                .GroupBy(attr => new
-                {
-                    ApiGroups     = attr.GetKubernetesEntityAttribute().Group,
-                    ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
-                    Verbs         = attr.Verbs,
-                    //SubResources  = attr.SubResources?.Split(",").Distinct().Select(sr => $"{attr.GetKubernetesEntityAttribute().PluralName}/{sr}") ??
-                    //                        new List<string>()
-                })
-                .Select(
-                    group => (
-                        Verbs: group.Key.Verbs,
-                        ResourceNames: group.Key.ResourceNames,
-                        //SubResources: group.Key.SubResources,
-                        EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList(),
-                        SubResources: group.SelectMany(attr => (attr.SubResources?.Split(",").Distinct().Select(sr => $"{attr.GetKubernetesEntityAttribute().PluralName}/{sr}")) ?? Array.Empty<string>())
-                        ))
-                .Select(
-                    group => new V1PolicyRule
-                    {
-                        ApiGroups     = group.EntityTypes.Select(entity => entity.Group).Distinct().OrderBy(x => x).ToList(),
-                        Resources     = group.EntityTypes.SelectMany(entity => group.SubResources.Append(entity.PluralName)).Distinct().OrderBy(x => x).ToList(),
-                        ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
-                        Verbs         = group.Verbs.ToStrings(),
-                    });
+            //var clusterRules = attributes.Where(attr => attr.Scope == EntityScope.Cluster)
+            //    .GroupBy(attr => new
+            //    {
+            //        ApiGroups     = attr.GetKubernetesEntityAttribute().Group,
+            //        ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
+            //        Verbs         = attr.Verbs,
+            //        //SubResources  = attr.SubResources?.Split(",").Distinct().Select(sr => $"{attr.GetKubernetesEntityAttribute().PluralName}/{sr}") ??
+            //        //                        new List<string>()
+            //    })
+            //    .Select(
+            //        group => (
+            //            Verbs: group.Key.Verbs,
+            //            ResourceNames: group.Key.ResourceNames,
+            //            //SubResources: group.Key.SubResources,
+            //            EntityTypes: group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList(),
+            //            SubResources: group.SelectMany(attr => (attr.SubResources?.Split(",").Distinct().Select(sr => $"{attr.GetKubernetesEntityAttribute().PluralName}/{sr}")) ?? Array.Empty<string>())
+            //            ))
+            //    .Select(
+            //        group => new V1PolicyRule
+            //        {
+            //            ApiGroups     = group.EntityTypes.Select(entity => entity.Group).Distinct().OrderBy(x => x).ToList(),
+            //            Resources     = group.EntityTypes.SelectMany(entity => group.SubResources.Append(entity.PluralName)).Distinct().OrderBy(x => x).ToList(),
+            //            ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
+            //            Verbs         = group.Verbs.ToStrings(),
+            //        });
 
-            if (clusterRules.Any())
-            {
-                var clusterRole = new V1ClusterRole().Initialize();
+            //if (clusterRules.Any())
+            //{
+            //    var clusterRole = new V1ClusterRole().Initialize();
 
-                clusterRole.Metadata.Name = operatorSettings.Name;
-                clusterRole.Rules         = clusterRules.ToList();
+            //    clusterRole.Metadata.Name = operatorSettings.Name;
+            //    clusterRole.Rules         = clusterRules.ToList();
 
-                ClusterRoles.Add(clusterRole);
+            //    ClusterRoles.Add(clusterRole);
 
-                var clusterRoleBinding = new V1ClusterRoleBinding().Initialize();
+            //    var clusterRoleBinding = new V1ClusterRoleBinding().Initialize();
 
-                clusterRoleBinding.Metadata.Name = operatorSettings.Name;
-                clusterRoleBinding.RoleRef       = new V1RoleRef(name: clusterRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole");
-                clusterRoleBinding.Subjects      = new List<V1Subject>()
-                {
-                    new V1Subject(kind: "ServiceAccount", name: operatorSettings.Name, namespaceProperty: serviceAccount.Namespace())
-                };
+            //    clusterRoleBinding.Metadata.Name = operatorSettings.Name;
+            //    clusterRoleBinding.RoleRef       = new V1RoleRef(name: clusterRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole");
+            //    clusterRoleBinding.Subjects      = new List<V1Subject>()
+            //    {
+            //        new V1Subject(kind: "ServiceAccount", name: operatorSettings.Name, namespaceProperty: serviceAccount.Namespace())
+            //    };
 
-                ClusterRoleBindings.Add(clusterRoleBinding);
-            }
+            //    ClusterRoleBindings.Add(clusterRoleBinding);
+            //}
 
-            var namespaceRules = new Dictionary<string, List<V1PolicyRule>>();
+            //var namespaceRules = new Dictionary<string, List<V1PolicyRule>>();
 
-            namespaceRules[@namespace] = attributes.Where(attr =>
-                attr.Scope == EntityScope.Namespaced)
-                    .GroupBy(
-                        attr => new
-                        {
-                            ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
-                            Verbs         = attr.Verbs
-                        })
-                    .Select(
-                        group => (
-                            Verbs:         group.Key.Verbs,
-                            ResourceNames: group.Key.ResourceNames,
-                            EntityTypes:   group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
-                    .Select(
-                        group => new V1PolicyRule
-                        {
-                            ApiGroups     = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
-                            Resources     = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
-                            ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
-                            Verbs         = group.Verbs.ToStrings(),
-                        }).ToList();
+            //namespaceRules[@namespace] = attributes.Where(attr =>
+            //    attr.Scope == EntityScope.Namespaced)
+            //        .GroupBy(
+            //            attr => new
+            //            {
+            //                ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
+            //                Verbs         = attr.Verbs
+            //            })
+            //        .Select(
+            //            group => (
+            //                Verbs:         group.Key.Verbs,
+            //                ResourceNames: group.Key.ResourceNames,
+            //                EntityTypes:   group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
+            //        .Select(
+            //            group => new V1PolicyRule
+            //            {
+            //                ApiGroups     = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
+            //                Resources     = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
+            //                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
+            //                Verbs         = group.Verbs.ToStrings(),
+            //            }).ToList();
 
-            foreach (var registration in componentRegister.ResourceManagerRegistrations)
-            {
-                var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(registration);
-                var options         = resourceManager.Options();
+            //if (namespaceRules.Keys.Any())
+            //{
+            //    foreach (var @namespace in namespaceRules.Keys)
+            //    {
+            //        var namespacedRole = new V1Role().Initialize();
 
-                var namespaces = options.RbacRules
-                    .Where(r => r.NamespaceList() != null)
-                    .SelectMany(r => r.NamespaceList())
-                    .Distinct()
-                    .ToList();
+            //        namespacedRole.Metadata.Name              = operatorSettings.Name;
+            //        namespacedRole.Metadata.NamespaceProperty = @namespace;
+            //        namespacedRole.Rules                      = namespaceRules[@namespace].ToList();
 
-                foreach (var @namespace in namespaces)
-                {
-                    namespaceRules[@namespace] = options.RbacRules
-                        .Select(rule => (IRbacRule)rule)
-                        .Where(attr =>
-                            attr.Scope == EntityScope.Namespaced
-                            && attr.NamespaceList().Contains(@namespace))
-                        .GroupBy(
-                            attr => new
-                            {
-                                ResourceNames = attr.ResourceNames?.Split(',').Distinct(),
-                                Verbs         = attr.Verbs,
-                            })
-                        .Select(
-                            group => (
-                                Verbs:         group.Key.Verbs,
-                                ResourceNames: group.Key.ResourceNames,
-                                EntityTypes:   group.Select(attr => attr.GetKubernetesEntityAttribute()).ToList()))
-                        .Select(
-                            group => new V1PolicyRule
-                            {
-                                ApiGroups     = group.EntityTypes.Select(entity => entity.Group).Distinct().ToList(),
-                                Resources     = group.EntityTypes.Select(entity => entity.PluralName).Distinct().ToList(),
-                                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
-                                Verbs         = group.Verbs.ToStrings(),
-                            })
-                        .ToList();
-                }
-            }
+            //        Roles.Add(namespacedRole);
 
-            if (namespaceRules.Keys.Any())
-            {
-                foreach (var @namespace in namespaceRules.Keys)
-                {
-                    var namespacedRole = new V1Role().Initialize();
+            //        var roleBinding = new V1RoleBinding().Initialize();
 
-                    namespacedRole.Metadata.Name              = operatorSettings.Name;
-                    namespacedRole.Metadata.NamespaceProperty = @namespace;
-                    namespacedRole.Rules                      = namespaceRules[@namespace].ToList();
+            //        roleBinding.Metadata.Name              = operatorSettings.Name;
+            //        roleBinding.Metadata.NamespaceProperty = @namespace;
+            //        roleBinding.RoleRef                    = new V1RoleRef(name: namespacedRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "Role");
+            //        roleBinding.Subjects                   = new List<V1Subject>()
+            //        {
+            //            new V1Subject(kind: "ServiceAccount", name: operatorSettings.Name, namespaceProperty: serviceAccount.Namespace())
+            //        };
 
-                    Roles.Add(namespacedRole);
-
-                    var roleBinding = new V1RoleBinding().Initialize();
-
-                    roleBinding.Metadata.Name              = operatorSettings.Name;
-                    roleBinding.Metadata.NamespaceProperty = @namespace;
-                    roleBinding.RoleRef                    = new V1RoleRef(name: namespacedRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "Role");
-                    roleBinding.Subjects                   = new List<V1Subject>()
-                    {
-                        new V1Subject(kind: "ServiceAccount", name: operatorSettings.Name, namespaceProperty: serviceAccount.Namespace())
-                    };
-
-                    RoleBindings.Add(roleBinding);
-                }
-            }
+            //        RoleBindings.Add(roleBinding);
+            //    }
+            //}
         }
     }
 }

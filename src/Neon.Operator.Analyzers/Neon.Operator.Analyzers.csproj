@@ -4,44 +4,46 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <OutputType>Library</OutputType>
         <Configurations>Debug;Release</Configurations>
-        <Version>0.9.2-alpha</Version>
+        <Version>0.10.0-beta.0</Version>
         <Description>Kubernetes Operator SDK.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
+        <RepositoryUrl>https://github.com/nforgeio/operator-sdk</RepositoryUrl>
         <PackageIcon>nuget-icon.png</PackageIcon>
         <RepositoryType>git</RepositoryType>
         <PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
-        <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/nforgeio/operator-sdk/releases</PackageReleaseNotes>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <IsPackable>true</IsPackable>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
         <IsRoslynComponent>true</IsRoslynComponent>
         <EnforceExtendedAnalyzerRules>false</EnforceExtendedAnalyzerRules>
-        <NoWarn>CS1591</NoWarn>
+        <NoWarn>$(NoWarn);CS1591;CS8034</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Fractions" Version="7.2.1" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.3.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.3.1" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="NJsonSchema" Version="10.8.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <!--<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />-->
         <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="KubernetesClient.Basic" Version="10.1.19" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="KubernetesClient.Models" Version="10.1.19" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="KubernetesClient.Basic" Version="11.0.21" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="KubernetesClient.Models" Version="11.0.21" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="System.Text.Json" Version="7.0.2" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="1.3.1" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="YamlDotNet" Version="13.0.2" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="YamlDotNet" Version="13.1.0" GeneratePathProperty="true" PrivateAssets="all" />
     </ItemGroup>
 
-    <!-- NEONFORGE package or project references -->
+    <ItemGroup Condition="'$(Configuration)' == 'Release'">
+        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />
+        <None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
 
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
@@ -52,15 +54,15 @@
         </When>
         <Otherwise>
             <ItemGroup>
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
             </ItemGroup>
         </Otherwise>
     </Choose>
-    
+
     <ItemGroup>
-        <ProjectReference Include="..\Neon.Operator.Core\Neon.Operator.Core.csproj" />
-    </ItemGroup> 
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+    </ItemGroup>
 
     <PropertyGroup>
         <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
@@ -75,7 +77,6 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNJsonSchema)\lib\netstandard2.0\NJsonSchema.dll" IncludeRuntimeDependency="false" />
-            <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_Text_Json)\lib\netstandard2.0\System.Text.Json.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGSystemTextJson_JsonDiffPatch)\lib\netstandard2.0\SystemTextJson.JsonDiffPatch.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGYamlDotNet)\lib\netstandard2.0\YamlDotNet.dll" IncludeRuntimeDependency="false" />
@@ -89,19 +90,18 @@
             <None Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGNJsonSchema)\lib\netstandard2.0\NJsonSchema.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-            <None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGSystem_Text_Json)\lib\netstandard2.0\System.Text.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGSystemTextJson_JsonDiffPatch)\lib\netstandard2.0\SystemTextJson.JsonDiffPatch.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGYamlDotNet)\lib\netstandard2.0\YamlDotNet.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         </ItemGroup>
-        
+
         <ItemGroup Condition="'$(NeonBuildUseNugets)' == 'true'">
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNeon_Common)\lib\netstandard2.0\Neon.Common.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNeon_Roslyn)\lib\netstandard2.0\Neon.Roslyn.dll" IncludeRuntimeDependency="false" />
             <None Include="$(PKGNeon_Common)\lib\netstandard2.0\Neon.Common.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGNeon_Roslyn)\lib\netstandard2.0\Neon.Roslyn.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         </ItemGroup>
-        
+
         <ItemGroup Condition="'$(NeonBuildUseNugets)' != 'true'">
             <None Include="$(OutputPath)\Neon.Common.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\Neon.Roslyn.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
@@ -109,11 +109,10 @@
 
     </Target>
 
-    
-    
     <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+        <None Include="build\*" Pack="true" PackagePath="build\" />
     </ItemGroup>
 
 </Project>

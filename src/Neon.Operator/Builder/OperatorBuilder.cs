@@ -251,12 +251,12 @@ namespace Neon.Operator.Builder
                                 break;
                             }
 
-                            //var mutatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddMutatingWebhook));
-                            //var mutatingWebhookRegArgs   = new object[mutatingWebhookRegMethod.GetParameters().Count()];
+                            var mutatingWebhookRegMethod = typeof(OperatorBuilderExtensions).GetMethod(nameof(OperatorBuilderExtensions.AddMutatingWebhook));
+                            var mutatingWebhookRegArgs   = new object[mutatingWebhookRegMethod.GetParameters().Count()];
 
-                            //mutatingWebhookRegArgs[0] = this;
+                            mutatingWebhookRegArgs[0] = this;
 
-                            //mutatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, mutatingWebhookRegArgs);
+                            mutatingWebhookRegMethod.MakeGenericMethod(type).Invoke(null, mutatingWebhookRegArgs);
                             break;
 
                         case OperatorComponentType.ValidationWebhook:

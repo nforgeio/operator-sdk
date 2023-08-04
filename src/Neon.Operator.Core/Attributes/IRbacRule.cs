@@ -30,6 +30,16 @@ namespace Neon.Operator.Rbac
     public interface IRbacRule
     {
         /// <summary>
+        /// The Kubernetes API group.
+        /// </summary>
+        public string ApiGroup { get; }
+
+        /// <summary>
+        /// The Resource type name.
+        /// </summary>
+        public string Resource { get; }
+
+        /// <summary>
         /// Verbs describe what operations the client can perform on the resource.
         /// </summary>
         RbacVerb Verbs { get; set; }
@@ -50,21 +60,14 @@ namespace Neon.Operator.Rbac
         string SubResources { get; set; }
 
         /// <summary>
+        /// Optional comma-separated list of namespaces.
+        /// </summary>
+        string Namespace { get; set; }
+
+        /// <summary>
         /// Gets a list of the Namespaces that the rule applies to.
         /// </summary>
         /// <returns>The list of namespaces.</returns>
         IEnumerable<string> NamespaceList();
-
-        /// <summary>
-        /// Returns the Type that the rule applies to.
-        /// </summary>
-        /// <returns>The entity type.</returns>
-        Type GetEntityType();
-
-        /// <summary>
-        /// Gets the <see cref="KubernetesEntityAttribute"/> for the type.
-        /// </summary>
-        /// <returns>Returns the <see cref="KubernetesEntityAttribute"/>.</returns>
-        KubernetesEntityAttribute GetKubernetesEntityAttribute();
     }
 }

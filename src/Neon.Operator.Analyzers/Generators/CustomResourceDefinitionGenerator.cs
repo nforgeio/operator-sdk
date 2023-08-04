@@ -33,6 +33,9 @@ using System.Security.AccessControl;
 using Neon.Common;
 using System.Xml.Linq;
 using NJsonSchema.Annotations;
+using Microsoft.CodeAnalysis.CSharp;
+using static System.Net.Mime.MediaTypeNames;
+using System.Runtime.InteropServices;
 
 namespace Neon.Operator.Analyzers
 {
@@ -46,69 +49,126 @@ namespace Neon.Operator.Analyzers
                                                                                               DiagnosticSeverity.Error,
                                                                                               isEnabledByDefault: true);
 
-        private List<ClassDeclarationSyntax> customResources = new List<ClassDeclarationSyntax>();
-        private Dictionary<string, V1CustomResourceDefinition> customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
-        private MetadataLoadContext metadataLoadContext { get; set; }
-        private GeneratorExecutionContext context { get; set; }
-
-        private IEnumerable<INamedTypeSymbol> namedTypeSymbols { get; set; }
-
-        private StringBuilder logString { get; set; }
-
-        private Dictionary<Type, Type> webhookSystemTypes = new Dictionary<Type, Type>();
         private static readonly string[] IgnoredProperties = { "metadata", "apiversion", "kind" };
 
+        private Dictionary<string, StringBuilder> logs;
         public void Initialize(GeneratorInitializationContext context)
         {
             //System.Diagnostics.Debugger.Launch();
+            AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
+
             context.RegisterForSyntaxNotifications(() => new CustomResourceReceiver());
+        }
+
+        public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        {
+            var assemblyName = new AssemblyName(args.Name);
+            Assembly assembly = null;
+            try
+            {
+                var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
+                var targetAssembly = runtimeDependencies
+                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+
+                if (!String.IsNullOrEmpty(targetAssembly))
+                    assembly = Assembly.LoadFrom(targetAssembly);
+            }
+            catch (Exception)
+            {
+            }
+            return assembly;
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
             //System.Diagnostics.Debugger.Launch();
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory) == false)
+            logs = new Dictionary<string, StringBuilder>();
+
+            string crdOutputDirectory = null;
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
-                throw new ArgumentException("MSBuildProjectDirectory should be specified");
+                crdOutputDirectory = projectDirectory;
             }
 
-            this.context = context;
-            this.metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            this.customResources = ((CustomResourceReceiver)context.SyntaxReceiver)?.ClassesToRegister;
-            this.namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
-            logString = new StringBuilder();
-
-            foreach (var cr in customResources)
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorManifestOutputDir", out var manifestOutDir))
             {
-                var crTypeIdentifier = namedTypeSymbols.Where(ntm => ntm.MetadataName == cr.Identifier.ValueText).SingleOrDefault();
-                var crFullyQualifiedName = crTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
-                var fn = crTypeIdentifier.GetFullMetadataName();
-                if (crFullyQualifiedName.StartsWith("k8s."))
+                if (!string.IsNullOrEmpty(manifestOutDir))
                 {
-
+                    if (Path.IsPathRooted(manifestOutDir))
+                    {
+                        crdOutputDirectory = manifestOutDir;
+                    }
+                    else
+                    {
+                        crdOutputDirectory = Path.Combine(projectDirectory, manifestOutDir);
+                    }
                 }
-                var desc     = crTypeIdentifier.GetDocumentationCommentXml();
+            }
 
-                var crSystemType = metadataLoadContext.ResolveType(crTypeIdentifier);
-               // var description = crSystemType.GetXmlDocsElement();
-                var k8sAttr     = crSystemType.GetCustomAttribute<KubernetesEntityAttribute>();
-                var versionAttr = crSystemType.GetCustomAttribute<EntityVersionAttribute>();
-                var scaleAttr   = crSystemType.GetCustomAttribute<ScaleAttribute>();
-                var scopeAttr   = crSystemType.GetCustomAttribute<EntityScopeAttribute>();
-                var shortNames  = crSystemType.GetCustomAttributes<ShortNameAttribute>()?.Select(sn => sn.Name).Distinct().ToList();
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorCrdOutputDir", out var crdOutDir))
+            {
+                crdOutputDirectory = crdOutDir;
 
-                var scope = EntityScope.Namespaced;
-                if (scopeAttr != null)
+                if (!string.IsNullOrEmpty(crdOutDir))
                 {
-                    scope = scopeAttr.Scope;
+                    if (Path.IsPathRooted(crdOutDir))
+                    {
+                        crdOutputDirectory = crdOutDir;
+                    }
+                    else
+                    {
+                        crdOutputDirectory = Path.Combine(projectDirectory, crdOutDir);
+                    }
                 }
-                var additionalPrinterColumns = new List<V1CustomResourceColumnDefinition>();
+            }
 
-                var schema           = new V1CustomResourceValidation(MapType(crSystemType, additionalPrinterColumns, string.Empty));
-                var pluralNameGroup  = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
-                var implementsStatus = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
+            if (crdOutputDirectory == null)
+            {
+                throw new Exception("CRD output directory not defined.");
+            }
 
-                var version = new V1CustomResourceDefinitionVersion(
+            try
+            {
+                Directory.CreateDirectory(crdOutputDirectory);
+
+                var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
+                var customResources           = ((CustomResourceReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+                var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
+                var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
+
+                foreach (var cr in customResources)
+                {
+                    try
+                    {
+                        var crTypeIdentifier = namedTypeSymbols.Where(ntm => ntm.MetadataName == cr.Identifier.ValueText).SingleOrDefault();
+                        var crFullyQualifiedName = crTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
+                        var fn = crTypeIdentifier.GetFullMetadataName();
+                        if (crFullyQualifiedName.StartsWith("k8s."))
+                        {
+
+                        }
+                        var desc     = crTypeIdentifier.GetDocumentationCommentXml();
+
+                        var crSystemType = metadataLoadContext.ResolveType(crTypeIdentifier);
+                        // var description = crSystemType.GetXmlDocsElement();
+                        var k8sAttr     = crSystemType.GetCustomAttribute<KubernetesEntityAttribute>();
+                        var versionAttr = crSystemType.GetCustomAttribute<EntityVersionAttribute>();
+                        var scaleAttr   = crSystemType.GetCustomAttribute<ScaleAttribute>();
+                        var scopeAttr   = crSystemType.GetCustomAttribute<EntityScopeAttribute>();
+                        var shortNames  = crSystemType.GetCustomAttributes<ShortNameAttribute>()?.Select(sn => sn.Name).Distinct().ToList();
+
+                        var scope = EntityScope.Namespaced;
+                        if (scopeAttr != null)
+                        {
+                            scope = scopeAttr.Scope;
+                        }
+                        var additionalPrinterColumns = new List<V1CustomResourceColumnDefinition>();
+
+                        var schema           = new V1CustomResourceValidation(MapType(namedTypeSymbols, crSystemType, additionalPrinterColumns, string.Empty));
+                        var pluralNameGroup  = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
+                        var implementsStatus = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
+
+                        var version = new V1CustomResourceDefinitionVersion(
                         name:         k8sAttr.ApiVersion,
                         served:       versionAttr?.Served ?? true,
                         storage:      versionAttr?.Storage ?? true,
@@ -127,20 +187,20 @@ namespace Neon.Operator.Analyzers
                         },
                         additionalPrinterColumns: additionalPrinterColumns);
 
-                if (customResourceDefinitions.ContainsKey(pluralNameGroup))
-                {
-                    customResourceDefinitions[pluralNameGroup].Spec.Versions.Add(version);
+                        if (customResourceDefinitions.ContainsKey(pluralNameGroup))
+                        {
+                            customResourceDefinitions[pluralNameGroup].Spec.Versions.Add(version);
 
-                    if (version.Storage == true)
-                    {
-                        customResourceDefinitions[pluralNameGroup].Spec.Names.Singular = k8sAttr.Kind.ToLowerInvariant();
-                    }
+                            if (version.Storage == true)
+                            {
+                                customResourceDefinitions[pluralNameGroup].Spec.Names.Singular = k8sAttr.Kind.ToLowerInvariant();
+                            }
 
-                    customResourceDefinitions[pluralNameGroup].Spec.Names.ShortNames = customResourceDefinitions[pluralNameGroup].Spec.Names.ShortNames.Union(shortNames).ToList();
-                }
-                else
-                {
-                    var crd = new V1CustomResourceDefinition(
+                            customResourceDefinitions[pluralNameGroup].Spec.Names.ShortNames = customResourceDefinitions[pluralNameGroup].Spec.Names.ShortNames.Union(shortNames).ToList();
+                        }
+                        else
+                        {
+                            var crd = new V1CustomResourceDefinition(
                         apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
                         kind:       V1CustomResourceDefinition.KubeKind,
                         metadata:   new V1ObjectMeta(name: pluralNameGroup),
@@ -157,37 +217,89 @@ namespace Neon.Operator.Analyzers
                             version,
                         }));
 
-                    customResourceDefinitions.Add(pluralNameGroup, crd);
+                            customResourceDefinitions.Add(pluralNameGroup, crd);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log(context, e);
+                    }
                 }
+
+                foreach (var crd in customResourceDefinitions)
+                {
+                    try
+                    {
+                        if (crd.Value.Spec.Versions.Where(v => v.Storage).Count() > 1)
+                        {
+                            context.ReportDiagnostic(
+                                Diagnostic.Create(TooManyStorageVersionsError,
+                                Location.None,
+                                crd.Value.Name(),
+                                crd.Value.Spec.Versions.Where(v => v.Storage).Count().ToString()));
+                        }
+                        else
+                        {
+                            var yaml = KubernetesYaml.Serialize(crd.Value);
+                            File.WriteAllText(Path.Combine(crdOutputDirectory, crd.Value.Name() + ".yaml"), yaml);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log(context, e);
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                Log(context, e);
             }
 
-            foreach (var crd in customResourceDefinitions)
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorAnalyzerLoggingEnabled", out var logEnabledString))
             {
-                if (crd.Value.Spec.Versions.Where(v => v.Storage).Count() > 1)
+                if (bool.TryParse(logEnabledString, out var logEnabledbool) == true)
                 {
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(TooManyStorageVersionsError,
-                        Location.None,
-                        crd.Value.Name(),
-                        crd.Value.Spec.Versions.Where(v => v.Storage).Count().ToString()));
-                }
-                else
-                {
-                    var yaml = KubernetesYaml.Serialize(crd.Value);
-                    File.WriteAllText(Path.Combine(projectDirectory, crd.Value.Name() + ".yaml"), yaml);
+                    if (!logs.ContainsKey(context.Compilation.AssemblyName))
+                    {
+                        return;
+                    }
+
+                    var log                = logs[context.Compilation.AssemblyName];
+                    var logOutputDirectory = projectDirectory;
+
+                    if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorAnalyzerLoggingDir", out var logsOutDir))
+                    {
+                        if (!string.IsNullOrEmpty(logsOutDir))
+                        {
+                            if (Path.IsPathRooted(logsOutDir))
+                            {
+                                logOutputDirectory = Path.Combine(logsOutDir, nameof(CustomResourceDefinitionGenerator));
+                            }
+                            else
+                            {
+                                logOutputDirectory = Path.Combine(projectDirectory, logsOutDir, nameof(CustomResourceDefinitionGenerator));
+                            }
+                        }
+                    }
+
+                    Directory.CreateDirectory(logOutputDirectory);
+
+                    File.WriteAllText(Path.Combine(logOutputDirectory, $"{context.Compilation.AssemblyName}.log"), log.ToString());
                 }
             }
         }
 
         private V1JSONSchemaProps MapProperty(
-        PropertyInfo info,
-        IList<V1CustomResourceColumnDefinition> additionalColumns,
-        string jsonPath)
+            IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
+            PropertyInfo                            info,
+            IList<V1CustomResourceColumnDefinition> additionalColumns,
+            string                                  jsonPath)
         {
             V1JSONSchemaProps props = null;
             try
             {
-                props = MapType(info.PropertyType, additionalColumns, jsonPath);
+                props = MapType(namedTypeSymbols, info.PropertyType, additionalColumns, jsonPath);
             }
             catch (Exception ex)
             {
@@ -239,9 +351,10 @@ namespace Neon.Operator.Analyzers
         }
 
         private V1JSONSchemaProps MapType(
-            Type type,
+            IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
+            Type                                    type,
             IList<V1CustomResourceColumnDefinition> additionalColumns,
-            string jsonPath)
+            string                                  jsonPath)
         {
             var typeSymbol = namedTypeSymbols.Where(nts => nts.GetFullMetadataName() == type.FullName).FirstOrDefault();
             
@@ -256,7 +369,7 @@ namespace Neon.Operator.Analyzers
             else if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)))
             {
                 props.Type = Constants.ObjectTypeString;
-                props.AdditionalProperties = MapType(type.GenericTypeArguments[1], additionalColumns, jsonPath);
+                props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments[1], additionalColumns, jsonPath);
             }
             else if (type.IsGenericType
                 && type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>))
@@ -265,12 +378,12 @@ namespace Neon.Operator.Analyzers
                 && type.GenericTypeArguments.Single().GetGenericTypeDefinition().Equals(typeof(KeyValuePair<,>)))
             {
                 props.Type = Constants.ObjectTypeString;
-                props.AdditionalProperties = MapType(type.GenericTypeArguments.Single().GenericTypeArguments[1], additionalColumns, jsonPath);
+                props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments.Single().GenericTypeArguments[1], additionalColumns, jsonPath);
             }
             else if (type.IsGenericType && type.IsEnumerableType(out Type typeParameter))
             {
                 props.Type = Constants.ArrayTypeString;
-                props.Items = MapType(typeParameter, additionalColumns, jsonPath);
+                props.Items = MapType(namedTypeSymbols, typeParameter, additionalColumns, jsonPath);
             }
 
             else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
@@ -284,6 +397,7 @@ namespace Neon.Operator.Analyzers
             {
                 props.Type = Constants.ArrayTypeString;
                 props.Items = MapType(
+                    namedTypeSymbols,
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                     additionalColumns,
                     jsonPath);
@@ -350,7 +464,7 @@ namespace Neon.Operator.Analyzers
                         continue;
                     }
 
-                    props.Properties.Add(GetPropertyName(prop), MapProperty(prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"));
+                    props.Properties.Add(GetPropertyName(prop), MapProperty(namedTypeSymbols, prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"));
                 };
 
                 props.Required = type.GetProperties()
@@ -394,6 +508,22 @@ namespace Neon.Operator.Analyzers
             {
                 return char.ToLowerInvariant(value[0]) + value.Substring(1, value.Length - 1);
             }
+        }
+
+        private void Log(GeneratorExecutionContext context, string message)
+        {
+            if (!logs.ContainsKey(context.Compilation.AssemblyName))
+            {
+                logs[context.Compilation.AssemblyName] = new StringBuilder();
+            }
+
+            logs[context.Compilation.AssemblyName].AppendLine(message);
+        }
+
+        private void Log(GeneratorExecutionContext context, Exception e)
+        {
+            Log(context, e.Message);
+            Log(context, e.StackTrace);
         }
     }
 }

@@ -57,7 +57,10 @@ namespace Neon.Operator.Rbac
                     continue;
                 }
 
-                result.Add(verbValue.ToString().ToLower());
+                if (verb.HasFlag(verbValue))
+                {
+                    result.Add(verbValue.ToString().ToLower());
+                }
             }
 
 

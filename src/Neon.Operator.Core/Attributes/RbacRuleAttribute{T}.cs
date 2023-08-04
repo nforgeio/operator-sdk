@@ -30,13 +30,15 @@ namespace Neon.Operator.Attributes
     /// Used to exclude a component from assembly scanning when building the operator.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class RbacRuleAttribute : Attribute, IRbacRule
+    public class RbacRuleAttribute<TEntity> : Attribute, IRbacRule
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <inheritdoc/>
-        public string ApiGroup { get; set; }
+        public string ApiGroup => GetKubernetesEntityAttribute().Group;
 
         /// <inheritdoc/>
-        public string Resource { get; set; }
+        public string Resource => GetKubernetesEntityAttribute().PluralName;
+
         /// <summary>
         /// The list of verbs describing the allowed actions.
         /// </summary>
@@ -68,13 +70,28 @@ namespace Neon.Operator.Attributes
         /// </summary>
         public RbacRuleAttribute()
         {
-           
+            if (typeof(TEntity).GetCustomAttribute<EntityScopeAttribute>()?.Scope == EntityScope.Cluster)
+            {
+                this.Scope = EntityScope.Cluster;
+            }
         }
 
         /// <inheritdoc/>
         public IEnumerable<string> NamespaceList()
         {
             return Namespace?.Split(',') ?? null;
+        }
+
+        /// <inheritdoc/>
+        public Type GetEntityType()
+        {
+            return typeof(TEntity);
+        }
+
+        /// <inheritdoc/>
+        public KubernetesEntityAttribute GetKubernetesEntityAttribute()
+        {
+            return GetEntityType().GetKubernetesTypeMetadata();
         }
     }
 }

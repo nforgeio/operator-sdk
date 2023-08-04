@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    RbacVerb.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
 
 namespace Neon.Operator.Rbac
 {
@@ -28,46 +29,55 @@ namespace Neon.Operator.Rbac
         /// <summary>
         /// No permissions will be allowed.
         /// </summary>
+        [EnumMember(Value = "None")]
         None = 0,
 
         /// <summary>
         /// All permissions will be allowed.
         /// </summary>
-        All = 1 << 0,
+        [EnumMember(Value = "All")]
+        All = 1,
 
         /// <summary>
         /// Allows GET on the resource.
         /// </summary>
-        Get = 1 << 1,
+        [EnumMember(Value = "Get")]
+        Get = 2,
 
         /// <summary>
         /// Allows listing all resources for the type.
         /// </summary>
-        List = 1 << 2,
+        [EnumMember(Value = "List")]
+        List = 8,
 
         /// <summary>
         /// Allows watching resources of the type.
         /// </summary>
-        Watch = 1 << 3,
+        [EnumMember(Value = "Watch")]
+        Watch =  16,
 
         /// <summary>
         /// Allows creating resources for the type.
         /// </summary>
-        Create = 1 << 4,
+        [EnumMember(Value = "Create")]
+        Create = 32,
 
         /// <summary>
         /// Allows updating existing resources for the type.
         /// </summary>
-        Update = 1 << 5,
+        [EnumMember(Value = "Update")]
+        Update = 64,
 
         /// <summary>
         /// Allows patching resources for the type.
         /// </summary>
-        Patch = 1 << 6,
+        [EnumMember(Value = "Patch")]
+        Patch = 128,
 
         /// <summary>
         /// Allows deleting resources for the type.
         /// </summary>
-        Delete = 1 << 7,
+        [EnumMember(Value = "Delete")]
+        Delete = 256,
     }
 }

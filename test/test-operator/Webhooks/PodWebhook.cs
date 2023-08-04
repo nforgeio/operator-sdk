@@ -1,13 +1,22 @@
 using System.Threading.Tasks;
 
+using k8s.Models;
+
+using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 
 namespace TestOperator
 {
     [Webhook(
-        name: "testaroo-hook.neonkube.io",
+        name: "pod-mutating-hook.neonkube.io",
         admissionReviewVersions: "v1",
         failurePolicy: "Ignore")]
+    [WebhookRule(
+        apiGroups: V1Pod.KubeGroup,
+        apiVersions: V1Pod.KubeApiVersion,
+        operations: AdmissionOperations.Create | AdmissionOperations.Update,
+        resources: V1Pod.KubePluralName,
+        scope: "*")]
     public class TestarooWebhook : MutatingWebhookBase<V1ExampleEntity>
     {
         private bool modified = false;

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
@@ -12,35 +15,25 @@ using Neon.Operator.Webhooks;
 
 using Neon.Roslyn;
 
+using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+
 namespace Neon.Operator.Analyzers
 {
     [Generator]
     public class AppExtensionsGenerator : ISourceGenerator
     {
-        private List<ClassDeclarationSyntax> webhooks = new List<ClassDeclarationSyntax>();
-        private MetadataLoadContext metadataLoadContext { get; set; }
-        private GeneratorExecutionContext context { get; set; }
-
-        private IEnumerable<INamedTypeSymbol> namedTypeSymbols { get; set; }
-
-        private StringBuilder logString { get; set; }
-
-        private Dictionary<Type, Type> webhookSystemTypes = new Dictionary<Type, Type>();
-
         public void Initialize(GeneratorInitializationContext context)
         {
             //System.Diagnostics.Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new AppExtensionsReceiver());
-
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
-            this.context = context;
-            this.metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            this.webhooks = ((AppExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister;
-            this.namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
-            logString = new StringBuilder();
+            var metadataLoadContext = new MetadataLoadContext(context.Compilation);
+            var webhooks = ((AppExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+            var namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
+            var logString = new StringBuilder();
             bool hasErrors = false;
 
             var sb = new StringBuilder();
@@ -167,6 +160,7 @@ namespace Neon.Operator
                     var webhookEntityFullyQualifiedName = webhookEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
 
                     var entitySystemType = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
+                    usings.Add(entitySystemType.Namespace);
 
                     var interfaces = webhookSystemType.GetInterfaces().ToList();
 

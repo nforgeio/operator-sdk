@@ -24,41 +24,40 @@ using k8s.Models;
 
 using Neon.Operator.Attributes;
 
-using Newtonsoft.Json;
-
 namespace Neon.Operator.Rbac
 {
     /// <summary>
     /// Models an RBAC rule.
     /// </summary>
-    public class RbacRule : IRbacRule
+    /// <typeparam name="TEntity">Specifies the target entity type.</typeparam>
+    public class RbacRule<TEntity> : IRbacRule
+        where TEntity : IKubernetesObject<V1ObjectMeta>
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="apiGroup">Specifies the API group.</param>
-        /// <param name="resource">Specifies the Resource type.</param>
         /// <param name="verbs">Specifies the RBAC verbs.</param>
         /// <param name="scope">Specifies whether the entity is namespaced or cluster scoped.</param>
         /// <param name="namespace">Optionally specifies a common separated list of namespaces to access.</param>
         /// <param name="resourceNames">Optionally specifies a comma separated list of the names of specific resources to be accessed.</param>/param>
         /// <param name="subResources">Optionally specifies a comma separated list of subresource names.</param>
         public RbacRule(
-            string      apiGroup,
-            string      resource,
             RbacVerb    verbs         = RbacVerb.None,
             EntityScope scope         = EntityScope.Namespaced,
             string      @namespace    = null,
             string      resourceNames = null,
             string      subResources  = null)
         {
-            this.ApiGroup      = apiGroup;
-            this.Resource      = resource;
             this.Verbs         = verbs;
             this.Scope         = scope;
             this.Namespace     = @namespace;
             this.ResourceNames = resourceNames;
             this.SubResources  = subResources;
+
+            if (typeof(TEntity).GetCustomAttribute<EntityScopeAttribute>()?.Scope == EntityScope.Cluster)
+            {
+                this.Scope = EntityScope.Cluster;
+            }
         }
 
         /// <summary>
@@ -88,10 +87,10 @@ namespace Neon.Operator.Rbac
         public string SubResources { get; set; } = null;
 
         /// <inheritdoc/>
-        public string ApiGroup { get; set; }
+        public string ApiGroup => GetKubernetesEntityAttribute().Group;
 
         /// <inheritdoc/>
-        public string Resource { get; set; }
+        public string Resource => GetKubernetesEntityAttribute().PluralName;
 
         /// <summary>
         /// Returns <see cref="Namespace"/> as a list of strings or <c>null</c>
@@ -102,5 +101,17 @@ namespace Neon.Operator.Rbac
         {
             return Namespace?.Split(',') ?? null;
         }
+
+        /// <summary>
+        /// Returns the entity type.
+        /// </summary>
+        /// <returns></returns>
+        public Type GetEntityType() => typeof(TEntity);
+
+        /// <summary>
+        /// Returns the associated <see cref="KubernetesEntityAttribute"/>.
+        /// </summary>
+        /// <returns>The <see cref="KubernetesEntityAttribute"/>.</returns>
+        public KubernetesEntityAttribute GetKubernetesEntityAttribute() => GetEntityType().GetKubernetesTypeMetadata();
     }
 }

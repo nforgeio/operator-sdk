@@ -38,7 +38,7 @@ namespace Neon.Operator.Webhooks
     /// </para>
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class WebhookRuleAttribute : Attribute
+    public sealed class WebhookRuleAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
@@ -62,6 +62,32 @@ namespace Neon.Operator.Webhooks
             ApiGroups   = apiGroups.Split(',');
             ApiVersions = apiVersions.Split(',');
             Operations  = operations;
+            Resources   = resources.Split(',');
+            Scope       = scope;
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="apiGroups"></param>
+        /// <param name="apiVersions"></param>
+        /// <param name="admissionOperations"></param>
+        /// <param name="resources"></param>
+        /// <param name="scope"></param>
+        public WebhookRuleAttribute(
+            string apiGroups,
+            string apiVersions,
+            int    admissionOperations,
+            string resources,
+            string scope)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(apiVersions), nameof(apiVersions));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resources), nameof(resources));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(scope), nameof(scope));
+
+            ApiGroups   = apiGroups.Split(',');
+            ApiVersions = apiVersions.Split(',');
+            Operations  = (AdmissionOperations)admissionOperations;
             Resources   = resources.Split(',');
             Scope       = scope;
         }

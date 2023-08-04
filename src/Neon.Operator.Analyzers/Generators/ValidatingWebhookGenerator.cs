@@ -1,28 +1,31 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+
+using k8s.Models;
+
+using k8s;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
+using Neon.Operator.Attributes;
+
+using Neon.Operator.Webhooks;
+
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+using Neon.Roslyn;
+using System.Text.RegularExpressions;
 
 namespace Neon.Operator.Analyzers
 {
     [Generator]
     public class ValidatingWebhookGenerator : ISourceGenerator
     {
-        private List<ClassDeclarationSyntax> ValidatingWebhooks = new List<ClassDeclarationSyntax>();
-        private MetadataLoadContext metadataLoadContext { get; set; }
-        private GeneratorExecutionContext context { get; set; }
-
-        private IEnumerable<INamedTypeSymbol> namedTypeSymbols { get; set; }
-
-        private StringBuilder logString { get; set; }
-
-        private Dictionary<Type, Type> webhookSystemTypes = new Dictionary<Type, Type>();
+        private Dictionary<string, StringBuilder> logs;
         public void Execute(GeneratorExecutionContext context)
         {
 #pragma warning disable RS1035 // Do not use APIs banned for analyzers
@@ -32,18 +35,102 @@ namespace Neon.Operator.Analyzers
             }
 #pragma warning restore RS1035 // Do not use APIs banned for analyzers
 
-            this.context = context;
-            this.metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            this.ValidatingWebhooks = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
-            this.namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
-            logString = new StringBuilder();
-            bool hasErrors = false;
+            logs = new Dictionary<string, StringBuilder>();
+
+            var metadataLoadContext = new MetadataLoadContext(context.Compilation);
+            var ValidatingWebhooks = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
+            var namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
+            bool certManagerDisabled      = false;
+            bool autoRegisterWebhooks     = false;
+            string operatorName           = null;
+            string operatorNamespace      = null;
+            string webhookOutputDirectory = null;
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
+            {
+                webhookOutputDirectory = projectDirectory;
+                operatorName = Regex.Replace(projectDirectory.Split('\\').Last(), @"([a-z])([A-Z])", "$1-$2").ToLower();
+            }
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorManifestOutputDir", out var manifestOutDir))
+            {
+                if (!string.IsNullOrEmpty(manifestOutDir))
+                {
+                    if (Path.IsPathRooted(manifestOutDir))
+                    {
+                        webhookOutputDirectory = manifestOutDir;
+                    }
+                    else
+                    {
+                        webhookOutputDirectory = Path.Combine(projectDirectory, manifestOutDir);
+                    }
+                }
+            }
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorWebhookOutputDir", out var webhookOutDir))
+            {
+                if (!string.IsNullOrEmpty(webhookOutDir))
+                {
+                    if (Path.IsPathRooted(webhookOutDir))
+                    {
+                        webhookOutputDirectory = webhookOutDir;
+                    }
+                    else
+                    {
+                        webhookOutputDirectory = Path.Combine(projectDirectory, webhookOutDir);
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(webhookOutputDirectory))
+            {
+                throw new Exception("Webhook output directory not defined.");
+            }
+
+            Directory.CreateDirectory(webhookOutputDirectory);
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorName", out var oName))
+            {
+                if (!string.IsNullOrEmpty(oName))
+                {
+                    operatorName = oName;
+                }
+            }
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var operatorNs))
+            {
+                if (!string.IsNullOrEmpty(operatorNs))
+                {
+                    operatorNamespace = operatorNs;
+                }
+            }
+
+            if (string.IsNullOrEmpty(operatorName))
+            {
+                throw new Exception("OperatorName not defined.");
+            }
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorCertManagerDisabled", out var certManagerString))
+            {
+                if (bool.TryParse(certManagerString, out var certManagerBool))
+                {
+                    certManagerDisabled = certManagerBool;
+                }
+            }
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorAutoRegisterWebhooks", out var autoRegisterWebhooksString))
+            {
+                if (bool.TryParse(autoRegisterWebhooksString, out var autoRegisterWebhooksBool))
+                {
+                    autoRegisterWebhooks = autoRegisterWebhooksBool;
+                }
+            }
 
             if (ValidatingWebhooks.Any())
             {
                 foreach (var webhook in ValidatingWebhooks)
                 {
-                    Log($"webook: {webhook.Identifier.ValueText}");
+                    Log(context, $"webook: {webhook.Identifier.ValueText}");
 
                     try
                     {
@@ -84,31 +171,80 @@ namespace Neon.Operator.Analyzers
 
                         var entitySystemType = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
 
+                        CreateYaml(
+                            operatorName:                    operatorName,
+                            operatorNamespace:               operatorNamespace,
+                            webhook:                         webhook,
+                            webhookEntityTypeIdentifier:     webhookEntityTypeIdentifier,
+                            webhookSystemType:               webhookSystemType,
+                            entitySystemType:                entitySystemType,
+                            webhookEntityFullyQualifiedName: webhookEntityFullyQualifiedName,
+                            certManagerDisabled:             certManagerDisabled,
+                            webhookOutputDirectory:          webhookOutputDirectory);
+
                         GenerateController(
-                            webhook: webhook,
-                            webhookEntityTypeIdentifier: webhookEntityTypeIdentifier,
-                            webhookSystemType: webhookSystemType,
-                            entitySystemType: entitySystemType,
+                            context:                         context,
+                            webhook:                         webhook,
+                            webhookEntityTypeIdentifier:     webhookEntityTypeIdentifier,
+                            webhookSystemType:               webhookSystemType,
+                            entitySystemType:                entitySystemType,
                             webhookEntityFullyQualifiedName: webhookEntityFullyQualifiedName);
                     }
                     catch (Exception e)
                     {
-                        Log(e.Message);
-                        hasErrors = true;
+                        Log(context, e.Message);
                     }
                 }
             }
-            if (hasErrors)
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorAnalyzerLoggingEnabled", out var logEnabledString))
             {
-                context.AddSource("log", logString.ToString());
+                if (bool.TryParse(logEnabledString, out var logEnabledbool) == true)
+                {
+                    if (!logs.ContainsKey(context.Compilation.AssemblyName))
+                    {
+                        return;
+                    }
+
+                    var log                = logs[context.Compilation.AssemblyName];
+                    var logOutputDirectory = projectDirectory;
+
+                    if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorAnalyzerLoggingDir", out var logsOutDir))
+                    {
+                        if (!string.IsNullOrEmpty(logsOutDir))
+                        {
+                            if (Path.IsPathRooted(logsOutDir))
+                            {
+                                logOutputDirectory = Path.Combine(logsOutDir, nameof(ValidatingWebhookGenerator));
+                            }
+                            else
+                            {
+                                logOutputDirectory = Path.Combine(projectDirectory, logsOutDir, nameof(ValidatingWebhookGenerator));
+                            }
+                        }
+                    }
+
+                    Directory.CreateDirectory(logOutputDirectory);
+
+                    File.WriteAllText(Path.Combine(logOutputDirectory, $"{context.Compilation.AssemblyName}.log"), log.ToString());
+                }
             }
-
-
         }
 
-        private void Log(string message)
+        private void Log(GeneratorExecutionContext context, string message)
         {
-            logString.AppendLine($"// {message}");
+            if (!logs.ContainsKey(context.Compilation.AssemblyName))
+            {
+                logs[context.Compilation.AssemblyName] = new StringBuilder();
+            }
+
+            logs[context.Compilation.AssemblyName].AppendLine(message);
+        }
+
+        private void Log(GeneratorExecutionContext context, Exception e)
+        {
+            Log(context, e.Message);
+            Log(context, e.StackTrace);
         }
 
 
@@ -117,17 +253,175 @@ namespace Neon.Operator.Analyzers
             context.RegisterForSyntaxNotifications(() => new ValidatingWebhookReceiver());
         }
 
+        private string CreateEndpoint(Type entityType, Type webhookImplementation)
+        {
+            var metadata = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
+            var builder  = new StringBuilder();
 
+            if (!string.IsNullOrEmpty(metadata.Group))
+            {
+                builder.Append($"/{metadata.Group}");
+            }
+
+            if (!string.IsNullOrEmpty(metadata.ApiVersion))
+            {
+                builder.Append($"/{metadata.ApiVersion}");
+            }
+
+            if (!string.IsNullOrEmpty(metadata.PluralName))
+            {
+                builder.Append($"/{metadata.PluralName}");
+            }
+
+            builder.Append($"/{webhookImplementation.Name}");
+
+            builder.Append("/validate");
+
+            return builder.ToString().ToLowerInvariant();
+        }
+
+        private void CreateYaml(
+            string                 operatorName,
+            string                 operatorNamespace,
+            ClassDeclarationSyntax webhook,
+            INamedTypeSymbol       webhookEntityTypeIdentifier,
+            Type                   webhookSystemType,
+            Type                   entitySystemType,
+            string                 webhookEntityFullyQualifiedName,
+            bool                   certManagerDisabled,
+            string                 webhookOutputDirectory)
+        {
+            var webhookAttribute = webhookSystemType.GetCustomAttribute<WebhookAttribute>();
+
+            var webhookConfiguration = new V1ValidatingWebhookConfiguration().Initialize();
+            webhookConfiguration.Metadata.Name = webhookAttribute.Name;
+
+            if (!certManagerDisabled)
+            {
+
+                webhookConfiguration.Metadata.Annotations = webhookConfiguration.Metadata.EnsureAnnotations();
+
+                if (!string.IsNullOrEmpty(operatorNamespace))
+                {
+                    webhookConfiguration.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorNamespace}/{operatorName}");
+                }
+                else
+                {
+                    webhookConfiguration.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{{{{ .Release.Namespace }}}}/{operatorName}");
+                }
+            }
+
+            var clientConfig = new Admissionregistrationv1WebhookClientConfig()
+            {
+                Service = new Admissionregistrationv1ServiceReference()
+                {
+                    Name              = operatorName,
+                    Path              = CreateEndpoint(entitySystemType, this.GetType())
+                }
+            };
+
+            if (!string.IsNullOrEmpty(operatorNamespace))
+            {
+                clientConfig.Service.NamespaceProperty = operatorNamespace;
+            }
+            else
+            {
+                clientConfig.Service.NamespaceProperty = "{{ .Release.Namespace }}";
+            }
+
+            var validatingWebhook = new V1ValidatingWebhook()
+            {
+                Name                    = webhookAttribute.Name,
+                Rules                   = new List<V1RuleWithOperations>(),
+                ClientConfig            = clientConfig,
+                AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions,
+                FailurePolicy           = webhookAttribute.FailurePolicy,
+                SideEffects             = webhookAttribute.SideEffects,
+                TimeoutSeconds          = webhookAttribute.TimeoutSeconds,
+                MatchPolicy             = webhookAttribute.MatchPolicy,
+            };
+
+            var namespaceSelectorExpressions =  webhookSystemType.GetCustomAttributes<NamespaceSelectorExpressionAttribute>();
+            var namespaceSelectorLabels      =  webhookSystemType.GetCustomAttributes<NamespaceSelectorLabelAttribute>();
+
+            if (namespaceSelectorExpressions.Any() || namespaceSelectorLabels.Any())
+            {
+                validatingWebhook.NamespaceSelector                  = new V1LabelSelector();
+                validatingWebhook.NamespaceSelector.MatchExpressions = new List<V1LabelSelectorRequirement>();
+                validatingWebhook.NamespaceSelector.MatchLabels      = new Dictionary<string, string>();
+
+                foreach (var selector in namespaceSelectorExpressions)
+                {
+                    validatingWebhook.NamespaceSelector.MatchExpressions.Add(new V1LabelSelectorRequirement()
+                    {
+                        Key              = selector.Key,
+                        OperatorProperty = selector.Operator.ToString(),
+                        Values           = selector.Values.Split(',')
+                    });
+                }
+
+                foreach (var selector in namespaceSelectorLabels)
+                {
+                    validatingWebhook.NamespaceSelector.MatchLabels.Add(selector.Key, selector.Value);
+                }
+            }
+            var objectSelectorExpressions = webhookSystemType.GetCustomAttributes<ObjectSelectorExpressionAttribute>();
+            var objectSelectorLabels      = webhookSystemType.GetCustomAttributes<ObjectSelectorLabelAttribute>();
+
+            if (objectSelectorExpressions.Any() || objectSelectorLabels.Any())
+            {
+                validatingWebhook.ObjectSelector                  = new V1LabelSelector();
+                validatingWebhook.ObjectSelector.MatchExpressions = new List<V1LabelSelectorRequirement>();
+                validatingWebhook.ObjectSelector.MatchLabels      = new Dictionary<string, string>();
+
+                foreach (var selector in objectSelectorExpressions)
+                {
+                    validatingWebhook.ObjectSelector.MatchExpressions.Add(new V1LabelSelectorRequirement()
+                    {
+                        Key              = selector.Key,
+                        OperatorProperty = selector.Operator.ToString(),
+                        Values           = selector.Values.Split(',')
+                    });
+                }
+
+                foreach (var selector in objectSelectorLabels)
+                {
+                    validatingWebhook.ObjectSelector.MatchLabels.Add(selector.Key, selector.Value);
+                }
+            }
+
+            webhookConfiguration.Webhooks = new List<V1ValidatingWebhook>
+            {
+                validatingWebhook
+            };
+
+            var rules = webhookSystemType.GetCustomAttributes<WebhookRuleAttribute>();
+
+            foreach (var rule in rules)
+            {
+                webhookConfiguration.Webhooks.FirstOrDefault().Rules.Add(
+                    new V1RuleWithOperations()
+                    {
+                        ApiGroups   = rule.ApiGroups,
+                        ApiVersions = rule.ApiVersions,
+                        Operations  = rule.Operations.ToList(),
+                        Resources   = rule.Resources,
+                        Scope       = rule.Scope
+                    }
+                );
+            }
+
+            File.WriteAllText(Path.Combine(webhookOutputDirectory, $"{webhookConfiguration.Name()}.yaml"), KubernetesYaml.Serialize(webhookConfiguration));
+        }
 
         private void GenerateController(
-            ClassDeclarationSyntax webhook,
-            INamedTypeSymbol webhookEntityTypeIdentifier,
-            Type webhookSystemType,
-            Type entitySystemType,
-            string webhookEntityFullyQualifiedName)
+            GeneratorExecutionContext context,
+            ClassDeclarationSyntax    webhook,
+            INamedTypeSymbol          webhookEntityTypeIdentifier,
+            Type                      webhookSystemType,
+            Type                      entitySystemType,
+            string                    webhookEntityFullyQualifiedName)
         {
-            webhookSystemTypes.Add(webhookSystemType, entitySystemType);
-
             var metadata = webhookEntityTypeIdentifier.GetAttributes();
 
             var builder  = new StringBuilder();
@@ -214,6 +508,9 @@ namespace Neon.Operator.Analyzers
             sb.AppendLine($@"
 namespace {controllerNamespace}.Controllers
 {{
+    /// <summary>
+    /// Auto-generated implementation of {controllerClassName}.
+    /// </summary>
     [ApiController]
     public class {controllerClassName} : ControllerBase
     {{
@@ -222,6 +519,9 @@ namespace {controllerNamespace}.Controllers
         private OperatorSettings operatorSettings;
         private ILogger<{controllerClassName}> logger;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public {controllerClassName}(
             IAdmissionWebhook<{webhookEntityTypeIdentifier.Name}, MutationResult> webhook,
             WebhookMetrics<{webhookEntityTypeIdentifier.Name}> metrics,
@@ -234,7 +534,11 @@ namespace {controllerNamespace}.Controllers
             this.logger = logger;
         }}
 
-
+        /// <summary>
+        /// Auto-generated implementation of {webhookEntityTypeIdentifier.Name}Webhook
+        /// </summary>
+        /// <param name=""admissionRequest"">The admission request</param>
+        /// <returns>The validation result</returns>
         [HttpPost(""{route}"")]
         public async Task<ActionResult<MutationResult>> {webhookEntityTypeIdentifier.Name}WebhookAsync([FromBody] AdmissionReview<{webhookEntityTypeIdentifier.Name}> admissionRequest)
         {{

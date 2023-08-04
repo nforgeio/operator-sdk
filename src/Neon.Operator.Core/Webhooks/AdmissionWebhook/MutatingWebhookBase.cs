@@ -167,11 +167,11 @@ namespace Neon.Operator.Webhooks
                 webhookConfig.Webhooks.FirstOrDefault().Rules.Add(
                     new V1RuleWithOperations()
                     {
-                        ApiGroups = rule.ApiGroups,
+                        ApiGroups   = rule.ApiGroups,
                         ApiVersions = rule.ApiVersions,
-                        Operations = rule.Operations.ToList(),
-                        Resources = rule.Resources,
-                        Scope = rule.Scope
+                        Operations  = rule.Operations.ToList(),
+                        Resources   = rule.Resources,
+                        Scope       = rule.Scope
                     }
                 );
             }
