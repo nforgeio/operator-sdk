@@ -95,8 +95,7 @@ namespace Neon.Operator.Builder
             if (!Services.Any(service => service.ServiceType == typeof(IKubernetes)))
             {
                 var k8sClientConfig = (KubernetesClientConfiguration)Services.Where(service =>
-                    service.ServiceType == typeof(KubernetesClientConfiguration)).FirstOrDefault().ImplementationInstance
-                    ?? KubernetesClientConfiguration.BuildDefaultConfig();
+                    service.ServiceType == typeof(KubernetesClientConfiguration)).FirstOrDefault()?.ImplementationInstance ?? KubernetesClientConfiguration.BuildDefaultConfig();
 
                 if (k8sClientConfig.SkipTlsVerify == false
                     && k8sClientConfig.SslCaCerts == null)
