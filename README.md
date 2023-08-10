@@ -5,7 +5,6 @@
 ---
 
 ## Documentation:
-- [Docs](https://docs.neonforge.com/docs/Neon.Operator)
-- [API Reference](https://api-docs.neonforge.com/Neon.Operator/api/Neon.html)
+- [Docs](https://docs.neonforge.com/docs/operator-sdk)
 
 Neon.Operator is an open source project released under the Apache-2.0 license.
