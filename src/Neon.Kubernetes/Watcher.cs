@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    WatchStream.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -212,10 +212,11 @@ namespace Neon.K8s
                             await eventChannel.Writer.WriteAsync(new WatchEvent<T>() { Type = type, Value = item });
                         }
                     }
-                    catch (OperationCanceledException)
+                    catch (OperationCanceledException canceledException)
                     {
                         // This is the signal to quit.
-                        logger?.LogDebugEx(() => "Operation canceled, restarting watch.");
+                        logger?.LogDebugEx(canceledException);
+                        logger?.LogDebugEx(() => "Operation canceled, quitting.");
 
                         return;
                     }
@@ -233,6 +234,8 @@ namespace Neon.K8s
                     }
                     catch (HttpOperationException e)
                     {
+                        logger?.LogErrorEx(e);
+
                         var statusCode = e.Response.StatusCode;
 
                         switch (statusCode)
@@ -247,7 +250,6 @@ namespace Neon.K8s
 
                             default:
 
-                                logger?.LogErrorEx(e);
                                 logger?.LogErrorEx("Cannot watch resource, please check RBAC rules for this service account.");
 
                                 throw;
@@ -256,6 +258,8 @@ namespace Neon.K8s
                     catch (Exception e)
                     {
                         logger?.LogErrorEx(e);
+
+                        throw;
                     }
                 }
             }
