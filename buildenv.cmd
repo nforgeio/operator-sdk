@@ -40,9 +40,9 @@ set NO_TEST=%NO_ROOT%\Test
 
 REM Persist the environment variables.
 
-setx NO_ROOT "%NO_ROOT%" /M                       > nul
-setx NO_BUILD "%NO_BUILD%" /M                     > nul
-setx NF_TEST "%NF_TEST%" /M                       > nul
+setx NO_ROOT "%NO_ROOT%" /M     > nul
+setx NO_BUILD "%NO_BUILD%" /M   > nul
+setx NF_TEST "%NF_TEST%" /M     > nul
 
 :done
 echo.
