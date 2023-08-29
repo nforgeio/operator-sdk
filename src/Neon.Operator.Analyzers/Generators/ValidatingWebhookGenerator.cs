@@ -49,6 +49,11 @@ namespace Neon.Operator.Analyzers
                 webhookOutputDirectory = projectDirectory;
                 operatorName = Regex.Replace(projectDirectory.Split('\\').Last(), @"([a-z])([A-Z])", "$1-$2").ToLower();
             }
+            else if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir))
+            {
+                webhookOutputDirectory = projectDir;
+                operatorName = Regex.Replace(projectDir.Split('\\').Last(), @"([a-z])([A-Z])", "$1-$2").ToLower();
+            }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorManifestOutputDir", out var manifestOutDir))
             {

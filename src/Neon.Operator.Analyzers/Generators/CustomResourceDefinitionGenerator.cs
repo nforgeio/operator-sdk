@@ -1,41 +1,26 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Models;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.Rest.Serialization;
 
+using Neon.Common;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
-using Neon.Operator.Entities;
 using Neon.Operator.Webhooks;
-using Newtonsoft.Json;
-
-using Newtonsoft.Json.Serialization;
-
 using Neon.Roslyn;
+
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
-using Newtonsoft.Json.Converters;
-using System.Text.Json.Serialization;
-using JsonConverter = Newtonsoft.Json.JsonConverter;
-using System.Security.AccessControl;
-using Neon.Common;
-using System.Xml.Linq;
-using NJsonSchema.Annotations;
-using Microsoft.CodeAnalysis.CSharp;
-using static System.Net.Mime.MediaTypeNames;
-using System.Runtime.InteropServices;
 
 namespace Neon.Operator.Analyzers
 {
@@ -88,6 +73,10 @@ namespace Neon.Operator.Analyzers
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
                 crdOutputDirectory = projectDirectory;
+            }
+            else if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir))
+            {
+                crdOutputDirectory = projectDir;
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorManifestOutputDir", out var manifestOutDir))

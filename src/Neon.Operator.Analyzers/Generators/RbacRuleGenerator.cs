@@ -17,24 +17,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-
-using k8s.Models;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis;
-using Neon.Operator.Rbac;
-using Neon.Roslyn;
-using Neon.Operator.Analyzers.Receivers;
-using System.Text.RegularExpressions;
-using System.Linq;
-using k8s;
-using Neon.Operator.Attributes;
-using System.Data;
 using System.IO;
-using Neon.Common;
-using OpenTelemetry.Resources;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+
+using k8s;
+using k8s.Models;
+
+using Microsoft.CodeAnalysis;
+
+using Neon.Operator.Attributes;
+using Neon.Operator.Rbac;
 using Neon.Operator.Webhooks;
-using Neon.Data;
+using Neon.Roslyn;
 
 namespace Neon.Operator.Analyzers
 {
@@ -79,6 +75,10 @@ namespace Neon.Operator.Analyzers
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
                 rbacOutputDirectory = projectDirectory;
+            }
+            else if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir))
+            {
+                rbacOutputDirectory = projectDir;
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorManifestOutputDir", out var manifestOutDir))
@@ -351,6 +351,7 @@ namespace Neon.Operator.Analyzers
                     clusterRole.Rules = clusterRules
                                             .OrderBy(pr => pr.ApiGroups.First())
                                             .ThenBy(pr => pr.Resources.First())
+                                            .ThenBy(pr => pr.ResourceNames?.First())
                                             .ToList();
 
                     clusterRoles.Add(clusterRole);
@@ -408,6 +409,7 @@ namespace Neon.Operator.Analyzers
                         namespacedRole.Rules         = namespaceRules[@namespace]
                                                             .OrderBy(pr => pr.ApiGroups.First())
                                                             .ThenBy(pr => pr.Resources.First())
+                                                            .ThenBy(pr => pr.ResourceNames?.First())
                                                             .ToList();
 
                         if (!string.IsNullOrEmpty(operatorNamespace))
