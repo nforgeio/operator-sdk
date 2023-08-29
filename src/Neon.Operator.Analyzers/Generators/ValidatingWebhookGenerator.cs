@@ -3,22 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
-using k8s.Models;
+using System.Text.RegularExpressions;
 
 using k8s;
+using k8s.Models;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 using Neon.Operator.Attributes;
-
 using Neon.Operator.Webhooks;
+using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
-using Neon.Roslyn;
-using System.Text.RegularExpressions;
 
 namespace Neon.Operator.Analyzers
 {
@@ -479,7 +477,8 @@ namespace Neon.Operator.Analyzers
                 "Neon.Operator.Webhooks",
                 "Prometheus",
                 entitySystemType.Namespace,
-                webhookEntityFullyQualifiedName.TrimEnd('.').Remove(webhookEntityFullyQualifiedName.LastIndexOf('.') + 1).TrimEnd('.')
+                webhookEntityFullyQualifiedName.TrimEnd('.').Remove(webhookEntityFullyQualifiedName.LastIndexOf('.') + 1).TrimEnd('.'),
+                webhook.GetNamespace()
             };
 
             var sb = new StringBuilder();
@@ -515,7 +514,7 @@ namespace {controllerNamespace}.Controllers
     public class {controllerClassName} : ControllerBase
     {{
         private WebhookMetrics<{webhookEntityTypeIdentifier.Name}> metrics;
-        private IAdmissionWebhook<{webhookEntityTypeIdentifier.Name}, MutationResult> webhook;
+        private {webhook.Identifier.ValueText} webhook;
         private OperatorSettings operatorSettings;
         private ILogger<{controllerClassName}> logger;
 
@@ -523,7 +522,7 @@ namespace {controllerNamespace}.Controllers
         /// Constructor.
         /// </summary>
         public {controllerClassName}(
-            IAdmissionWebhook<{webhookEntityTypeIdentifier.Name}, MutationResult> webhook,
+            {webhook.Identifier.ValueText} webhook,
             WebhookMetrics<{webhookEntityTypeIdentifier.Name}> metrics,
             OperatorSettings operatorSettings,
             ILogger<{controllerClassName}> logger = null)
@@ -540,7 +539,7 @@ namespace {controllerNamespace}.Controllers
         /// <param name=""admissionRequest"">The admission request</param>
         /// <returns>The validation result</returns>
         [HttpPost(""{route}"")]
-        public async Task<ActionResult<MutationResult>> {webhookEntityTypeIdentifier.Name}WebhookAsync([FromBody] AdmissionReview<{webhookEntityTypeIdentifier.Name}> admissionRequest)
+        public async Task<ActionResult<ValidationResult>> {webhookEntityTypeIdentifier.Name}WebhookAsync([FromBody] AdmissionReview<{webhookEntityTypeIdentifier.Name}> admissionRequest)
         {{
             using var activity = Activity.Current;
             using var inFlight = metrics.RequestsInFlight.TrackInProgress();
@@ -556,7 +555,7 @@ namespace {controllerNamespace}.Controllers
 
                 logger?.LogInformationEx(() => @$""Admission with method """"{{admissionRequest.Request.Operation}}""""."");
 
-                MutationResult result;
+                ValidationResult result;
 
                 switch (admissionRequest.Request.Operation)
                 {{
@@ -604,7 +603,7 @@ namespace {controllerNamespace}.Controllers
             logger?.LogInformationEx(() => @$""AdmissionHook """"{{webhook.Name}}"""" did return """"{{admissionRequest.Response?.Allowed}}"""" for """"{{admissionRequest.Request.Operation}}""""."");
             admissionRequest.Request = null;
 
-            metrics.RequestsTotal.WithLabels(new string[] {{ operatorSettings.Name, webhook.Endpoint, response.Status?.Code.ToString() }}).Inc();
+            metrics.RequestsTotal.WithLabels(new string[] {{ operatorSettings.Name, webhook.GetEndpoint(), response.Status?.Code.ToString() }}).Inc();
 
             return Ok(admissionRequest);
         }}

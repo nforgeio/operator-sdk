@@ -85,6 +85,8 @@ namespace Neon.Operator
                 {{
                     await SyncContext.Clear;
 
+                    endpoints.MapControllers();
+
                     endpoints.MapMetrics(operatorSettings.MetricsEndpoint);
 
                     endpoints.MapHealthChecks(operatorSettings.StartupEndpooint, new HealthCheckOptions()
@@ -194,8 +196,8 @@ namespace Neon.Operator
                         {{
                             logger?.LogInformationEx(() => $""Registering [{webhookSystemType.Name}] with Kubernetes API Server."");
 
-                            var mutator = ({webhookInterfaceType}<{webhookEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameOnly)}>)app.ApplicationServices.GetRequiredService<{webhookSystemType.Name}>();
-                            await mutator.CreateAsync(app.ApplicationServices);
+                            var hook = ({webhookInterfaceType}<{webhookEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameOnly)}>)app.ApplicationServices.GetRequiredService<{webhookSystemType.Name}>();
+                            await hook.CreateAsync(app.ApplicationServices);
                         }}
 
                     }}

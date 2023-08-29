@@ -305,6 +305,11 @@ namespace Neon.Operator.Builder
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterMutatingWebhook<TImplementation, TEntity>();
 
+            var webhookAttribute = typeof(TImplementation).GetCustomAttribute<WebhookAttribute>();
+            var metrics          = new WebhookMetrics<TEntity>(operatorSettings, webhookAttribute.Name);
+
+            Services.AddSingleton(metrics);
+
             operatorSettings.hasMutatingWebhooks = true;
 
             return this;
@@ -317,6 +322,11 @@ namespace Neon.Operator.Builder
         {
             Services.TryAddScoped<TImplementation>();
             componentRegister.RegisterValidatingWebhook<TImplementation, TEntity>();
+
+            var webhookAttribute = typeof(TImplementation).GetCustomAttribute<WebhookAttribute>();
+            var metrics          = new WebhookMetrics<TEntity>(operatorSettings, webhookAttribute.Name);
+
+            Services.AddSingleton(metrics);
 
             operatorSettings.hasValidatingWebhooks = true;
 

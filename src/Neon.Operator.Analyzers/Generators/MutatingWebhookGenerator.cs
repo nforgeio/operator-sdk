@@ -489,7 +489,8 @@ namespace Neon.Operator.Analyzers
                 "Neon.Operator.Webhooks",
                 "Prometheus",
                 entitySystemType.Namespace,
-                webhookEntityFullyQualifiedName.TrimEnd('.').Remove(webhookEntityFullyQualifiedName.LastIndexOf('.') + 1).TrimEnd('.')
+                webhookEntityFullyQualifiedName.TrimEnd('.').Remove(webhookEntityFullyQualifiedName.LastIndexOf('.') + 1).TrimEnd('.'),
+                webhook.GetNamespace()
             };
 
             var sb = new StringBuilder();
@@ -525,7 +526,7 @@ namespace {controllerNamespace}.Controllers
     public class {controllerClassName} : ControllerBase
     {{
         private WebhookMetrics<{webhookEntityTypeIdentifier.Name}> metrics;
-        private IAdmissionWebhook<{webhookEntityTypeIdentifier.Name}, MutationResult> webhook;
+        private {webhook.Identifier.ValueText} webhook;
         private OperatorSettings operatorSettings;
         private ILogger<{controllerClassName}> logger;
 
@@ -533,7 +534,7 @@ namespace {controllerNamespace}.Controllers
         /// Constructor.
         /// </summary>
         public {controllerClassName}(
-            IAdmissionWebhook<{webhookEntityTypeIdentifier.Name}, MutationResult> webhook,
+            {webhook.Identifier.ValueText} webhook,
             WebhookMetrics<{webhookEntityTypeIdentifier.Name}> metrics,
             OperatorSettings operatorSettings,
             ILogger<{controllerClassName}> logger = null)
@@ -614,7 +615,7 @@ namespace {controllerNamespace}.Controllers
             logger?.LogInformationEx(() => @$""AdmissionHook """"{{webhook.Name}}"""" did return """"{{admissionRequest.Response?.Allowed}}"""" for """"{{admissionRequest.Request.Operation}}""""."");
             admissionRequest.Request = null;
 
-            metrics.RequestsTotal.WithLabels(new string[] {{ operatorSettings.Name, webhook.Endpoint, response.Status?.Code.ToString() }}).Inc();
+            metrics.RequestsTotal.WithLabels(new string[] {{ operatorSettings.Name, webhook.GetEndpoint(), response.Status?.Code.ToString() }}).Inc();
 
             return Ok(admissionRequest);
         }}

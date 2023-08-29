@@ -276,5 +276,11 @@ namespace Neon.Operator.Webhooks
         {
             return MutationResult.Modified(modifiedEntry, warnings);
         }
+
+        /// <inheritdoc />
+        public string GetEndpoint()
+        {
+            return WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType);
+        }
     }
 }

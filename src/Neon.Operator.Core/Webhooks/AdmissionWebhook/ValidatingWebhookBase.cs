@@ -256,5 +256,11 @@ namespace Neon.Operator.Webhooks
         {
             return ValidationResult.Fail(statusCode, statusMessage);
         }
+
+        /// <inheritdoc />
+        public string GetEndpoint()
+        {
+            return WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType);
+        }
     }
 }

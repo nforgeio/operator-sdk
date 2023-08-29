@@ -51,5 +51,6 @@ namespace Neon.Operator.Webhooks
         /// <param name="serviceProvider"></param>
         /// <returns></returns>
         Task CreateAsync(IServiceProvider serviceProvider);
+        string GetEndpoint();
     }
 }

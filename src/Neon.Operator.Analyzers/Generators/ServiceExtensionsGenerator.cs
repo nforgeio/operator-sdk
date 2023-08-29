@@ -75,6 +75,8 @@ namespace Neon.Operator
         /// <returns>The <see cref=""OperatorBuilder""/>.</returns>
         public static IOperatorBuilder AddKubernetesOperator(this IServiceCollection services)
         {{
+            services.AddControllers();
+
             return new OperatorBuilder(services).AddOperatorBase().AddServiceComponents();
         }}
 
@@ -90,6 +92,7 @@ namespace Neon.Operator
             options?.Invoke(settings);
 
             services.AddSingleton(settings);
+            services.AddControllers();
 
             return new OperatorBuilder(services).AddOperatorBase().AddServiceComponents();
         }}
