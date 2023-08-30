@@ -378,6 +378,8 @@ namespace Neon.Operator.ResourceManager
 
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
+            logger?.LogInformationEx(() => $"Checking permissions for {typeof(TEntity)}.");
+
             HttpOperationResponse<object> response;
 
             try
@@ -399,18 +401,69 @@ namespace Neon.Operator.ResourceManager
                     }
                 }
             }
-            catch (HttpOperationException e)
+            catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.Forbidden)
             {
-                if (e.Response.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
-                    throw;
-                }
+                logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                throw;
             }
             catch (Exception e)
             {
                 logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
                 logger?.LogErrorEx(() => e.Message);
+
+                throw;
+            }
+
+            logger?.LogInformationEx(() => $"Permissions for {typeof(TEntity)} ok.");
+
+            if (options.DependentResources != null)
+            {
+                logger?.LogInformationEx(() => $"Checking permissions for dependent resources.");
+
+                foreach (var dependent in options.DependentResources.Where(d => !kubernetesTypes.Contains(d.GetEntityType().GetKubernetesCrdName())))
+                {
+                    try
+                    {
+                        logger?.LogInformationEx(() => $"Checking permissions for {dependent.GetEntityType()}.");
+
+                        if (resourceNamespaces == null)
+                        {
+                            response = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
+                                dependent.GetKubernetesEntityAttribute().Group,
+                                dependent.GetKubernetesEntityAttribute().ApiVersion,
+                                dependent.GetKubernetesEntityAttribute().PluralName,
+                                allowWatchBookmarks: true,
+                                watch: true);
+                        }
+                        else
+                        {
+                            foreach (var @namespace in resourceNamespaces)
+                            {
+                                response = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
+                                    dependent.GetKubernetesEntityAttribute().Group,
+                                    dependent.GetKubernetesEntityAttribute().ApiVersion,
+                                    @namespace,
+                                    dependent.GetKubernetesEntityAttribute().PluralName,
+                                    allowWatchBookmarks: true,
+                                    watch: true);
+                            }
+                        }
+                    }
+                    catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        logger?.LogErrorEx(() => $"Cannot watch type {dependent.GetEntityType()}, please check RBAC rules for the controller.");
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(() => $"Cannot watch type {dependent.GetEntityType()}, please check RBAC rules for the controller.");
+                        logger?.LogErrorEx(() => e.Message);
+
+                        throw;
+                    }
+
+                    logger?.LogInformationEx(() => $"Permissions for {dependent.GetEntityType()} ok.");
+                }
             }
         }
 
@@ -501,7 +554,6 @@ namespace Neon.Operator.ResourceManager
                     {
                         await CreateController(scope.ServiceProvider).OnPromotionAsync();
                     }
-
                 }).Wait();
         }
 
