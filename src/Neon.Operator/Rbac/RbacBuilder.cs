@@ -45,7 +45,6 @@ namespace Neon.Operator.Rbac
         private OperatorSettings        operatorSettings;
         private ComponentRegister       componentRegister;
         private string                  @namespace;
-        private List<Type>              assemblyTypes;
 
         /// <summary>
         /// Constructor.
