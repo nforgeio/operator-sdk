@@ -336,8 +336,8 @@ namespace Neon.Operator.Analyzers
                     .Select(
                         group => new V1PolicyRule
                         {
-                            ApiGroups     = group.ApiGroups.Distinct().OrderBy(x=>x).ToList(),
-                            Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x=>x).ToList(),
+                            ApiGroups     = group.ApiGroups.Distinct().OrderBy(x => x).ToList(),
+                            Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
                             ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
                             Verbs         = group.Verbs.ToStrings(),
                         })
@@ -393,7 +393,7 @@ namespace Neon.Operator.Analyzers
                             {
                                 ApiGroups     = group.ApiGroups.Distinct().OrderBy(x => x).ToList(),
                                 Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
-                                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.ToList() : null,
+                                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
                                 Verbs         = group.Verbs.ToStrings(),
                             })
                         .Distinct(new PolicyRuleComparer())
