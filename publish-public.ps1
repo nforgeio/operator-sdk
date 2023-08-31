@@ -104,7 +104,7 @@ function Publish
     #
     # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NO_BUILD\nuget"
 
-    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName
+    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName -p:PackageVersion=$version
     ThrowOnExitCode
 
 	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NO_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
@@ -121,12 +121,14 @@ try
     $msbuild         = $env:MSBUILDPATH
     $neonBuild       = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
     $config          = "Release"
+    $nfRoot          = "$env:NF_ROOT"
     $nkRoot          = "$env:NK_ROOT"
     $nkSolution      = "$nkRoot\neonKUBE.sln"
     $nkBuild         = "$env:NK_BUILD"
     $nkLib           = "$nkRoot\Lib"
+    $nfLib           = "$nfRoot\Lib"
     $nkTools         = "$nkRoot\Tools"
-    $neonSdkVersion  = $(& "neon-build" read-version "$nkLib/Neon.Common/Build.cs" NeonSdkVersion)
+    $neonSdkVersion  = $(& "neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonSdkVersion)
     $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
 
     #------------------------------------------------------------------------------
@@ -157,37 +159,6 @@ try
 
     if (-not $restore)
     {
-        Write-Info ""
-        Write-Info "********************************************************************************"
-        Write-Info "***                            CLEAN SOLUTION                                ***"
-        Write-Info "********************************************************************************"
-        Write-Info ""
-
-        Invoke-Program "`"$neonBuild`" clean `"$nkRoot`""
-
-        Write-Info  ""
-        Write-Info  "*******************************************************************************"
-        Write-Info  "***                           BUILD SOLUTION                                ***"
-        Write-Info  "*******************************************************************************"
-        Write-Info  ""
-
-        & "$msbuild" "$nkSolution" -p:Configuration=Release -t:restore,build -p:RestorePackagesConfig=true -m -verbosity:quiet
-
-        if (-not $?)
-        {
-            throw "ERROR: BUILD FAILED"
-        }
-
-        #------------------------------------------------------------------------------
-        # Update the project versions.
-
-        SetVersion Neon.Kubernetes                $neonkubeVersion
-        SetVersion Neon.Operator                  $neonkubeVersion
-        SetVersion Neon.Operator.Analyzers        $neonkubeVersion
-        SetVersion Neon.Operator.Core             $neonkubeVersion
-        SetVersion Neon.Operator.Templates        $neonkubeVersion
-        SetVersion Neon.Operator.Xunit            $neonkubeVersion
-
         #------------------------------------------------------------------------------
         # Build and publish the projects.
 
