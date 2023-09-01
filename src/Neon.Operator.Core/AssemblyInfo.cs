@@ -22,4 +22,3 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Neon.Operator")]
 [assembly: InternalsVisibleTo("Neon.Operator.XUnit")]
 [assembly: InternalsVisibleTo("Neon.Operator.Analyzers")]
-[assembly: InternalsVisibleTo("operator-cli")]

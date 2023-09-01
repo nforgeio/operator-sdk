@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    AssemblyInfo.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -23,5 +23,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Test.Neon.Operator")]
 [assembly: InternalsVisibleTo("Neon.Operator.XUnit")]
 [assembly: InternalsVisibleTo("Neon.Kube.Xunit")]
-[assembly: InternalsVisibleTo("operator-cli")]
 
