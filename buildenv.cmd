@@ -20,9 +20,9 @@ set NO_ROOT=%NO_ROOT:~0,-2%
 
 if not [%1]==[] set NO_ROOT=%1
 
-if exist %NO_ROOT%\Neon.Operator.sln goto goodPath
-echo The [%NO_ROOT%\Neon.Operator.sln] file does not exist.  Please pass the path
-echo to the Neon.Operator solution folder.
+if exist %NO_ROOT%\operator-sdk.sln goto goodPath
+echo The [%NO_ROOT%\operator-sdk.sln] file does not exist.  Please pass the path
+echo to the OperatorSDK solution folder.
 goto done
 
 :goodPath 

@@ -183,13 +183,13 @@ try
 {
     if ([System.String]::IsNullOrEmpty($env:SolutionName))
     {
-        $env:SolutionName = "Neon.Operator"
+        $env:SolutionName = "operator-sdk"
     }
 
     $msbuild     = $env:MSBUILDPATH
     $config      = "Release"
     $noRoot      = "$env:NO_ROOT"
-    $noSolution  = "$noRoot\Neon.Operator.sln"
+    $noSolution  = "$noRoot\operator-sdk.sln"
     $branch      = GitBranch $noRoot
 
     if ($localVersion)
