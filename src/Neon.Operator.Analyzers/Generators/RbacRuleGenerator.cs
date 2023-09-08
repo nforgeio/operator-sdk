@@ -171,6 +171,8 @@ namespace Neon.Operator.Analyzers
 
                 serviceAccounts.Add(serviceAccount);
 
+                var serviceAccountNs = !string.IsNullOrEmpty(serviceAccount.Metadata.NamespaceProperty) ? serviceAccount.Metadata.NamespaceProperty : "{{ .Release.Namespace }}";
+
                 foreach (var controller in controllers)
                 {
                     try
@@ -360,9 +362,10 @@ namespace Neon.Operator.Analyzers
 
                     clusterRoleBinding.Metadata.Name = operatorName;
                     clusterRoleBinding.RoleRef = new V1RoleRef(name: clusterRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole");
+
                     clusterRoleBinding.Subjects = new List<V1Subject>()
                     {
-                        new V1Subject(kind: "ServiceAccount", name: operatorName, namespaceProperty: serviceAccount.Namespace())
+                        new V1Subject(kind: "ServiceAccount", name: operatorName, namespaceProperty: serviceAccountNs)
                     };
 
                     clusterRoleBindings.Add(clusterRoleBinding);
@@ -425,7 +428,7 @@ namespace Neon.Operator.Analyzers
                         roleBinding.RoleRef       = new V1RoleRef(name: namespacedRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "Role");
                         roleBinding.Subjects      = new List<V1Subject>()
                         {
-                            new V1Subject(kind: "ServiceAccount", name: operatorName, namespaceProperty: serviceAccount.Namespace())
+                            new V1Subject(kind: "ServiceAccount", name: operatorName, namespaceProperty: serviceAccountNs)
                         };
 
                         if (!string.IsNullOrEmpty(operatorNamespace))
