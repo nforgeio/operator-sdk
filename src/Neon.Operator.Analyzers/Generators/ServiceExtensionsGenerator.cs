@@ -58,6 +58,7 @@ namespace Neon.Operator.Analyzers
                     "Microsoft.Extensions.DependencyInjection",
                     "Neon.Operator",
                     "Neon.Operator.Builder",
+                    "Neon.Operator.ResourceManager"
             };
 
                 sb.Append($@"
@@ -170,8 +171,28 @@ namespace Neon.Operator
                     {
                         case OperatorComponentType.Controller:
 
-                            sb.Append($@"
+                            var controllerAttribute = componentSystemType.GetCustomAttribute<ResourceControllerAttribute>();
+
+                            if (controllerAttribute != null)
+                            {
+                                sb.Append($@"
+            builder.AddController<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>(
+                        options: new ResourceManagerOptions()
+                        {{
+                            AutoRegisterFinalizers          = {controllerAttribute.AutoRegisterFinalizers.ToString().ToLower()},
+                            ManageCustomResourceDefinitions = {controllerAttribute.ManageCustomResourceDefinitions.ToString().ToLower()},
+                            LabelSelector                   = ""{controllerAttribute.LabelSelector}"",
+                            FieldSelector                   = ""{controllerAttribute.FieldSelector}"",
+                            ErrorMinRequeueInterval         = TimeSpan.FromSeconds({controllerAttribute.ErrorMinRequeueIntervalSeconds}),
+                            ErrorMaxRequeueInterval         = TimeSpan.FromSeconds({controllerAttribute.ErrorMaxRequeueIntervalSeconds}),
+                            MaxConcurrentReconciles         = {controllerAttribute.MaxConcurrentReconciles},
+                        }});");
+                            }
+                            else
+                            {
+                                sb.Append($@"
             builder.AddController<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
+                            }
 
                             break;
 
