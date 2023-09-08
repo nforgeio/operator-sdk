@@ -141,10 +141,7 @@ namespace Neon.Operator.Builder
                     options.PoolInitialFill = operatorSettings.LockPoolInitialFill;
                 }));
 
-            if (operatorSettings.manageCustomResourceDefinitions)
-            {
-                Services.AddSingleton(typeof(CustomResourceGenerator));
-            }
+            Services.AddSingleton(typeof(CustomResourceGenerator));
 
             if (operatorSettings.AssemblyScanningEnabled)
             {
@@ -186,9 +183,9 @@ namespace Neon.Operator.Builder
                                 options.AutoRegisterFinalizers = false;
                             }
 
-                            if (controllerAttribute?.ManageCustomResourceDefinitions == false)
+                            if (controllerAttribute?.ManageCustomResourceDefinitions == true)
                             {
-                                options.ManageCustomResourceDefinitions = false;
+                                options.ManageCustomResourceDefinitions = true;
                             }
 
                             if (controllerAttribute != null)
