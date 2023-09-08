@@ -527,34 +527,44 @@ namespace Neon.Operator.ResourceManager
         /// </summary>
         private void OnPromotion()
         {
-            logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] PROMOTED");
+            try
+            {
+                logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] PROMOTED");
 
-            IsLeader = true;
+                IsLeader = true;
 
-            Task.Run(
-                async () =>
-                {
-                    if (options.ManageCustomResourceDefinitions)
+                Task.Run(
+                    async () =>
                     {
-                        await CreateOrReplaceCustomResourceDefinitionAsync();
-                    }
+                        await SyncContext.Clear;
 
-                    watcherTcs = new CancellationTokenSource();
+                        if (options.ManageCustomResourceDefinitions)
+                        {
+                            await CreateOrReplaceCustomResourceDefinitionAsync();
+                        }
 
-                    await EnsurePermissionsAsync();
-                    await StartCrdWatchersAsync(watcherTcs.Token);
+                        watcherTcs = new CancellationTokenSource();
 
-                    // Start the watcher.
+                        await EnsurePermissionsAsync();
+                        await StartCrdWatchersAsync(watcherTcs.Token);
 
-                    watcherTask = WatchAsync(watcherTcs.Token);
+                        // Start the watcher.
 
-                    // Inform the controller.
+                        watcherTask = WatchAsync(watcherTcs.Token);
 
-                    using (var scope = serviceProvider.CreateScope())
-                    {
-                        await CreateController(scope.ServiceProvider).OnPromotionAsync();
-                    }
-                }).Wait();
+                        // Inform the controller.
+
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            await CreateController(scope.ServiceProvider).OnPromotionAsync();
+                        }
+                    }).Wait();
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -633,18 +643,25 @@ namespace Neon.Operator.ResourceManager
             {
                 var generator    = serviceProvider.GetRequiredService<CustomResourceGenerator>();
                 var crd          = generator.GenerateCustomResourceDefinition(typeof(TEntity));
+
+                logger?.LogInformationEx(() => $"Checking CustomResourceDefinition [{crd.Name()}]");
+
                 var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={crd.Name()}");
 
                 var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
 
                 if (existingCustomResourceDefinition != null)
                 {
+                    logger?.LogInformationEx(() => $"Updating CustomResourceDefinition [{crd.Name()}]");
+
                     crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
 
                     await k8s.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
                 }
                 else
                 {
+                    logger?.LogInformationEx(() => $"Creating CustomResourceDefinition [{crd.Name()}]");
+
                     await k8s.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
                 }
 
