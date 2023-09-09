@@ -69,11 +69,11 @@ namespace Neon.Operator.Analyzers
             //System.Diagnostics.Debugger.Launch();
             logs = new Dictionary<string, StringBuilder>();
 
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateRbac", out var generateRbac))
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrds", out var generateCrds))
             {
-                if (bool.TryParse(generateRbac, out bool generateRbacBool))
+                if (bool.TryParse(generateCrds, out bool generateCrdsBool))
                 {
-                    if (!generateRbacBool)
+                    if (!generateCrdsBool)
                     {
                         return;
                     }
@@ -140,9 +140,10 @@ namespace Neon.Operator.Analyzers
                 {
                     try
                     {
-                        var crTypeIdentifier = namedTypeSymbols.Where(ntm => ntm.MetadataName == cr.Identifier.ValueText).SingleOrDefault();
+                        var crTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == cr.Identifier.ValueText).SingleOrDefault();
                         var crFullyQualifiedName = crTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
-                        var fn = crTypeIdentifier.GetFullMetadataName();
+                        var fn                   = crTypeIdentifier.GetFullMetadataName();
+
                         if (crFullyQualifiedName.StartsWith("k8s."))
                         {
 
@@ -456,12 +457,12 @@ namespace Neon.Operator.Analyzers
             else if (type.IsEnum)
             {
                 props.Type = Constants.StringTypeString;
-                props.EnumProperty = new List<object>(Enum.GetNames(type));
+                //props.EnumProperty = new List<object>(Enum.GetNames(type));
             }
             else if (Nullable.GetUnderlyingType(type)?.IsEnum == true)
             {
                 props.Type = Constants.StringTypeString;
-                props.EnumProperty = new List<object>(Enum.GetNames(Nullable.GetUnderlyingType(type)!));
+                //props.EnumProperty = new List<object>(Enum.GetNames(Nullable.GetUnderlyingType(type)!));
             }
             else 
             {
