@@ -36,9 +36,12 @@ namespace Neon.Operator.Analyzers
             var logString               = new StringBuilder();
             bool hasErrors              = false;
 
-            if (webhooks.Count == 0)
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework))
             {
-                return;
+                if (targetFramework.StartsWith("netstandard", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return;
+                }
             }
 
             var sb = new StringBuilder();
