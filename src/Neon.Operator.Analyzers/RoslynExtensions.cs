@@ -78,7 +78,7 @@ namespace Neon.Operator.Analyzers
                 var sb = new StringBuilder();
                 foreach (var item in summary)
                 {
-                    sb.AppendLine(item.Value);
+                    sb.AppendLine(item.Value.Trim());
                 }
 
                 var result = sb.ToString().Trim();
