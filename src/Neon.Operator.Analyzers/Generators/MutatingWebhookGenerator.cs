@@ -44,19 +44,17 @@ namespace Neon.Operator.Analyzers
             bool certManagerDisabled      = false;
             bool autoRegisterWebhooks     = false;
 
-            string operatorName           = null;
+            string operatorName           = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
             string operatorNamespace      = null;
             string webhookOutputDirectory = null;
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
                 webhookOutputDirectory = projectDirectory;
-                operatorName           = Regex.Replace(projectDirectory.Split('\\').Last(), @"([a-z])([A-Z])", "$1-$2").ToLower();
             }
             else if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir))
             {
                 webhookOutputDirectory = projectDir;
-                operatorName = Regex.Replace(projectDir.Split('\\').Last(), @"([a-z])([A-Z])", "$1-$2").ToLower();
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorManifestOutputDir", out var manifestOutDir))

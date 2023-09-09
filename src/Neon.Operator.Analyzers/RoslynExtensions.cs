@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -91,35 +92,6 @@ namespace Neon.Operator.Analyzers
             catch
             {
                 return null;
-            }
-        }
-
-        public static IEnumerable<INamedTypeSymbol> GetNamedTypeSymbols(this Compilation compilation)
-        {
-            var stack = new Stack<INamespaceSymbol>();
-
-            stack.Push(compilation.Assembly.GlobalNamespace);
-
-            foreach (var assemblySymbol in compilation.SourceModule.ReferencedAssemblySymbols)
-            {
-                stack.Push(assemblySymbol.GlobalNamespace);
-            }
-
-            while (stack.Count > 0)
-            {
-                var @namespace = stack.Pop();
-
-                foreach (var member in @namespace.GetMembers())
-                {
-                    if (member is INamespaceSymbol memberAsNamespace)
-                    {
-                        stack.Push(memberAsNamespace);
-                    }
-                    else if (member is INamedTypeSymbol memberAsNamedTypeSymbol)
-                    {
-                        yield return memberAsNamedTypeSymbol;
-                    }
-                }
             }
         }
     }

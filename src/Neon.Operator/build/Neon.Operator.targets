@@ -3,6 +3,8 @@
         <CompilerVisibleProperty Include="NeonOperatorCrdOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorManifestOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorRbacOutputDir" />
+        <CompilerVisibleProperty Include="NeonOperatorGenerateRbac" />
+        <CompilerVisibleProperty Include="NeonOperatorGenerateCrds" />
         <CompilerVisibleProperty Include="NeonOperatorWebhookOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorLeaderElectionDisabled" />
         <CompilerVisibleProperty Include="NeonOperatorAutoRegisterWebhooks" />

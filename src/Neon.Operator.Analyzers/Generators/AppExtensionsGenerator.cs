@@ -30,11 +30,16 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            var webhooks = ((AppExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister;
-            var namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
-            var logString = new StringBuilder();
-            bool hasErrors = false;
+            var metadataLoadContext     = new MetadataLoadContext(context.Compilation);
+            var webhooks                = ((AppExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+            var namedTypeSymbols        = context.Compilation.GetNamedTypeSymbols();
+            var logString               = new StringBuilder();
+            bool hasErrors              = false;
+
+            if (webhooks.Count == 0)
+            {
+                return;
+            }
 
             var sb = new StringBuilder();
 
@@ -187,7 +192,6 @@ namespace Neon.Operator
                             ))
                         .Select(i => i.Name.Replace("`1", ""))
                         .FirstOrDefault();
-
 
                     sb.Append($@"
                     try

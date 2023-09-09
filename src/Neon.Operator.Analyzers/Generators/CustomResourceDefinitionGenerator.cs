@@ -69,6 +69,17 @@ namespace Neon.Operator.Analyzers
             //System.Diagnostics.Debugger.Launch();
             logs = new Dictionary<string, StringBuilder>();
 
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateRbac", out var generateRbac))
+            {
+                if (bool.TryParse(generateRbac, out bool generateRbacBool))
+                {
+                    if (!generateRbacBool)
+                    {
+                        return;
+                    }
+                }
+            }
+
             string crdOutputDirectory = null;
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
@@ -140,6 +151,19 @@ namespace Neon.Operator.Analyzers
 
                         var crSystemType = metadataLoadContext.ResolveType(crTypeIdentifier);
                         // var description = crSystemType.GetXmlDocsElement();
+
+                        try
+                        {
+                            if (crSystemType.GetCustomAttribute<IgnoreAttribute>() != null)
+                            {
+                                continue;
+                            }
+                        }
+                        catch
+                        {
+                            // not ignoring
+                        }
+
                         var k8sAttr     = crSystemType.GetCustomAttribute<KubernetesEntityAttribute>();
                         var versionAttr = crSystemType.GetCustomAttribute<EntityVersionAttribute>();
                         var scaleAttr   = crSystemType.GetCustomAttribute<ScaleAttribute>();

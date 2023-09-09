@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    EntityScope.cs
+// FILE:	    IgnoreAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,30 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Runtime.Serialization;
+using System;
 
 namespace Neon.Operator.Attributes
 {
     /// <summary>
-    /// <para>
-    /// Enumerates the possible the scopes for a Kubernetes resource.
-    /// </para>
-    /// <note>
-    /// You may also use <b>"*"</b> to indicate that there's no scope restriction.
-    /// </note>
+    /// Indicates the class should be ignored.
     /// </summary>
-    public enum EntityScope
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class IgnoreAttribute : Attribute
     {
         /// <summary>
-        /// The resource is Namespaced.
+        /// Constructor.
         /// </summary>
-        [EnumMember(Value = "Namespaced")]
-        Namespaced = 0,
-
-        /// <summary>
-        /// The resource is cluster wide.
-        /// </summary>
-        [EnumMember(Value = "Cluster")]
-        Cluster = 1
+        public IgnoreAttribute()
+        {
+        }
     }
 }

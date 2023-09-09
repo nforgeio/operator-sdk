@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // FILE:	    EntityScope.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -39,6 +39,15 @@ namespace Neon.Operator.Attributes
         public EntityScopeAttribute(EntityScope scope = EntityScope.Namespaced)
         {
             Scope = scope;
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="scope">Specifies the entity scope, one of the <see cref="EntityScope"/> values.</param>
+        public EntityScopeAttribute(int scope)
+        {
+            Scope = (EntityScope)scope;
         }
     }
 }

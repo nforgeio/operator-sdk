@@ -61,7 +61,7 @@ namespace Neon.Operator.Analyzers
             var roleBindings        = new List<V1RoleBinding>();
             var attributes          = new List<IRbacRule>();
 
-            string operatorName        = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
+            string operatorName        = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower(); 
             string operatorNamespace   = string.Empty;
             string rbacOutputDirectory = null;
 
@@ -71,6 +71,17 @@ namespace Neon.Operator.Analyzers
             bool manageCustomResourceDefinitions = false;
 
             logs = new Dictionary<string, StringBuilder>();
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateRbac", out var generateRbac))
+            {
+                if (bool.TryParse(generateRbac, out bool generateRbacBool))
+                {
+                    if (!generateRbacBool)
+                    {
+                        return;
+                    }
+                }
+            }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
