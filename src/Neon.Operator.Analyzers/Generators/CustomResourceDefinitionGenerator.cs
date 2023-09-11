@@ -255,7 +255,13 @@ namespace Neon.Operator.Analyzers
                         else
                         {
                             var yaml = KubernetesYaml.Serialize(crd.Value);
-                            File.WriteAllText(Path.Combine(crdOutputDirectory, crd.Value.Name() + ".yaml"), yaml);
+
+                            var outputPath = Path.Combine(crdOutputDirectory, crd.Value.Name() + ".yaml");
+
+                            if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
+                            {
+                                File.WriteAllText(outputPath, yaml);
+                            }
                         }
                     }
                     catch (Exception e)

@@ -511,7 +511,12 @@ namespace Neon.Operator.Analyzers
 
                     rbNameString.Append(".yaml");
 
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, rbNameString.ToString()), rbString);
+                    var outputPath = Path.Combine(rbacOutputDirectory, rbNameString.ToString());
+
+                    if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != rbString)
+                    {
+                        File.WriteAllText(outputPath, rbString);
+                    }
                 }
             }
             catch (Exception e)
