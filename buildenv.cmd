@@ -45,8 +45,11 @@ setx NO_BUILD "%NO_BUILD%" /M   > nul
 setx NF_TEST "%NF_TEST%" /M     > nul
 
 :done
+
+if not "%2" == "no-exit-msg" goto quit
 echo.
 echo ============================================================================================
 echo * Be sure to close and reopen Visual Studio and any command windows to pick up the changes *
 echo ============================================================================================
 pause
+:quit
