@@ -8,9 +8,9 @@ REM batch file.
 REM
 REM This must be [RUN AS ADMINISTRATOR].
 
-echo ================================================
-echo * Neon.Operator Build Environment Configurator *
-echo ================================================
+echo ====================================================
+echo * Neon Operator SDK Build Environment Configurator *
+echo ====================================================
 
 REM Default NF_ROOT to the folder holding this batch file after stripping
 REM off the trailing backslash.
