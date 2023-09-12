@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <OutputType>Library</OutputType>
         <Configurations>Debug;Release</Configurations>
-        <Version>0.10.0-beta.0</Version>
+        <Version>0.10.0-beta.5</Version>
         <Description>Kubernetes Operator SDK.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>

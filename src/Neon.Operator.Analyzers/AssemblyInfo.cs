@@ -18,5 +18,5 @@
 using System.Reflection;
 
 [assembly: global::System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName = ".NET Standard 2.0")]
-[assembly: AssemblyVersion("0.10.0.3")]
-[assembly: AssemblyFileVersion("0.10.0.3")]
+[assembly: AssemblyVersion("0.10.0.5")]
+[assembly: AssemblyFileVersion("0.10.0.5")]

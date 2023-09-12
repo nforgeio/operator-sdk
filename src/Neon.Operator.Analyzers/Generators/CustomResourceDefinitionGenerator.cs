@@ -326,10 +326,10 @@ namespace Neon.Operator.Analyzers
                 throw new Exception(ex.Message);
             }
 
-            if (props.Description == null)
-            {
-                props.Description = info.GetPropertySymbol().GetSummary();
-            }
+            //if (props.Description == null)
+            //{
+            //    props.Description = info.GetPropertySymbol().GetSummary();
+            //}
 
             // get additional printer column information
             var additionalColumn = info.GetCustomAttribute<AdditionalPrinterColumnAttribute>();
@@ -421,7 +421,7 @@ namespace Neon.Operator.Analyzers
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                     additionalColumns,
                     jsonPath);
-                props.Description ??= typeSymbol.GetSummary();
+                //props.Description ??= typeSymbol.GetSummary();
             }
             else if (type.Equals(typeof(IntstrIntOrString)))
             {
@@ -496,7 +496,7 @@ namespace Neon.Operator.Analyzers
                 {
                     props.Required = null;
                 }
-                props.Description ??= typeSymbol.GetSummary();
+                //props.Description ??= typeSymbol.GetSummary();
             }
 
             return props;
