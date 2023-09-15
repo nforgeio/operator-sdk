@@ -13,10 +13,10 @@
         <NeonOperatorWebhookOutputDir>Manifests</NeonOperatorWebhookOutputDir>
     </PropertyGroup>
 
-    <ImportGroup>
+    <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
         <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.7.2" />
-    </ImportGroup>
+    </ItemGroup>
 
     <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
 
