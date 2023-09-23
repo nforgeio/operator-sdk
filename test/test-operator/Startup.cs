@@ -16,10 +16,10 @@ namespace TestOperator
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging(c =>
+            services.AddLogging(configure =>
             {
-                c.ClearProviders();
-                c.AddConsole();
+                configure.ClearProviders();
+                configure.AddConsole();
             });
 
             //services.AddKubernetesOperator();
