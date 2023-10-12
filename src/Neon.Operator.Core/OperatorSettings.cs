@@ -130,7 +130,7 @@ namespace Neon.Operator
         public string ReadinessEndpooint { get; set; } = "/ready";
 
         /// <summary>
-        /// Whether certs are provided by cert manager.
+        /// Whether certs are provided by CertManager.
         /// </summary>
         public bool CertManagerEnabled 
         { 

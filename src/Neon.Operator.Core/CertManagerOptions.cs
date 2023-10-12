@@ -39,7 +39,7 @@ namespace Neon.Operator
     }
 
     /// <summary>
-    /// Cert manager Issuer Ref.
+    /// CertManager Issuer Ref.
     /// </summary>
     public class IssuerRef
     {

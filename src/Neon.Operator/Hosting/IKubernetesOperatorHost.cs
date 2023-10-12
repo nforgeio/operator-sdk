@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IKubernetesOperatorHost.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -44,7 +44,7 @@ namespace Neon.Operator
         OperatorSettings OperatorSettings { get; set; }
 
         /// <summary>
-        /// Cert Manager options.
+        /// CertManager options.
         /// </summary>
         CertManagerOptions CertManagerOptions { get; set; }
 
