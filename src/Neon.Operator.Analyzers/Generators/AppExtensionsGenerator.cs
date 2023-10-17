@@ -30,11 +30,11 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var metadataLoadContext     = new MetadataLoadContext(context.Compilation);
-            var webhooks                = ((AppExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister;
-            var namedTypeSymbols        = context.Compilation.GetNamedTypeSymbols();
-            var logString               = new StringBuilder();
-            bool hasErrors              = false;
+            var metadataLoadContext = new MetadataLoadContext(context.Compilation);
+            var webhooks            = ((AppExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+            var namedTypeSymbols    = context.Compilation.GetNamedTypeSymbols();
+            var logString           = new StringBuilder();
+            bool hasErrors          = false;
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework))
             {
@@ -121,15 +121,9 @@ namespace Neon.Operator
                         }})
                     }});
 
-                    NgrokWebhookTunnel tunnel = null;
-
-                    try
-                    {{
-                        tunnel = app.ApplicationServices.GetServices<IHostedService>()
-                            .OfType<NgrokWebhookTunnel>()
-                            .Single();
-                    }}
-                    catch {{ }}
+                    var tunnel = app.ApplicationServices.GetServices<IHostedService>()
+                        .OfType<NgrokWebhookTunnel>()
+                        .SingleOrDefault();
 
                     var componentRegistrar = app.ApplicationServices.GetRequiredService<ComponentRegister>();");
 
@@ -138,16 +132,15 @@ namespace Neon.Operator
                 try
                 {
                     var webhookNs = webhook.GetNamespace();
+
                     usings.Add(webhookNs);
+
                     var webhookSystemType = metadataLoadContext.ResolveType($"{webhookNs}.{webhook.Identifier.ValueText}");
-
-                    IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
-                    var members = assemblySymbol.GlobalNamespace.
-                            GetNamespaceMembers();
-
-
-                    var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols.SelectMany(
-                        ras => ras.GlobalNamespace.GetNamespaceMembers())
+                    var assemblySymbol    = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
+                    var members           = assemblySymbol.GlobalNamespace.GetNamespaceMembers();
+                    
+                    var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols
+                        .SelectMany(ras => ras.GlobalNamespace.GetNamespaceMembers())
                         .SelectMany(nsm => nsm.GetTypeMembers());
 
                     var webhookEntityType = webhook
@@ -160,16 +153,14 @@ namespace Neon.Operator
                                 || gns.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", ""))
                                 ) == true).FirstOrDefault();
 
-                    var webhookTypeIdentifier          = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
-
-                    var sdf = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
-
-                    var webhookTypeIdentifierNamespace = webhookTypeIdentifier.GetNamespace();
-
+                    var webhookTypeIdentifier           = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
+                    var sdf                             = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+                    var webhookTypeIdentifierNamespace  = webhookTypeIdentifier.GetNamespace();
                     var webhookEntityTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == webhookTypeIdentifier.Identifier.ValueText).SingleOrDefault();
                     var webhookEntityFullyQualifiedName = webhookEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
 
                     var entitySystemType = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
+
                     usings.Add(entitySystemType.Namespace);
 
                     var interfaces = webhookSystemType.GetInterfaces().ToList();
@@ -183,7 +174,6 @@ namespace Neon.Operator
                             interfaces.AddRange(baseType.GetInterfaces());
                             baseType = baseType.BaseType;
                         }
-
                     }
 
                     var webhookInterfaceType = interfaces
@@ -204,6 +194,7 @@ namespace Neon.Operator
                             logger?.LogInformationEx(() => $""Registering [{webhookSystemType.Name}] with Kubernetes API Server."");
 
                             var hook = ({webhookInterfaceType}<{webhookEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameOnly)}>)app.ApplicationServices.GetRequiredService<{webhookSystemType.Name}>();
+
                             await hook.CreateAsync(app.ApplicationServices);
                         }}
 
@@ -213,17 +204,15 @@ namespace Neon.Operator
                         logger?.LogErrorEx(e);
                     }}");
 
-
                 }
-                    catch (Exception e)
+                catch (Exception e)
                 {
                     logString.AppendLine(e.Message);
                 }
             }
+
             sb.Append($@"
             }});");
-
-                
 
             sb.Append($@"
         }}
@@ -237,6 +226,7 @@ namespace Neon.Operator
             sb.AppendLine();
 
             var lastUsingRoot = "";
+
             foreach (var u in usings)
             {
                 var usingRoot = u.Split('.').First();
@@ -250,6 +240,7 @@ namespace Neon.Operator
 
                 sb.AppendLine($"using {u};");
             }
+
             var source = sb.ToString() + classSource;
 
             context.AddSource($"ApplicationExtensions.g.cs", SourceText.From(source, Encoding.UTF8, SourceHashAlgorithm.Sha256));
