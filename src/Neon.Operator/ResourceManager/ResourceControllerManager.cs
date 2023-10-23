@@ -47,7 +47,7 @@ namespace Neon.Operator.ResourceManager
         /// <param name="serviceProvider">Specifies the depdency injection service provider.</param>
         public ResourceControllerManager(
             ComponentRegister   componentRegistration,
-            IServiceProvider        serviceProvider)
+            IServiceProvider    serviceProvider)
         {
             Covenant.Requires<ArgumentNullException>(componentRegistration != null, nameof(componentRegistration));
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
