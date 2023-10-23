@@ -155,7 +155,7 @@ namespace Neon.Operator.ResourceManager
     /// </item>
     /// </list>
     /// </remarks>
-    public sealed class ResourceManager<TEntity, TController> : IResourceManager, IDisposable
+    public sealed class ResourceManager<TEntity, TController> : IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
@@ -173,11 +173,11 @@ namespace Neon.Operator.ResourceManager
         //---------------------------------------------------------------------
         // Instance members
 
+        private bool                                                     isDisposed = false;
+        private bool                                                     started    = false;
         private static IEnumerable<string>                               kubernetesTypes;
         private ResourceManagerOptions                                   options;
         private OperatorSettings                                         operatorSettings;
-        private bool                                                     isDisposed   = false;
-        private bool                                                     started      = false;
         private ResourceManagerMetrics<TEntity, TController>             metrics;
         private IKubernetes                                              k8s;
         private IServiceProvider                                         serviceProvider;
@@ -237,7 +237,6 @@ namespace Neon.Operator.ResourceManager
                 this.resourceNamespaces = Regex.Replace(options.WatchNamespace, @"\s+", "").Split(',').ToList();
             }
 
-
             this.options.Validate();
 
             this.controllerType = typeof(TController);
@@ -254,11 +253,11 @@ namespace Neon.Operator.ResourceManager
         /// Starts the resource manager.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when the resource manager has already been started.</exception>
-        public async Task StartAsync()
+        private async Task StartAsync()
         {
             await SyncContext.Clear;
-
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
+            Covenant.Requires<InvalidOperationException>(!started, $"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
 
             this.k8s                    = serviceProvider.GetRequiredService<IKubernetes>();
             this.resourceCache          = serviceProvider.GetRequiredService<IResourceCache<TEntity, TEntity>>();
@@ -268,6 +267,7 @@ namespace Neon.Operator.ResourceManager
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
             IResourceController<TEntity> controller;
+
             using (var scope = serviceProvider.CreateScope())
             {
                 controller = CreateController(scope.ServiceProvider);
@@ -281,19 +281,17 @@ namespace Neon.Operator.ResourceManager
                 this.leaderConfig =
                     new LeaderElectionConfig(
                         @namespace: operatorSettings.DeployedNamespace,
-                        leaseName: controller.LeaseName,
-                        identity: Pod.Name);
+                        leaseName:  controller.LeaseName,
+                        identity:   Pod.Name);
             }
 
-            if (started)
-            {
-                throw new InvalidOperationException($"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
-            }
+            await controller.StartAsync(serviceProvider);
+
+            started = true;
 
             //-----------------------------------------------------------------
             // Start the leader elector if enabled.
 
-            started = true;
 
             // Start the leader elector when enabled.
 
@@ -364,7 +362,7 @@ namespace Neon.Operator.ResourceManager
         {
             if (!started)
             {
-                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] before starting Operator.");
+                throw new InvalidOperationException($"You must call [{nameof(TController)}.{nameof(StartAsync)}()] first.");
             }
         }
 

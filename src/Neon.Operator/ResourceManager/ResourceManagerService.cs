@@ -37,7 +37,7 @@ namespace Neon.Operator.ResourceManager
     internal class ResourceControllerManager : IHostedService
     {
         private readonly ILogger<ResourceControllerManager> logger;
-        private ComponentRegister                       componentRegistration;
+        private ComponentRegister                           componentRegistration;
         private IServiceProvider                            serviceProvider;
         
         /// <summary>
