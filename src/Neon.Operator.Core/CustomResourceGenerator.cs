@@ -227,7 +227,7 @@ namespace Neon.Operator.Entities
                 }
             }
 
-            var duplicateStoredVersions = customResourceDefinitions.Where(crd => crd.Spec.Versions.Where(v => v.Storage == true).Count() > 1);
+            var duplicateStoredVersions = customResourceDefinitions.Where(crd => crd.Spec.Versions.Where(v => v.Storage).Count() > 1);
             if (duplicateStoredVersions.Any())
             {
                 throw new Exception($"Only 1 stored version allowed. The following resources have multiple stored versions: [{string.Join(", ", duplicateStoredVersions.Select(crd => crd.Name()))}]");

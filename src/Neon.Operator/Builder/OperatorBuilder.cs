@@ -97,12 +97,9 @@ namespace Neon.Operator.Builder
                 var k8sClientConfig = (KubernetesClientConfiguration)Services.Where(service =>
                     service.ServiceType == typeof(KubernetesClientConfiguration)).FirstOrDefault()?.ImplementationInstance ?? KubernetesClientConfiguration.BuildDefaultConfig();
 
-                if (k8sClientConfig.SkipTlsVerify == false
-                    && k8sClientConfig.SslCaCerts == null)
+                if (!k8sClientConfig.SkipTlsVerify && k8sClientConfig.SslCaCerts == null)
                 {
-                    var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                    var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
 
                     k8sClientConfig.SslCaCerts = store.Certificates;
                 }
@@ -118,11 +115,9 @@ namespace Neon.Operator.Builder
                 Services.TryAddSingleton<KubernetesClientConfiguration>(k8sClientConfig);
             }
 
-            var existingK8s = (IKubernetes)Services.Where(service =>
-                    service.ServiceType == typeof(IKubernetes)).FirstOrDefault().ImplementationInstance;
+            var existingK8s = (IKubernetes)Services.Where(service => service.ServiceType == typeof(IKubernetes)).FirstOrDefault().ImplementationInstance;
+            
             Services.TryAddSingleton<IBasicKubernetes>(existingK8s);
-
-
             Services.AddControllers();
             Services.AddSingleton<OperatorSettings>(operatorSettings);
             Services.AddSingleton(operatorSettings.ResourceManagerOptions);
@@ -156,7 +151,8 @@ namespace Neon.Operator.Builder
                         .Where(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
                         .Any())
                         .Select(@interface => @interface.GetCustomAttribute<OperatorComponentAttribute>())
-                        .FirstOrDefault().ComponentType)
+                        .FirstOrDefault()
+                        .ComponentType)
                     {
                         case OperatorComponentType.Controller:
 
@@ -167,8 +163,7 @@ namespace Neon.Operator.Builder
 
                             controllerArgs[0] = this;
 
-                            if (controllerAttribute?.Ignore == true
-                                || type == typeof(ResourceControllerBase<>))
+                            if (controllerAttribute?.Ignore == true || type == typeof(ResourceControllerBase<>))
                             {
                                 break;
                             }
@@ -201,8 +196,7 @@ namespace Neon.Operator.Builder
                                 options.FieldSelector = controllerAttribute.FieldSelector;
                             }
 
-                            if (options.LabelSelector == null
-                                && controllerAttribute?.LabelSelector != null)
+                            if (options.LabelSelector == null && controllerAttribute?.LabelSelector != null)
                             {
                                 options.LabelSelector = controllerAttribute.LabelSelector;
                             }
@@ -210,7 +204,8 @@ namespace Neon.Operator.Builder
                             var dependentResources = type.GetCustomAttributes()
                                 .Where(attribute => attribute.GetType().IsGenericType)
                                 .Where(attribute => attribute.GetType().GetGenericTypeDefinition().IsEquivalentTo(typeof(DependentResourceAttribute<>)))
-                                .Select(attribute => (IDependentResource)(attribute)).ToList();
+                                .Select(attribute => (IDependentResource)(attribute))
+                                .ToList();
 
                             foreach (var resource in dependentResources)
                             {
@@ -345,9 +340,9 @@ namespace Neon.Operator.Builder
             Services.TryAddSingleton<ResourceManager<TEntity, TImplementation>>(services =>
             {
                 return new ResourceManager<TEntity, TImplementation>(
-                    serviceProvider: services,
-                    options: options,
-                    leaderConfig: leaderConfig,
+                    serviceProvider:        services,
+                    options:                options,
+                    leaderConfig:           leaderConfig,
                     leaderElectionDisabled: leaderElectionDisabled);
             });
 

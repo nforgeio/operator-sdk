@@ -205,7 +205,7 @@ namespace Neon.Operator.Analyzers
                         {
                             customResourceDefinitions[pluralNameGroup].Spec.Versions.Add(version);
 
-                            if (version.Storage == true)
+                            if (version.Storage)
                             {
                                 customResourceDefinitions[pluralNameGroup].Spec.Names.Singular = k8sAttr.Kind.ToLowerInvariant();
                             }
@@ -215,21 +215,21 @@ namespace Neon.Operator.Analyzers
                         else
                         {
                             var crd = new V1CustomResourceDefinition(
-                        apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
-                        kind:       V1CustomResourceDefinition.KubeKind,
-                        metadata:   new V1ObjectMeta(name: pluralNameGroup),
-                        spec:       new V1CustomResourceDefinitionSpec(
-                        group:      k8sAttr.Group,
-                        names:      new V1CustomResourceDefinitionNames(
-                            kind: k8sAttr.Kind,
-                            plural: k8sAttr.PluralName,
-                            singular: k8sAttr.Kind.ToLowerInvariant(),
-                            shortNames: shortNames),
-                        scope:      scope.ToMemberString(),
-                        versions:   new List<V1CustomResourceDefinitionVersion>
-                        {
-                            version,
-                        }));
+                                apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
+                                kind:       V1CustomResourceDefinition.KubeKind,
+                                metadata:   new V1ObjectMeta(name: pluralNameGroup),
+                                spec:       new V1CustomResourceDefinitionSpec(
+                                group:      k8sAttr.Group,
+                                names:      new V1CustomResourceDefinitionNames(
+                                kind:       k8sAttr.Kind,
+                                plural:     k8sAttr.PluralName,
+                                singular:   k8sAttr.Kind.ToLowerInvariant(),
+                                shortNames: shortNames),
+                                scope:      scope.ToMemberString(),
+                                versions:   new List<V1CustomResourceDefinitionVersion>
+                                {
+                                    version,
+                                }));
 
                             customResourceDefinitions.Add(pluralNameGroup, crd);
                         }
@@ -391,11 +391,11 @@ namespace Neon.Operator.Analyzers
                 props.Type = Constants.ObjectTypeString;
                 props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments[1], additionalColumns, jsonPath);
             }
-            else if (type.IsGenericType
-                && type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>))
-                && type.GenericTypeArguments.Length == 1
-                && type.GenericTypeArguments.Single().IsGenericType
-                && type.GenericTypeArguments.Single().GetGenericTypeDefinition().Equals(typeof(KeyValuePair<,>)))
+            else if (type.IsGenericType &&
+                type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>)) &&
+                type.GenericTypeArguments.Length == 1 &&
+                type.GenericTypeArguments.Single().IsGenericType &&
+                type.GenericTypeArguments.Single().GetGenericTypeDefinition().Equals(typeof(KeyValuePair<,>)))
             {
                 props.Type = Constants.ObjectTypeString;
                 props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments.Single().GenericTypeArguments[1], additionalColumns, jsonPath);
@@ -407,9 +407,9 @@ namespace Neon.Operator.Analyzers
             }
 
             else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
-                 !type.IsAbstract &&
-                 !type.IsInterface &&
-                 type.Assembly == typeof(IKubernetesObject).Assembly)
+                !type.IsAbstract &&
+                !type.IsInterface &&
+                type.Assembly == typeof(IKubernetesObject).Assembly)
             {
                 SetEmbeddedResourceProperties(props);
             }
@@ -429,22 +429,22 @@ namespace Neon.Operator.Analyzers
             }
             else if (type.Equals(typeof(int)) | type.Equals(typeof(int?)))
             {
-                props.Type = Constants.IntegerTypeString;
+                props.Type   = Constants.IntegerTypeString;
                 props.Format = Constants.Int32TypeString;
             }
             else if (type.Equals(typeof(long)) | type.Equals(typeof(long?)))
             {
-                props.Type = Constants.IntegerTypeString;
+                props.Type   = Constants.IntegerTypeString;
                 props.Format = Constants.Int64TypeString;
             }
             else if (type.Equals(typeof(float)) | type.Equals(typeof(float?)))
             {
-                props.Type = Constants.NumberTypeString;
+                props.Type   = Constants.NumberTypeString;
                 props.Format = Constants.FloatTypeString;
             }
             else if (type.Equals(typeof(double)) | type.Equals(typeof(double?)))
             {
-                props.Type = Constants.NumberTypeString;
+                props.Type   = Constants.NumberTypeString;
                 props.Format = Constants.DoubleTypeString;
             }
             else if (type.Equals(typeof(string)))
@@ -457,7 +457,7 @@ namespace Neon.Operator.Analyzers
             }
             else if (type.Equals(typeof(DateTime)) | type.Equals(typeof(DateTime?)))
             {
-                props.Type = Constants.StringTypeString;
+                props.Type   = Constants.StringTypeString;
                 props.Format = Constants.DateTimeTypeString;
             }
             else if (type.IsEnum)
@@ -488,8 +488,7 @@ namespace Neon.Operator.Analyzers
                 };
 
                 props.Required = type.GetProperties()
-                    .Where(
-                        prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
+                    .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
                     .Select(GetPropertyName)
                     .ToList();
                 if (props.Required.Count == 0)

@@ -535,7 +535,7 @@ namespace Neon.Operator.Analyzers
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorAnalyzerLoggingEnabled", out var logEnabledString))
             {
-                if (bool.TryParse(logEnabledString, out var logEnabledbool) == true)
+                if (bool.TryParse(logEnabledString, out var logEnabledbool))
                 {
                     if (!logs.ContainsKey(context.Compilation.AssemblyName))
                     {
