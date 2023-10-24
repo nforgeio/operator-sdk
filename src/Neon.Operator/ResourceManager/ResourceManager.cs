@@ -155,7 +155,7 @@ namespace Neon.Operator.ResourceManager
     /// </item>
     /// </list>
     /// </remarks>
-    public sealed class ResourceManager<TEntity, TController> : IDisposable
+    public sealed class ResourceManager<TEntity, TController> : IResourceManager, IDisposable
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
         where TController : IResourceController<TEntity>
     {
@@ -253,7 +253,7 @@ namespace Neon.Operator.ResourceManager
         /// Starts the resource manager.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when the resource manager has already been started.</exception>
-        private async Task StartAsync()
+        public async Task StartAsync()
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
@@ -285,9 +285,10 @@ namespace Neon.Operator.ResourceManager
                         identity:   Pod.Name);
             }
 
-            await controller.StartAsync(serviceProvider);
-
-            started = true;
+            if (started)
+            {
+                throw new InvalidOperationException($"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
+            }
 
             //-----------------------------------------------------------------
             // Start the leader elector if enabled.
