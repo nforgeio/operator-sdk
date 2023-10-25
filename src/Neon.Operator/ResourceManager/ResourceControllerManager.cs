@@ -66,20 +66,6 @@ namespace Neon.Operator.ResourceManager
         {
             await SyncContext.Clear;
 
-            foreach (var resourceManagerType in componentRegistration.ResourceManagerRegistrations)
-            {
-                try
-                {
-                    var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(resourceManagerType);
-
-                    await resourceManager.StartAsync();
-                }
-                catch (Exception e)
-                {
-                    logger?.LogErrorEx(e);
-                }
-            }
-
             foreach (var registration in componentRegistration.ControllerRegistrations)
             {
                 using (var scope = serviceProvider.CreateScope())
@@ -100,6 +86,20 @@ namespace Neon.Operator.ResourceManager
                     {
                         logger?.LogErrorEx(e);
                     }
+                }
+            }
+
+            foreach (var resourceManagerType in componentRegistration.ResourceManagerRegistrations)
+            {
+                try
+                {
+                    var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(resourceManagerType);
+
+                    await resourceManager.StartAsync();
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
                 }
             }
         }
