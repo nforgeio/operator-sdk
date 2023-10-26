@@ -267,11 +267,10 @@ namespace Neon.Operator.ResourceManager
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
 
             IResourceController<TEntity> controller;
+            
+            controller = CreateController(serviceProvider);
 
-            using (var scope = serviceProvider.CreateScope())
-            {
-                controller = CreateController(scope.ServiceProvider);
-            }
+            await controller.StartAsync(serviceProvider);
 
             options.FieldSelector = options.FieldSelector ?? controller.FieldSelector;
             options.LabelSelector = options.LabelSelector ?? controller.LabelSelector;

@@ -66,29 +66,6 @@ namespace Neon.Operator.ResourceManager
         {
             await SyncContext.Clear;
 
-            foreach (var registration in componentRegistration.ControllerRegistrations)
-            {
-                using (var scope = serviceProvider.CreateScope())
-                {
-                    try
-                    {
-                        (Type controllerType, Type entityType) = registration;
-
-                        logger?.LogInformationEx(() => $"Registering controller [{controllerType.Name}].");
-
-                        var controller = (IResourceController)ActivatorUtilities.CreateInstance(scope.ServiceProvider, controllerType);
-
-                        await controller.StartAsync(serviceProvider);
-
-                        logger?.LogInformationEx(() => $"Registered controller [{controllerType.Name}]");
-                    }
-                    catch (Exception e)
-                    {
-                        logger?.LogErrorEx(e);
-                    }
-                }
-            }
-
             foreach (var resourceManagerType in componentRegistration.ResourceManagerRegistrations)
             {
                 try

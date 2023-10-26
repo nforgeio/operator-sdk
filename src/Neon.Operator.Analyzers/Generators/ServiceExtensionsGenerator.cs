@@ -111,6 +111,13 @@ namespace Neon.Operator
                     usings.Add(componentNs);
                     var componentSystemType = metadataLoadContext.ResolveType($"{componentNs}.{component.Identifier.ValueText}");
 
+                    var ignoreAttribute = componentSystemType.GetCustomAttribute<IgnoreAttribute>();
+
+                    if (ignoreAttribute != null)
+                    {
+                        continue;
+                    }
+
                     var interfaces = componentSystemType.GetInterfaces().ToList();
 
                     if (componentSystemType.BaseType != null)
@@ -173,6 +180,11 @@ namespace Neon.Operator
 
                             var controllerAttribute = componentSystemType.GetCustomAttribute<ResourceControllerAttribute>();
 
+                            if (controllerAttribute.Ignore)
+                            {
+                                break;
+                            }
+
                             if (controllerAttribute != null)
                             {
                                 sb.Append($@"
@@ -198,6 +210,13 @@ namespace Neon.Operator
 
                         case OperatorComponentType.Finalizer:
 
+                            var finalizerAttribute = componentSystemType.GetCustomAttribute<ResourceFinalizerAttribute>();
+
+                            if (finalizerAttribute.Ignore)
+                            {
+                                break;
+                            }
+
                             sb.Append($@"
             builder.AddFinalizer<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
 
@@ -205,12 +224,26 @@ namespace Neon.Operator
 
                         case OperatorComponentType.MutationWebhook:
 
+                            var mutatingWebhookAttribute = componentSystemType.GetCustomAttribute<MutatingWebhookAttribute>();
+
+                            if (mutatingWebhookAttribute.Ignore)
+                            {
+                                break;
+                            }
+
                             sb.Append($@"
             builder.AddMutatingWebhook<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");
 
                             break;
 
                         case OperatorComponentType.ValidationWebhook:
+
+                            var validatingWebhookAttribute = componentSystemType.GetCustomAttribute<ValidatingWebhookAttribute>();
+
+                            if (validatingWebhookAttribute.Ignore)
+                            {
+                                break;
+                            }
 
                             sb.Append($@"
             builder.AddValidatingWebhook<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>();");

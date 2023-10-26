@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesOperatorHostBuilder.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -90,7 +90,11 @@ namespace Neon.Operator
                                 return this.operatorHost.Certificate;
                             };
                         });
-                        options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port, o =>
+                    }
+
+                    options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port, o =>
+                    {
+                        if (!NeonHelper.IsDevWorkstation)
                         {
                             o.UseHttps(httpsOptions =>
                             {
@@ -99,8 +103,8 @@ namespace Neon.Operator
                                     return this.operatorHost.Certificate;
                                 };
                             });
-                        });
-                    }
+                        }
+                    });
                 })
                 .UseStartup(this.operatorHost.StartupType);
         
