@@ -180,13 +180,13 @@ namespace Neon.Operator
 
                             var controllerAttribute = componentSystemType.GetCustomAttribute<ResourceControllerAttribute>();
 
-                            if (controllerAttribute.Ignore)
-                            {
-                                break;
-                            }
-
                             if (controllerAttribute != null)
                             {
+                                if (controllerAttribute.Ignore)
+                                {
+                                    break;
+                                }
+
                                 sb.Append($@"
             builder.AddController<{componentSystemType.Name}, {componentEntityTypeIdentifier.Name}>(
                         options: new ResourceManagerOptions()
@@ -212,7 +212,7 @@ namespace Neon.Operator
 
                             var finalizerAttribute = componentSystemType.GetCustomAttribute<ResourceFinalizerAttribute>();
 
-                            if (finalizerAttribute.Ignore)
+                            if (finalizerAttribute != null && finalizerAttribute.Ignore)
                             {
                                 break;
                             }
@@ -226,7 +226,7 @@ namespace Neon.Operator
 
                             var mutatingWebhookAttribute = componentSystemType.GetCustomAttribute<MutatingWebhookAttribute>();
 
-                            if (mutatingWebhookAttribute.Ignore)
+                            if (mutatingWebhookAttribute != null && mutatingWebhookAttribute.Ignore)
                             {
                                 break;
                             }
@@ -240,7 +240,7 @@ namespace Neon.Operator
 
                             var validatingWebhookAttribute = componentSystemType.GetCustomAttribute<ValidatingWebhookAttribute>();
 
-                            if (validatingWebhookAttribute.Ignore)
+                            if (validatingWebhookAttribute != null && validatingWebhookAttribute.Ignore)
                             {
                                 break;
                             }
