@@ -295,6 +295,13 @@ namespace Neon.Operator.ResourceManager
 
             // Start the leader elector when enabled.
 
+            ResetLeaderElector();
+
+            await Task.CompletedTask;
+        }
+
+        private void ResetLeaderElector()
+        {
             if (leaderConfig != null)
             {
                 leaderElector = new LeaderElector(
@@ -306,8 +313,6 @@ namespace Neon.Operator.ResourceManager
 
                 leaderTask = leaderElector.RunAsync();
             }
-
-            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -561,7 +566,8 @@ namespace Neon.Operator.ResourceManager
             catch (Exception e)
             {
                 logger?.LogErrorEx(e);
-                throw;
+                Thread.Sleep(leaderConfig.LeaseDuration);
+                ResetLeaderElector();
             }
         }
 
@@ -612,19 +618,26 @@ namespace Neon.Operator.ResourceManager
         {
             LeaderIdentity = identity;
 
-            Task.Run(
-                async () =>
-                {
-                    logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] LEADER-IS: {identity}");
-
-                    // Inform the controller.
-
-                    using (var scope = serviceProvider.CreateScope())
+            try
+            {
+                Task.Run(
+                    async () =>
                     {
-                        await CreateController(scope.ServiceProvider).OnNewLeaderAsync(identity);
-                    }
+                        logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] LEADER-IS: {identity}");
 
-                }).Wait();
+                        // Inform the controller.
+
+                        using (var scope = serviceProvider.CreateScope())
+                        {
+                            await CreateController(scope.ServiceProvider).OnNewLeaderAsync(identity);
+                        }
+
+                    }).Wait();
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e);
+            }
         }
 
         /// <summary>
