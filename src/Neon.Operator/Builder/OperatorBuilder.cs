@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -91,6 +92,19 @@ namespace Neon.Operator.Builder
         public IOperatorBuilder AddOperatorBase()
         {
             operatorSettings = (OperatorSettings)Services.Where(s => s.ServiceType == typeof(OperatorSettings)).Single().ImplementationInstance;
+
+            if (string.IsNullOrEmpty(operatorSettings.DeployedNamespace))
+            {
+                var nsFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
+                if (File.Exists(nsFile))
+                {
+                    operatorSettings.DeployedNamespace = File.ReadAllText(nsFile).Trim();
+                }
+                else
+                {
+                    operatorSettings.DeployedNamespace = "default";
+                }
+            }
 
             if (!Services.Any(service => service.ServiceType == typeof(IKubernetes)))
             {
