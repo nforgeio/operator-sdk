@@ -114,22 +114,29 @@ namespace Neon.Operator.Cache
 
             result = CompareEntity(entity);
 
+            TValue oldEntity = default;
+
             cache.AddOrUpdate(
                 key: id,
                 addValueFactory: (id) =>
                 {
                     metrics.ItemsCount.Inc();
                     metrics.ItemsTotal.Inc();
+
+                    oldEntity = entity;
+
                     return Clone(entity);
                 },
-                updateValueFactory: (key, oldEntity) =>
+                updateValueFactory: (key, _oldEntity) =>
                 {
                     metrics.HitsTotal.Inc();
+
+                    oldEntity = _oldEntity;
+
                     return Clone(entity);
                 });
 
-            return entity;
-
+            return oldEntity;
         }
 
         public void Upsert(IEnumerable<TValue> entities)
