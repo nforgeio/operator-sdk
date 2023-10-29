@@ -392,6 +392,8 @@ namespace Neon.Operator.ResourceManager
                     response = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
                         allowWatchBookmarks: true,
                         watch: true);
+
+                    response.Dispose();
                 }
                 else
                 {
@@ -401,18 +403,19 @@ namespace Neon.Operator.ResourceManager
                             @namespace,
                             allowWatchBookmarks: true,
                             watch:               true);
+
+                        response.Dispose();
                     }
                 }
             }
             catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.Forbidden)
             {
-                logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
+                logger?.LogErrorEx(e, () => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
                 throw;
             }
             catch (Exception e)
             {
-                logger?.LogErrorEx(() => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
-                logger?.LogErrorEx(() => e.Message);
+                logger?.LogErrorEx(e, () => $"Cannot watch type {typeof(TEntity)}.");
 
                 throw;
             }
@@ -437,6 +440,8 @@ namespace Neon.Operator.ResourceManager
                                 dependent.GetKubernetesEntityAttribute().PluralName,
                                 allowWatchBookmarks: true,
                                 watch: true);
+
+                            response.Dispose();
                         }
                         else
                         {
@@ -449,18 +454,19 @@ namespace Neon.Operator.ResourceManager
                                     dependent.GetKubernetesEntityAttribute().PluralName,
                                     allowWatchBookmarks: true,
                                     watch: true);
+
+                                response.Dispose();
                             }
                         }
                     }
                     catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.Forbidden)
                     {
-                        logger?.LogErrorEx(() => $"Cannot watch type {dependent.GetEntityType()}, please check RBAC rules for the controller.");
+                        logger?.LogErrorEx(e, () => $"Cannot watch type {dependent.GetEntityType()}, please check RBAC rules for the controller.");
                         throw;
                     }
                     catch (Exception e)
                     {
-                        logger?.LogErrorEx(() => $"Cannot watch type {dependent.GetEntityType()}, please check RBAC rules for the controller.");
-                        logger?.LogErrorEx(() => e.Message);
+                        logger?.LogErrorEx(e, () => $"Cannot watch type {typeof(TEntity)}.");
 
                         throw;
                     }
@@ -499,7 +505,8 @@ namespace Neon.Operator.ResourceManager
                     logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
                 },
                 fieldSelector:     $"metadata.name={crdName}",
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken,
+                logger: logger);
 
             crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
 
@@ -517,7 +524,8 @@ namespace Neon.Operator.ResourceManager
                             await Task.CompletedTask;
                         },
                         fieldSelector:     $"metadata.name={crdName}",
-                        cancellationToken: cancellationToken);
+                        cancellationToken: cancellationToken,
+                        logger: logger);
 
                     crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
                 }
@@ -920,6 +928,8 @@ namespace Neon.Operator.ResourceManager
 
                                                     if (newStatusJson != oldStatusJson)
                                                     {
+                                                        logger?.LogDebugEx(() => $"Status updated on resource [{resource.Kind}/{resourceName}]");
+
                                                         try
                                                         {
                                                             metrics.StatusModifiedTotal?.Inc();
@@ -935,11 +945,18 @@ namespace Neon.Operator.ResourceManager
                                                             logger?.LogErrorEx(e);
                                                         }
                                                     }
+                                                    else
+                                                    {
+                                                        logger?.LogDebugEx(() => $"Status not updated/no changes on resource [{resource.Kind}/{resourceName}].");
+                                                    }
 
                                                     break;
 
                                                 case ModifiedEventType.FinalizerUpdate:
+                                                case ModifiedEventType.NoChanges:
                                                 default:
+
+                                                    logger?.LogDebugEx(() => $"Event is {modifiedEventType}. No action needed.");
 
                                                     break;
                                             }
@@ -998,24 +1015,13 @@ namespace Neon.Operator.ResourceManager
                         var resource     = @event.Value;
                         var resourceName = resource.Metadata.Name;
 
-                        resourceCache.Compare(resource, out var modifiedEventType);
-                        logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type}/{modifiedEventType} event.");
+                        logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
 
                         switch (@event.Type)
                         {
                             case (k8s.WatchEventType)WatchEventType.Added:
                             case (k8s.WatchEventType)WatchEventType.Deleted:
-
-                                await eventQueue.DequeueAsync(@event);
-                                await eventQueue.EnqueueAsync(@event);
-                                break;
-
                             case (k8s.WatchEventType)WatchEventType.Modified:
-
-                                if (modifiedEventType == ModifiedEventType.NoChanges)
-                                {
-                                    return;
-                                }
 
                                 await eventQueue.DequeueAsync(@event);
                                 await eventQueue.EnqueueAsync(@event);
@@ -1177,7 +1183,8 @@ namespace Neon.Operator.ResourceManager
                             namespaceParameter: ns, 
                             fieldSelector: options.FieldSelector,
                             labelSelector: options.LabelSelector,
-                            cancellationToken: cancellationToken));
+                            cancellationToken: cancellationToken,
+                            logger: logger));
                     }
                 }
                 else
@@ -1186,7 +1193,8 @@ namespace Neon.Operator.ResourceManager
                         actionAsync: enqueueAsync,
                         fieldSelector: options.FieldSelector,
                         labelSelector: options.LabelSelector,
-                        cancellationToken: cancellationToken));
+                        cancellationToken: cancellationToken,
+                        logger: logger));
                 }
 
                 foreach (var dependent in options.DependentResources)
@@ -1199,6 +1207,7 @@ namespace Neon.Operator.ResourceManager
                     args[3] = options.FieldSelector;
                     args[4] = options.LabelSelector;
                     args[8] = cancellationToken;
+                    args[9] = logger;
 
                     if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                     {
@@ -1215,7 +1224,7 @@ namespace Neon.Operator.ResourceManager
                     }
                 }
 
-                await NeonHelper.WaitAllAsync(tasks);
+                await NeonHelper.WaitAllAsync(tasks, cancellationToken: cancellationToken);
             }
             catch (OperationCanceledException)
             {
