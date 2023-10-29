@@ -223,7 +223,8 @@ namespace Neon.Operator
                     logger?.LogInformationEx("Updated webhook certificate");
                 },
                 OperatorSettings.DeployedNamespace,
-                fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls");
+                fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls",
+                logger: logger);
 
             using (TraceContext.ActivitySource?.StartActivity("WaitForSecret", ActivityKind.Internal))
             {
