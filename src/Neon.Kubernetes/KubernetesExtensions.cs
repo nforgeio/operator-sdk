@@ -915,14 +915,17 @@ namespace Neon.K8s
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
-            await new Watcher<T>(k8s, logger).WatchAsync(actionAsync,
-                namespaceParameter,
-                fieldSelector:        fieldSelector,
-                labelSelector:        labelSelector,
-                resourceVersion:      resourceVersion,
-                resourceVersionMatch: resourceVersionMatch,
-                timeoutSeconds:       timeoutSeconds,
-                cancellationToken:    cancellationToken);
+            using (var watcher = new Watcher<T>(k8s, logger))
+            {
+                await watcher.WatchAsync(actionAsync,
+                    namespaceParameter,
+                    fieldSelector:        fieldSelector,
+                    labelSelector:        labelSelector,
+                    resourceVersion:      resourceVersion,
+                    resourceVersionMatch: resourceVersionMatch,
+                    timeoutSeconds:       timeoutSeconds,
+                    cancellationToken:    cancellationToken);
+            }
         }
 
         /// <summary>

@@ -122,9 +122,19 @@ namespace Neon.K8s
         /// <inheritdoc/>
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        private void Dispose(bool disposing)
+        {
             if (eventChannel != null)
             {
                 eventChannel = null;
+            }
+
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -171,16 +181,18 @@ namespace Neon.K8s
             // This is where you'll actually listen for watch events from Kubernetes.
             // When you receive an event, do this:
 
+            Task<HttpOperationResponse<object>> listResponse = default;
+
             while (true)
             {
                 this.resourceVersion = resourceVersion ?? "0";
+
+                logger?.LogDebugEx($"Watching {typeof(T)} with resource version {this.resourceVersion}.");
 
                 while (!string.IsNullOrEmpty(this.resourceVersion))
                 {
                     try
                     {
-                        Task<HttpOperationResponse<object>> listResponse;
-
                         if (string.IsNullOrEmpty(namespaceParameter))
                         {
                             listResponse = k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
@@ -196,19 +208,38 @@ namespace Neon.K8s
                         else
                         {
                             listResponse = k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
-                            namespaceParameter,
-                            allowWatchBookmarks:  true,
-                            fieldSelector:        fieldSelector,
-                            labelSelector:        labelSelector,
-                            resourceVersion:      this.resourceVersion,
-                            resourceVersionMatch: resourceVersionMatch,
-                            timeoutSeconds:       timeoutSeconds,
-                            cancellationToken:    cancellationToken,
-                            watch:                true);
+                                namespaceParameter,
+                                allowWatchBookmarks:  true,
+                                fieldSelector:        fieldSelector,
+                                labelSelector:        labelSelector,
+                                resourceVersion:      this.resourceVersion,
+                                resourceVersionMatch: resourceVersionMatch,
+                                timeoutSeconds:       timeoutSeconds,
+                                cancellationToken:    cancellationToken,
+                                watch:                true);
                         }
 
                         await foreach (var (type, item) in listResponse.WatchAsync<T, object>())
                         {
+                            var sb = new StringBuilder();
+
+                            sb.Append(item.ApiVersion);
+                            sb.Append($"/{item.Kind}");
+
+                            if (!string.IsNullOrEmpty(item.Namespace()))
+                            {
+                                sb.Append($"/{item.Namespace()}");
+                            }
+
+                            if (!string.IsNullOrEmpty(item.Name()))
+                            {
+                                sb.Append($"/{item.Name()}");
+                            }
+
+                            var crdId = sb.ToString();
+
+                            logger?.LogDebugEx(() => $"Received {type.ToMemberString()} event for type {typeof(T)} [{crdId}].");
+
                             await eventChannel.Writer.WriteAsync(new WatchEvent<T>() { Type = type, Value = item });
                         }
                     }
@@ -232,34 +263,13 @@ namespace Neon.K8s
                             this.resourceVersion = null;
                         }
                     }
-                    catch (HttpOperationException e)
-                    {
-                        logger?.LogErrorEx(e);
-
-                        var statusCode = e.Response.StatusCode;
-
-                        switch (statusCode)
-                        {
-                            case HttpStatusCode.GatewayTimeout:
-                            case HttpStatusCode.InternalServerError:
-                            case HttpStatusCode.ServiceUnavailable:
-                            case (HttpStatusCode)423:   // Locked
-                            case (HttpStatusCode)429:   // Too many requests
-
-                                return;
-
-                            default:
-
-                                logger?.LogErrorEx("Cannot watch resource, please check RBAC rules for this service account.");
-
-                                throw;
-                        }
-                    }
                     catch (Exception e)
                     {
                         logger?.LogErrorEx(e);
-
-                        throw;
+                    }
+                    finally
+                    {
+                        listResponse.Dispose();
                     }
                 }
             }
@@ -269,11 +279,13 @@ namespace Neon.K8s
         /// Handles received events.
         /// </summary>
         /// <param name="action">The event handler.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="KubernetesException"></exception>
-        private async Task EventHandlerAsync(Func<WatchEvent<T>, Task> action)
+        private async Task EventHandlerAsync(Func<WatchEvent<T>, Task> action, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try
@@ -282,9 +294,11 @@ namespace Neon.K8s
                 {
                     WatchEvent<T> @event;
 
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     @event = await eventChannel.Reader.ReadAsync();
 
-                    logger?.LogDebugEx(() => $"Processing watch event: {@event.Value.Uid()}");
+                    logger?.LogDebugEx(() => $"Processing watch event: {(string.IsNullOrEmpty(@event.Value.Uid()) ? "BOOKMARK" : @event.Value.Uid())}");
 
                     switch (@event.Type)
                     {
@@ -318,6 +332,12 @@ namespace Neon.K8s
 
                 logger?.LogInformationEx("Disposing");
             }
+            catch (OperationCanceledException)
+            {
+                // This normal: we'll see this when the watcher is disposed.
+
+                logger?.LogInformationEx("Disposing");
+            }
         }
 
         /// <summary>
@@ -344,26 +364,30 @@ namespace Neon.K8s
             {
                 if (string.IsNullOrEmpty(namespaceParameter))
                 {
-                    await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
-                    fieldSelector:        fieldSelector,
-                    labelSelector:        labelSelector,
-                    limit:                1,
-                    resourceVersion:      resourceVersion,
-                    resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds:       timeoutSeconds,
-                    watch:                false);
+                    var result = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
+                        fieldSelector:        fieldSelector,
+                        labelSelector:        labelSelector,
+                        limit:                1,
+                        resourceVersion:      resourceVersion,
+                        resourceVersionMatch: resourceVersionMatch,
+                        timeoutSeconds:       timeoutSeconds,
+                        watch:                false);
+
+                    result.Dispose();
                 }
                 else
                 {
-                    await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
-                    namespaceParameter,
-                    fieldSelector:        fieldSelector,
-                    labelSelector:        labelSelector,
-                    limit:                1,
-                    resourceVersion:      resourceVersion,
-                    resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds:       timeoutSeconds,
-                    watch:                false);
+                    var result = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
+                        namespaceParameter,
+                        fieldSelector:        fieldSelector,
+                        labelSelector:        labelSelector,
+                        limit:                1,
+                        resourceVersion:      resourceVersion,
+                        resourceVersionMatch: resourceVersionMatch,
+                        timeoutSeconds:       timeoutSeconds,
+                        watch:                false);
+
+                    result.Dispose();
                 }
             }
             catch (KubernetesException kubernetesException)
