@@ -314,8 +314,6 @@ namespace Neon.Operator.ResourceManager
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
 
-            logger?.LogDebugEx(() => $"Dequeuing resource [{@event.Value.Kind}/{@event.Value.Name()}].");
-
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
             if (queuedEvent == null) 
@@ -325,6 +323,8 @@ namespace Neon.Operator.ResourceManager
 
             if (queuedEvent.Value != null)
             {
+                logger?.LogDebugEx(() => $"Dequeuing resource [{@event.Value.Kind}/{@event.Value.Name()}].");
+
                 if (!queue[queuedEvent].IsCancellationRequested)
                 {
                     queue[queuedEvent].Cancel();
