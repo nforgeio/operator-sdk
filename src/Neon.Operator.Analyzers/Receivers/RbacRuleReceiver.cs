@@ -96,21 +96,6 @@ namespace Neon.Operator.Analyzers
                 catch { }
             }
 
-            //if (syntaxNode is ClassDeclarationSyntax)
-            //{
-            //    var attributeSyntaxes = syntaxNode
-            //        .DescendantNodes()
-            //        .OfType<AttributeSyntax>()?
-            //        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-            //                .Any(gns => attributes.Contains(gns.Identifier.ValueText))
-            //                || attributes.Contains(@base.Name.ToString()));
-
-            //    AttributesToRegister.AddRange(attributeSyntaxes);
-
-            //    var dns = syntaxNode.DescendantNodes();
-            //    var attrs = dns.OfType<AttributeSyntax>();
-            //}
-
             if (!HasMutatingWebhooks)
             {
                 if (syntaxNode is ClassDeclarationSyntax)
