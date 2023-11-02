@@ -58,9 +58,10 @@ namespace Neon.Operator
         //---------------------------------------------------------------------
         // Instance members
 
-        private string[]    args;
-        private ILogger     logger;
-        private IKubernetes k8s;
+        private string[]                        args;
+        private ILogger<KubernetesOperatorHost> logger;
+        private ILoggerFactory                  loggerFactory;
+        private IKubernetes                     k8s;
 
         /// <summary>
         /// Consructor.
@@ -99,12 +100,13 @@ namespace Neon.Operator
 
             if (args == null || args?.Count() == 0)
             {
-                Host   = HostBuilder.Build();
-                logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();
+                Host          = HostBuilder.Build();
+                loggerFactory = Host.Services.GetService<ILoggerFactory>();
+                logger        = loggerFactory?.CreateLogger<KubernetesOperatorHost>();
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = KubeHelper.GetKubernetesClient();
+                    k8s = KubeHelper.GetKubernetesClient(loggerFactory: loggerFactory);
 
                     ConfigureRbacAsync().RunSynchronously();
                 }
@@ -136,12 +138,13 @@ namespace Neon.Operator
 
             if (args == null || args?.Count() == 0) 
             {
-                Host   = HostBuilder.Build();
-                logger = Host.Services.GetService<ILoggerFactory>()?.CreateLogger<KubernetesOperatorHost>();
+                Host          = HostBuilder.Build();
+                loggerFactory = Host.Services.GetService<ILoggerFactory>();
+                logger        = loggerFactory?.CreateLogger<KubernetesOperatorHost>();
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = KubeHelper.GetKubernetesClient();
+                    k8s = KubeHelper.GetKubernetesClient(loggerFactory: loggerFactory);
 
                     await ConfigureRbacAsync();
                 }
@@ -222,9 +225,10 @@ namespace Neon.Operator
 
                     logger?.LogInformationEx("Updated webhook certificate");
                 },
-                OperatorSettings.DeployedNamespace,
-                fieldSelector: $"metadata.name={OperatorSettings.Name}-webhook-tls",
-                logger: logger);
+                namespaceParameter: OperatorSettings.DeployedNamespace,
+                fieldSelector:      $"metadata.name={OperatorSettings.Name}-webhook-tls",
+                retryDelay:         OperatorSettings.WatchRetryDelay,
+                logger:             logger);
 
             using (TraceContext.ActivitySource?.StartActivity("WaitForSecret", ActivityKind.Internal))
             {

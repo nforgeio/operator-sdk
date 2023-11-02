@@ -130,6 +130,11 @@ namespace Neon.Operator
         public string ReadinessEndpooint { get; set; } = "/ready";
 
         /// <summary>
+        /// The amount of time to wait between watches when an error occurs.
+        /// </summary>
+        public TimeSpan WatchRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
         /// Whether certs are provided by CertManager.
         /// </summary>
         public bool CertManagerEnabled 

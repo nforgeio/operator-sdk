@@ -112,11 +112,13 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="k8s">The Kubernetes clien.</param>
         /// <param name="logger">Optionally specifies the logger to use.</param>
-        public Watcher(IKubernetes k8s, ILogger logger = null)
+        public Watcher(
+            IKubernetes k8s,
+            ILogger logger = null)
         {
-            this.k8s     = k8s;
-            this.logger  = logger;
-            eventChannel = Channel.CreateUnbounded<WatchEvent<T>>();
+            this.k8s          = k8s;
+            this.logger       = logger;
+            this.eventChannel = Channel.CreateUnbounded<WatchEvent<T>>();
         }
 
         /// <inheritdoc/>
@@ -148,6 +150,7 @@ namespace Neon.K8s
         /// <param name="resourceVersion">The start resource version.</param>
         /// <param name="resourceVersionMatch">The optional resourceVersionMatch setting.</param>
         /// <param name="timeoutSeconds">Optional timeout override.</param>
+        /// <param name="retryDelay">Optionally specifies a delay period to wait between watch errors.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WatchAsync(
@@ -158,21 +161,10 @@ namespace Neon.K8s
             string                      resourceVersion      = null,
             string                      resourceVersionMatch = null,
             int?                        timeoutSeconds       = null,
+            TimeSpan?                   retryDelay           = null,
             CancellationToken           cancellationToken    = default)
         {
             await SyncContext.Clear;
-
-            // Validate the resource version we're being given.
-
-            if (!string.IsNullOrEmpty(resourceVersion))
-            {
-                await ValidateResourceVersionAsync(
-                    fieldSelector:        fieldSelector,
-                    labelSelector:        labelSelector,
-                    resourceVersion:      resourceVersion,
-                    resourceVersionMatch: resourceVersionMatch,
-                    timeoutSeconds:       timeoutSeconds);
-            }
 
             // Start the loop that handles the async action callbacks.
 
@@ -185,92 +177,118 @@ namespace Neon.K8s
 
             while (true)
             {
-                this.resourceVersion = resourceVersion ?? "0";
+                logger?.LogDebugEx($"Watching {typeof(T)} with resource version [{this.resourceVersion}].");
 
-                logger?.LogDebugEx($"Watching {typeof(T)} with resource version {this.resourceVersion}.");
-
-                while (!string.IsNullOrEmpty(this.resourceVersion))
+                try
                 {
-                    try
+                    // Validate the resource version we're being given.
+
+                    if (!string.IsNullOrEmpty(this.resourceVersion)
+                        && this.resourceVersion != "0")
                     {
-                        if (string.IsNullOrEmpty(namespaceParameter))
-                        {
-                            listResponse = k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
-                                allowWatchBookmarks:  true,
-                                fieldSelector:        fieldSelector,
-                                labelSelector:        labelSelector,
-                                resourceVersion:      this.resourceVersion,
-                                resourceVersionMatch: resourceVersionMatch,
-                                timeoutSeconds:       timeoutSeconds,
-                                watch:                true,
-                                cancellationToken:    cancellationToken);
-                        }
-                        else
-                        {
-                            listResponse = k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
-                                namespaceParameter,
-                                allowWatchBookmarks:  true,
-                                fieldSelector:        fieldSelector,
-                                labelSelector:        labelSelector,
-                                resourceVersion:      this.resourceVersion,
-                                resourceVersionMatch: resourceVersionMatch,
-                                timeoutSeconds:       timeoutSeconds,
-                                cancellationToken:    cancellationToken,
-                                watch:                true);
-                        }
+                        await ValidateResourceVersionAsync(
+                            fieldSelector:        fieldSelector,
+                            labelSelector:        labelSelector,
+                            resourceVersion:      this.resourceVersion,
+                            timeoutSeconds:       timeoutSeconds);
+                    }
 
-                        await foreach (var (type, item) in listResponse.WatchAsync<T, object>())
+                    if (string.IsNullOrEmpty(namespaceParameter))
+                    {
+                        listResponse = k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<T>(
+                            allowWatchBookmarks:  true,
+                            fieldSelector:        fieldSelector,
+                            labelSelector:        labelSelector,
+                            resourceVersion:      this.resourceVersion,
+                            resourceVersionMatch: resourceVersionMatch,
+                            timeoutSeconds:       timeoutSeconds,
+                            watch:                true,
+                            cancellationToken:    cancellationToken);
+                    }
+                    else
+                    {
+                        listResponse = k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<T>(
+                            namespaceParameter,
+                            allowWatchBookmarks:  true,
+                            fieldSelector:        fieldSelector,
+                            labelSelector:        labelSelector,
+                            resourceVersion:      this.resourceVersion,
+                            resourceVersionMatch: resourceVersionMatch,
+                            timeoutSeconds:       timeoutSeconds,
+                            cancellationToken:    cancellationToken,
+                            watch:                true);
+                    }
+
+                    await foreach (var (type, item) in listResponse.WatchAsync<T, object>(
+                        onError: (exception) =>
                         {
-                            var sb = new StringBuilder();
+                            logger?.LogErrorEx(exception);
 
-                            sb.Append(item.ApiVersion);
-                            sb.Append($"/{item.Kind}");
-
-                            if (!string.IsNullOrEmpty(item.Namespace()))
+                            if (exception is KubernetesException)
                             {
-                                sb.Append($"/{item.Namespace()}");
+                                if (string.Equals(((KubernetesException)exception).Status.Reason, "Expired", StringComparison.Ordinal))
+                                {
+                                    this.resourceVersion = null;
+                                }
                             }
-
-                            if (!string.IsNullOrEmpty(item.Name()))
-                            {
-                                sb.Append($"/{item.Name()}");
-                            }
-
-                            var crdId = sb.ToString();
-
-                            logger?.LogDebugEx(() => $"Received {type.ToMemberString()} event for type {typeof(T)} [{crdId}].");
-
-                            await eventChannel.Writer.WriteAsync(new WatchEvent<T>() { Type = type, Value = item });
-                        }
-                    }
-                    catch (OperationCanceledException canceledException)
+                        },
+                        cancellationToken: cancellationToken))
                     {
-                        // This is the signal to quit.
-                        logger?.LogDebugEx(canceledException);
-                        logger?.LogDebugEx(() => "Operation canceled, quitting.");
+                        var sb = new StringBuilder();
 
-                        return;
-                    }
-                    catch (KubernetesException kubernetesException)
-                    {
-                        logger?.LogErrorEx(kubernetesException);
+                        sb.Append(item.ApiVersion);
+                        sb.Append($"/{item.Kind}");
 
-                        // Deal with this non-recoverable condition "too old resource version"
-
-                        if (string.Equals(kubernetesException.Status.Reason, "Expired", StringComparison.Ordinal))
+                        if (!string.IsNullOrEmpty(item.Namespace()))
                         {
-                            // force control back to outer loop
-                            this.resourceVersion = null;
+                            sb.Append($"/{item.Namespace()}");
                         }
+
+                        if (!string.IsNullOrEmpty(item.Name()))
+                        {
+                            sb.Append($"/{item.Name()}");
+                        }
+
+                        var crdId = sb.ToString();
+
+                        logger?.LogDebugEx(() => $"Received {type.ToMemberString()} event for type {typeof(T)} [{crdId}].");
+
+                        await eventChannel.Writer.WriteAsync(new WatchEvent<T>() { Type = type, Value = item });
                     }
-                    catch (Exception e)
+                }
+                catch (OperationCanceledException canceledException)
+                {
+                    // This is the signal to quit.
+                    logger?.LogDebugEx(canceledException);
+                    logger?.LogDebugEx(() => "Operation canceled, quitting.");
+
+                    return;
+                }
+                catch (KubernetesException kubernetesException)
+                {
+                    logger?.LogErrorEx(kubernetesException);
+
+                    // Deal with this non-recoverable condition "too old resource version"
+
+                    if (string.Equals(kubernetesException.Status.Reason, "Expired", StringComparison.Ordinal))
                     {
-                        logger?.LogErrorEx(e);
+                        this.resourceVersion = null;
                     }
-                    finally
-                    {
-                        listResponse.Dispose();
-                    }
+                }
+                catch (Exception e)
+                {
+                    logger?.LogErrorEx(e);
+                }
+                finally
+                {
+                    listResponse.Dispose();
+                }
+
+                if (retryDelay.HasValue)
+                {
+                    logger?.LogDebugEx(() => $"Sleeping for {retryDelay.Value.TotalSeconds} seconds before restarting watch.");
+
+                    await Task.Delay(retryDelay.Value);
                 }
             }
         }
@@ -305,6 +323,7 @@ namespace Neon.K8s
                         case WatchEventType.Bookmark:
 
                             resourceVersion = @event.Value.ResourceVersion();
+
                             break;
 
                         case WatchEventType.Error:
@@ -315,9 +334,10 @@ namespace Neon.K8s
                         case WatchEventType.Modified:
                         case WatchEventType.Deleted:
 
-                            resourceVersion = @event.Value.ResourceVersion();
-
                             await action(@event);
+
+                            //resourceVersion = @event.Value.ResourceVersion();
+
                             break;
 
                         default:
@@ -347,7 +367,6 @@ namespace Neon.K8s
         /// <param name="namespaceParameter">The object namespace, or null for cluster objects</param>
         /// <param name="fieldSelector">Optional field selector</param>
         /// <param name="labelSelector">Optional label selector.</param>
-        /// <param name="resourceVersionMatch">Optional resourceVersionMatch parameter.</param>
         /// <param name="timeoutSeconds">Optional timeout.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ValidateResourceVersionAsync(
@@ -355,7 +374,6 @@ namespace Neon.K8s
             string  namespaceParameter   = null,
             string  fieldSelector        = null,
             string  labelSelector        = null,
-            string  resourceVersionMatch = null,
             int?    timeoutSeconds       = null)
         {
             await SyncContext.Clear;
@@ -369,7 +387,7 @@ namespace Neon.K8s
                         labelSelector:        labelSelector,
                         limit:                1,
                         resourceVersion:      resourceVersion,
-                        resourceVersionMatch: resourceVersionMatch,
+                        resourceVersionMatch: "NotOlderThan",
                         timeoutSeconds:       timeoutSeconds,
                         watch:                false);
 
@@ -383,7 +401,7 @@ namespace Neon.K8s
                         labelSelector:        labelSelector,
                         limit:                1,
                         resourceVersion:      resourceVersion,
-                        resourceVersionMatch: resourceVersionMatch,
+                        resourceVersionMatch: "NotOlderThan",
                         timeoutSeconds:       timeoutSeconds,
                         watch:                false);
 
@@ -400,6 +418,18 @@ namespace Neon.K8s
                 {
                     throw;
                 }
+            }
+            catch (HttpOperationException httpOperationException)
+            {
+                logger?.LogErrorEx(httpOperationException);
+                if (httpOperationException.Response.StatusCode == HttpStatusCode.Gone)
+                {
+                    this.resourceVersion = "0";
+                }
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e);
             }
         }
     }

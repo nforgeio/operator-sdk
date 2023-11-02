@@ -5,6 +5,9 @@ using System.Security.Cryptography.X509Certificates;
 using k8s;
 using k8s.Models;
 
+using Microsoft.Extensions.Http.Logging;
+using Microsoft.Extensions.Logging;
+
 namespace Neon.K8s
 {
     /// <summary>
@@ -63,10 +66,12 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="kubeConfigPath"></param>
         /// <param name="currentContext"></param>
+        /// <param name="loggerFactory"></param>
         /// <returns></returns>
         public static IKubernetes GetKubernetesClient(
-            string kubeConfigPath = null,
-            string currentContext = null)
+            string         kubeConfigPath = null,
+            string         currentContext = null,
+            ILoggerFactory loggerFactory  = null)
         {
             KubernetesClientConfiguration config = null;
 
@@ -88,8 +93,17 @@ namespace Neon.K8s
                 config.SslCaCerts = store.Certificates;
             }
 
-            var k8s = new Kubernetes(config, new KubernetesRetryHandler());
+            KubernetesRetryHandler retryHandler = null;
+            if (loggerFactory == null)
+            {
+                retryHandler = new KubernetesRetryHandler();
+            }
+            else
+            {
+                retryHandler = new KubernetesRetryHandler(new LoggingHttpMessageHandler(loggerFactory.CreateLogger<IKubernetes>()));
+            }
 
+            var k8s = new Kubernetes(config, retryHandler);
             return k8s;
         }
     }

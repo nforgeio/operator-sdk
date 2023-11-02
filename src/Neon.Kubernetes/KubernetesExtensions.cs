@@ -898,6 +898,7 @@ namespace Neon.K8s
         /// <param name="resourceVersion">Optionally specifies a resource version.</param>
         /// <param name="resourceVersionMatch">Optionally specifies a <b>resourceVersionMatch</b> setting.</param>
         /// <param name="timeoutSeconds">Optionally specifies a timeout override.</param>
+        /// <param name="retryDelay">Optionally specifies a delay period to wait between watch errors.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <param name="logger">Optionally specifies a <see cref="ILogger"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -910,6 +911,7 @@ namespace Neon.K8s
             string                      resourceVersion      = null,
             string                      resourceVersionMatch = null,
             int?                        timeoutSeconds       = null,
+            TimeSpan?                   retryDelay           = null,
             CancellationToken           cancellationToken    = default,
             ILogger                     logger               = null) 
             
@@ -924,6 +926,7 @@ namespace Neon.K8s
                     resourceVersion:      resourceVersion,
                     resourceVersionMatch: resourceVersionMatch,
                     timeoutSeconds:       timeoutSeconds,
+                    retryDelay:           retryDelay,
                     cancellationToken:    cancellationToken);
             }
         }

@@ -505,8 +505,9 @@ namespace Neon.Operator.ResourceManager
                     logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
                 },
                 fieldSelector:     $"metadata.name={crdName}",
+                retryDelay:        operatorSettings.WatchRetryDelay,
                 cancellationToken: cancellationToken,
-                logger: logger);
+                logger:            logger);
 
             crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
 
@@ -524,8 +525,9 @@ namespace Neon.Operator.ResourceManager
                             await Task.CompletedTask;
                         },
                         fieldSelector:     $"metadata.name={crdName}",
+                        retryDelay:        operatorSettings.WatchRetryDelay,
                         cancellationToken: cancellationToken,
-                        logger: logger);
+                        logger:            logger);
 
                     crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
                 }
@@ -1179,22 +1181,24 @@ namespace Neon.Operator.ResourceManager
                     foreach (var ns in resourceNamespaces)
                     {
                         tasks.Add(k8s.WatchAsync<TEntity>(
-                            actionAsync: enqueueAsync, 
+                            actionAsync:        enqueueAsync, 
                             namespaceParameter: ns, 
-                            fieldSelector: options.FieldSelector,
-                            labelSelector: options.LabelSelector,
-                            cancellationToken: cancellationToken,
-                            logger: logger));
+                            fieldSelector:      options.FieldSelector,
+                            labelSelector:      options.LabelSelector,
+                            retryDelay:         operatorSettings.WatchRetryDelay,
+                            cancellationToken:  cancellationToken,
+                            logger:             logger));
                     }
                 }
                 else
                 {
                     tasks.Add(k8s.WatchAsync<TEntity>(
-                        actionAsync: enqueueAsync,
-                        fieldSelector: options.FieldSelector,
-                        labelSelector: options.LabelSelector,
+                        actionAsync:       enqueueAsync,
+                        fieldSelector:     options.FieldSelector,
+                        labelSelector:     options.LabelSelector,
+                        retryDelay:        operatorSettings.WatchRetryDelay,
                         cancellationToken: cancellationToken,
-                        logger: logger));
+                        logger:            logger));
                 }
 
                 foreach (var dependent in options.DependentResources)
@@ -1206,8 +1210,9 @@ namespace Neon.Operator.ResourceManager
                     args[1] = enqueueDependentAsync;
                     args[3] = options.FieldSelector;
                     args[4] = options.LabelSelector;
-                    args[8] = cancellationToken;
-                    args[9] = logger;
+                    args[8] = operatorSettings.WatchRetryDelay;
+                    args[9] = cancellationToken;
+                    args[10] = logger;
 
                     if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
                     {

@@ -31,6 +31,8 @@ using k8s.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Http.Logging;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.K8s;
@@ -118,7 +120,19 @@ namespace Neon.Operator.Builder
                     k8sClientConfig.SslCaCerts = store.Certificates;
                 }
 
-                var k8s = new Kubernetes(k8sClientConfig, new KubernetesRetryHandler());
+                var loggerFactory = (ILoggerFactory)Services.Where(service => service.ServiceType == typeof(ILoggerFactory)).FirstOrDefault()?.ImplementationInstance;
+
+                KubernetesRetryHandler retryHandler = null;
+                if (loggerFactory != null)
+                {
+                    retryHandler = new KubernetesRetryHandler(new LoggingHttpMessageHandler(loggerFactory.CreateLogger<IKubernetes>()));
+                }
+                else
+                {
+                    retryHandler = new KubernetesRetryHandler();
+                }
+
+                var k8s = new Kubernetes(k8sClientConfig, retryHandler);
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
