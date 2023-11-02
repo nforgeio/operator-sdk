@@ -57,6 +57,11 @@ namespace Neon.Operator.Attributes
         public int MaxConcurrentReconciles { get; set; } = 1;
 
         /// <summary>
+        /// The maximum number of finalizers per resource manager.
+        /// </summary>
+        public int MaxConcurrentFinalizers { get; set; } = 1;
+
+        /// <summary>
         /// The minimum number of seconds to wait before requeuing after an error.
         /// </summary>
         public int ErrorMinRequeueIntervalSeconds { get; set; } = 10;

@@ -93,6 +93,11 @@ namespace Neon.Operator.ResourceManager
         public int MaxConcurrentReconciles { get; set; } = 1;
 
         /// <summary>
+        /// The maximum number of finalizers per resource manager.
+        /// </summary>
+        public int MaxConcurrentFinalizers { get; set; } = 1;
+
+        /// <summary>
         /// Validates the option properties.
         /// </summary>
         /// <exception cref="ValidationException">Thrown when any of the properties are invalid.</exception>

@@ -198,6 +198,7 @@ namespace Neon.Operator
                             ErrorMinRequeueInterval         = TimeSpan.FromSeconds({controllerAttribute.ErrorMinRequeueIntervalSeconds}),
                             ErrorMaxRequeueInterval         = TimeSpan.FromSeconds({controllerAttribute.ErrorMaxRequeueIntervalSeconds}),
                             MaxConcurrentReconciles         = {controllerAttribute.MaxConcurrentReconciles},
+                            MaxConcurrentFinalizers         = {controllerAttribute.MaxConcurrentFinalizers}
                         }});");
                             }
                             else

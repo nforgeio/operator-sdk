@@ -54,7 +54,9 @@ namespace Neon.Operator.ResourceManager
         private readonly EventQueueMetrics<TEntity, TController>                                metrics;
         private readonly Func<WatchEvent<TEntity>, Task>                                        eventHandler;
         private readonly Channel<string>                                                        eventChannel;
-        private readonly Task[]                                                                 consumerTasks;
+        private readonly Channel<string>                                                        finalizeChannel;
+        private readonly Task[]                                                                 reconcileTasks;
+        private readonly Task[]                                                                 finalizeTasks;
 
         /// <summary>
         /// Constructor.
@@ -76,17 +78,19 @@ namespace Neon.Operator.ResourceManager
 
             options ??= new ResourceManagerOptions();
 
-            this.k8s           = k8s;
-            this.options       = options;
-            this.eventHandler  = eventHandler;
-            this.metrics       = metrics;
-            this.logger        = loggerFactory?.CreateLogger<EventQueue<TEntity, TController>>();
-            this.queue         = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
-            this.currentEvents = new ConcurrentDictionary<string, DateTime>();
-            this.eventChannel  = Channel.CreateUnbounded<string>();
-            this.consumerTasks = new Task[options.MaxConcurrentReconciles];
+            this.k8s             = k8s;
+            this.options         = options;
+            this.eventHandler    = eventHandler;
+            this.metrics         = metrics;
+            this.logger          = loggerFactory?.CreateLogger<EventQueue<TEntity, TController>>();
+            this.queue           = new ConcurrentDictionary<WatchEvent<TEntity>, CancellationTokenSource>();
+            this.currentEvents   = new ConcurrentDictionary<string, DateTime>();
+            this.eventChannel    = Channel.CreateUnbounded<string>();
+            this.finalizeChannel = Channel.CreateUnbounded<string>();
+            this.reconcileTasks  = new Task[options.MaxConcurrentReconciles];
+            this.finalizeTasks   = new Task[options.MaxConcurrentFinalizers];
 
-            metrics.MaxActiveWorkers.IncTo(options.MaxConcurrentReconciles);
+            metrics.MaxActiveWorkers.IncTo(options.MaxConcurrentReconciles + options.MaxConcurrentFinalizers);
 
             Metrics.DefaultRegistry.AddBeforeCollectCallback(
                 async cancel =>
@@ -103,42 +107,104 @@ namespace Neon.Operator.ResourceManager
                     await Task.CompletedTask;
                 });
 
-            _ = StartConsumersAsync();
+            _ = StartReconcileConsumersAsync();
+            _ = StartFinalizerConsumersAsync();
         }
 
         /// <summary>
         /// Starts task consumers.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task StartConsumersAsync()
+        private async Task StartReconcileConsumersAsync()
         {
             while (true)
             {
-                for (int i = 0; i < consumerTasks.Length; i++)
+                for (int i = 0; i < reconcileTasks.Length; i++)
                 {
-                    var task = consumerTasks[i];
+                    var task = reconcileTasks[i];
 
                     if (task == null || !task.Status.Equals(TaskStatus.Running))
                     {
-                        consumerTasks[i] = ConsumerAsync();
+                        reconcileTasks[i] = ReconcileConsumerAsync();
                     }
                 }
 
-                await Task.WhenAny(consumerTasks);
+                await Task.WhenAny(reconcileTasks);
             }
         }
 
         /// <summary>
-        /// Implements an event consumer.
+        /// Starts task consumers.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConsumerAsync()
+        private async Task StartFinalizerConsumersAsync()
+        {
+            while (true)
+            {
+                for (int i = 0; i < finalizeTasks.Length; i++)
+                {
+                    var task = finalizeTasks[i];
+
+                    if (task == null || !task.Status.Equals(TaskStatus.Running))
+                    {
+                        finalizeTasks[i] = FinalizerConsumerAsync();
+                    }
+                }
+
+                await Task.WhenAny(finalizeTasks);
+            }
+        }
+
+        /// <summary>
+        /// Implements an event consumer for reconcile tasks.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ReconcileConsumerAsync()
         {
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
             while (await eventChannel.Reader.WaitToReadAsync())
             {
                 if (eventChannel.Reader.TryRead(out var uid))
+                {
+                    var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
+
+                    if (@event == null || @event.Value == null || queue[@event].IsCancellationRequested)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        currentEvents.TryAdd(uid, DateTime.UtcNow);
+
+                        metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
+                        logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
+                        using (var timer = metrics.WorkDurationSeconds.NewTimer())
+                        {
+                            await eventHandler?.Invoke(@event);
+                        }
+                    }
+                    finally
+                    {
+                        currentEvents.Remove(uid, out _);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Implements an event consumer for finalizers.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task FinalizerConsumerAsync()
+        {
+            using var worker = metrics.ActiveWorkers.TrackInProgress();
+
+            while (await finalizeChannel.Reader.WaitToReadAsync())
+            {
+                if (finalizeChannel.Reader.TryRead(out var uid))
                 {
                     var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
 
@@ -224,7 +290,20 @@ namespace Neon.Operator.ResourceManager
                 metrics.Depth.Set(queue.Count);
             }
 
-            await eventChannel.Writer.WriteAsync(@event.Value.Uid());
+            switch (@event.ModifiedEventType)
+            {
+                case Controllers.ModifiedEventType.Finalizing:
+
+                    await finalizeChannel.Writer.WriteAsync(@event.Value.Uid());
+
+                    break;
+
+                default:
+
+                    await eventChannel.Writer.WriteAsync(@event.Value.Uid());
+
+                    break;
+            }
         }
 
         /// <summary>

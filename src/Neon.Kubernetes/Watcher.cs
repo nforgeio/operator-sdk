@@ -16,26 +16,25 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics.Contracts;
 using System.Net;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Autorest;
+using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Operator.Controllers;
 using Neon.Tasks;
 
-using k8s;
-using k8s.Models;
-using k8s.Autorest;
-using System.Diagnostics.Contracts;
+using WatchEventType = k8s.WatchEventType;
 
 namespace Neon.K8s
 {
@@ -49,6 +48,11 @@ namespace Neon.K8s
         /// The <see cref="WatchEventType"/>
         /// </summary>
         public WatchEventType Type { get; set; }
+
+        /// <summary>
+        /// The <see cref="ModifiedEventType"/>
+        /// </summary>
+        public ModifiedEventType ModifiedEventType { get; set; }
 
         /// <summary>
         /// The watch event value.
@@ -336,7 +340,7 @@ namespace Neon.K8s
 
                             await action(@event);
 
-                            //resourceVersion = @event.Value.ResourceVersion();
+                            resourceVersion = @event.Value.ResourceVersion();
 
                             break;
 

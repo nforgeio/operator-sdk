@@ -567,7 +567,7 @@ namespace Neon.Operator.ResourceManager
 
                         // Inform the controller.
 
-                        using (var scope = serviceProvider.CreateScope())
+                        await using (var scope = serviceProvider.CreateAsyncScope())
                         {
                             await CreateController(scope.ServiceProvider).OnPromotionAsync();
                         }
@@ -604,7 +604,7 @@ namespace Neon.Operator.ResourceManager
 
                         // Inform the controller.
 
-                        using (var scope = serviceProvider.CreateScope())
+                        await using (var scope = serviceProvider.CreateAsyncScope())
                         {
                             await CreateController(scope.ServiceProvider).OnDemotionAsync();
                         }
@@ -637,7 +637,7 @@ namespace Neon.Operator.ResourceManager
 
                         // Inform the controller.
 
-                        using (var scope = serviceProvider.CreateScope())
+                        await using (var scope = serviceProvider.CreateAsyncScope())
                         {
                             await CreateController(scope.ServiceProvider).OnNewLeaderAsync(identity);
                         }
@@ -753,7 +753,7 @@ namespace Neon.Operator.ResourceManager
                         {
                             try
                             {
-                                using (var scope = serviceProvider.CreateScope())
+                                await using (var scope = serviceProvider.CreateAsyncScope())
                                 {
                                     var cachedEntity = resourceCache.Upsert(resource, out modifiedEventType);
 
@@ -1018,6 +1018,10 @@ namespace Neon.Operator.ResourceManager
                         var resourceName = resource.Metadata.Name;
 
                         logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
+
+                        var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
+
+                        @event.ModifiedEventType = modifiedEventType;
 
                         switch (@event.Type)
                         {
