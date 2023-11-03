@@ -1019,7 +1019,7 @@ namespace Neon.Operator.ResourceManager
 
                         logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
 
-                        var cachedEntity = resourceCache.Upsert(resource, out var modifiedEventType);
+                        resourceCache.Compare(resource, out var modifiedEventType);
 
                         @event.ModifiedEventType = modifiedEventType;
 
