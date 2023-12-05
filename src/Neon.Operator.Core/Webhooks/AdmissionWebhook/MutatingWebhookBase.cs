@@ -223,8 +223,7 @@ namespace Neon.Operator.Webhooks
                 else
                 {
                     logger?.LogErrorEx(e);
-
-                    throw e;
+                    throw;
                 }
             }
         }
