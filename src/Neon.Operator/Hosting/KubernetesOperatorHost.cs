@@ -36,7 +36,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Operator.Rbac;
 using Neon.K8s;
-using Neon.Kube.Resources.CertManager;
+using Neon.K8s.Resources.CertManager;
 using Neon.Tasks;
 
 namespace Neon.Operator
@@ -161,8 +161,6 @@ namespace Neon.Operator
                 return;
             }
 
-            
-
             return;
         }
 
@@ -199,7 +197,7 @@ namespace Neon.Operator
                             $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
                         },
                         Duration   = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
-                        IssuerRef  = NeonHelper.JsonDeserialize<Neon.Kube.Resources.CertManager.IssuerRef>(NeonHelper.JsonSerialize(CertManagerOptions.IssuerRef)),
+                        IssuerRef  = NeonHelper.JsonDeserialize<Neon.K8s.Resources.CertManager.IssuerRef>(NeonHelper.JsonSerialize(CertManagerOptions.IssuerRef)),
                         SecretName = $"{OperatorSettings.Name}-webhook-tls"
                     }
                 };

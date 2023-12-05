@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+
+    <!-- NEONFORGE package or project references -->
+
+    <Choose>
+        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
+            <ItemGroup>
+                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
+
+    <ItemGroup>
+        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
+        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="YamlDotNet" Version="13.3.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+    </ItemGroup>
+
+</Project>

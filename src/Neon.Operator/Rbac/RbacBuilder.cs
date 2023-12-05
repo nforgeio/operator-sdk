@@ -32,7 +32,7 @@ using Neon.Operator.Builder;
 using Neon.Operator.ResourceManager;
 using Neon.Operator.Util;
 using Neon.Operator.Webhooks;
-using Neon.Kube.Resources.CertManager;
+using Neon.K8s.Resources.CertManager;
 
 namespace Neon.Operator.Rbac
 {
