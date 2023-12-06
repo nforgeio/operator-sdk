@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -25,6 +26,25 @@ namespace Neon.Operator.Analyzers
     public class MutatingWebhookGenerator : ISourceGenerator
     {
         private Dictionary<string, StringBuilder> logs;
+
+        public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        {
+            var assemblyName = new AssemblyName(args.Name);
+            Assembly assembly = null;
+            try
+            {
+                var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
+                var targetAssembly = runtimeDependencies
+                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+
+                if (!String.IsNullOrEmpty(targetAssembly))
+                    assembly = Assembly.LoadFrom(targetAssembly);
+            }
+            catch (Exception)
+            {
+            }
+            return assembly;
+        }
 
         public void Execute(GeneratorExecutionContext context)
         {

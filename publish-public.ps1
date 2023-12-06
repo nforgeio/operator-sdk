@@ -36,7 +36,9 @@
 param 
 (
     [switch]$dirty   = $false,    # use GitHub sources for SourceLink even if local repo is dirty
-    [switch]$restore = $false     # Just restore the CSPROJ files after cancelling publish
+    [switch]$restore = $false, # RELEASE build instead of DEBUG (the default)
+    [string]$packageVersion,
+    [string]$neonSdkVersion
 )
 
 # Import the global solution include file.
@@ -104,7 +106,7 @@ function Publish
     #
     # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NO_BUILD\nuget"
 
-    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName -p:PackageVersion=$version
+    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName -p:PackageVersion=$version -p:NeonSdkPackageVersion=$neonSdkVersion -p:NeonBuildUseNugets=true
     ThrowOnExitCode
 
 	nuget push -Source nuget.org -ApiKey $nugetApiKey "$env:NO_BUILD\nuget\$project.$version.nupkg" -SkipDuplicate -Timeout 600
@@ -162,12 +164,13 @@ try
         #------------------------------------------------------------------------------
         # Build and publish the projects.
 
-        Publish Neon.Kubernetes                $neonkubeVersion
-        Publish Neon.Operator                  $neonkubeVersion
-        Publish Neon.Operator.Analyzers        $neonkubeVersion
-        Publish Neon.Operator.Core             $neonkubeVersion
-        Publish Neon.Operator.Templates        $neonkubeVersion
-        Publish Neon.Operator.Xunit            $neonkubeVersion
+        Publish Neon.Kubernetes                $packageVersion
+        Publish Neon.Kubernetes.Resources      $packageVersion
+        Publish Neon.Operator                  $packageVersion
+        Publish Neon.Operator.Analyzers        $packageVersion
+        Publish Neon.Operator.Core             $packageVersion
+        Publish Neon.Operator.Templates        $packageVersion
+        Publish Neon.Operator.Xunit            $packageVersion
     }
 
     #------------------------------------------------------------------------------

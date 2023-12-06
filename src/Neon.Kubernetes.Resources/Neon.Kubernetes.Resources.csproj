@@ -2,6 +2,19 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <Configurations>Debug;Release</Configurations>
+        <Version>0.10.0-beta.0</Version>
+        <Description>Kubernetes Operator SDK resources.</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/nforgeio/operator-sdk</RepositoryUrl>
+        <PackageIcon>nuget-icon.png</PackageIcon>
+        <IsPackable>true</IsPackable>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
+        <PackageReleaseNotes>https://github.com/nforgeio/operator-sdk/releases</PackageReleaseNotes>
+        <DebugType>full</DebugType>
     </PropertyGroup>
 
     <!-- NEONFORGE package or project references -->
@@ -30,6 +43,11 @@
 
     <ItemGroup>
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>

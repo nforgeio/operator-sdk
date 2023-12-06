@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Operator;
+
 namespace TestOperator
 {
     public class Startup
@@ -22,12 +24,12 @@ namespace TestOperator
                 configure.AddConsole();
             });
 
-            //services.AddKubernetesOperator();
+            services.AddKubernetesOperator();
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            //app.UseKubernetesOperator();
+            app.UseKubernetesOperator();
         }
     }
 }

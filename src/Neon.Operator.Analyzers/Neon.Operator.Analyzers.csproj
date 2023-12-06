@@ -23,13 +23,14 @@
 
     <ItemGroup>
         <PackageReference Include="Fractions" Version="7.2.1" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.5.0" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" PrivateAssets="all" />
+        <!--<PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2" />-->
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="NJsonSchema" Version="10.9.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="System.Reflection.MetadataLoadContext" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="KubernetesClient.Models" Version="12.0.16" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" GeneratePathProperty="true" PrivateAssets="all" />
@@ -44,6 +45,25 @@
         <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />
         <None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
+
+    <!--<Target Name="ILRepacker" AfterTargets="Build" >
+        <ItemGroup>
+            <InputAssemblies Include="$(TargetPath)"/>
+            <InputAssemblies Include="@(ReferencePathWithRefAssemblies)" Condition="'%(filename)' == 'Microsoft.CodeAnalysis'" />
+            <InputAssemblies Include="@(ReferencePathWithRefAssemblies)" Condition="'%(filename)' == 'System.Collections.Immutable'" />
+            <InputAssemblies Include="@(ReferencePathWithRefAssemblies)" Condition="'%(filename)' == 'System.Reflection.Metadata'" />
+            <InputAssemblies Include="@(ReferencePathWithRefAssemblies)" Condition="'%(filename)' == 'System.Reflection.MetadataLoadContext'" />
+        </ItemGroup>
+
+        <ILRepack
+            AllowDuplicateResources="false"
+            DebugInfo="true"
+            Internalize="true"
+            InputAssemblies="@(InputAssemblies)"
+            OutputFile="$(TargetPath)"
+            Parallel="true"
+            TargetKind="SameAsPrimaryAssembly" />
+    </Target>-->
 
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">

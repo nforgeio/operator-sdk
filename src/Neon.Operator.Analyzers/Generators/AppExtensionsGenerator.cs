@@ -28,6 +28,25 @@ namespace Neon.Operator.Analyzers
             context.RegisterForSyntaxNotifications(() => new AppExtensionsReceiver());
         }
 
+        public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        {
+            var assemblyName = new AssemblyName(args.Name);
+            Assembly assembly = null;
+            try
+            {
+                var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
+                var targetAssembly = runtimeDependencies
+                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+
+                if (!String.IsNullOrEmpty(targetAssembly))
+                    assembly = Assembly.LoadFrom(targetAssembly);
+            }
+            catch (Exception)
+            {
+            }
+            return assembly;
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
             var metadataLoadContext = new MetadataLoadContext(context.Compilation);
