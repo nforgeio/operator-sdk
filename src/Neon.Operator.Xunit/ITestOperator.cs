@@ -1,4 +1,4 @@
-﻿// FILE:	    ITestOperator.cs
+// FILE:	    ITestOperator.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,7 +16,6 @@
 
 using System.Threading.Tasks;
 
-using Neon.Operator;
 using Neon.Operator.Controllers;
 using Neon.Operator.Finalizers;
 using Neon.Operator.Webhooks;

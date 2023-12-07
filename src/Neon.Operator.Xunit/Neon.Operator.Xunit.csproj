@@ -45,12 +45,13 @@
     </Choose>
 
     <ItemGroup>
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+        <ProjectReference Include="..\Neon.Operator\Neon.Operator.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\Neon.Operator.Core\Neon.Operator.Core.csproj" />
     </ItemGroup>
 
 </Project>
