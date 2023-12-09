@@ -58,6 +58,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{E25EE7
 		nuget.config = nuget.config
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kubernetes.Resources", "src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj", "{037EEE6A-CC11-4D42-954F-2561EA726654}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 		{A8A9248F-3CED-4932-851A-F4CF04769BE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8A9248F-3CED-4932-851A-F4CF04769BE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8A9248F-3CED-4932-851A-F4CF04769BE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{037EEE6A-CC11-4D42-954F-2561EA726654}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{037EEE6A-CC11-4D42-954F-2561EA726654}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{037EEE6A-CC11-4D42-954F-2561EA726654}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{037EEE6A-CC11-4D42-954F-2561EA726654}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -114,6 +120,7 @@ Global
 		{3F8D120C-C510-47F5-BFD9-A20F16980A48} = {F167FFE0-5642-4C1F-97CC-8747134CB6F4}
 		{A9E56C5B-3186-4697-9FBF-B7CD54774A9C} = {74209E85-B0D5-4D77-911F-CC2779695961}
 		{A8A9248F-3CED-4932-851A-F4CF04769BE2} = {74209E85-B0D5-4D77-911F-CC2779695961}
+		{037EEE6A-CC11-4D42-954F-2561EA726654} = {F167FFE0-5642-4C1F-97CC-8747134CB6F4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {996559D3-B593-4229-B485-5D53DF94BE60}

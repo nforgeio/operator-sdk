@@ -48,10 +48,22 @@ namespace Test.Neon.Operator
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1TestDatabase resource)
         {
-            var statefulSet = new V1StatefulSet().Initialize();
-            statefulSet.Metadata.Name = resource.Name();
-            statefulSet.Metadata.SetNamespace(resource.Namespace());
-            statefulSet.AddOwnerReference(resource.MakeOwnerReference());
+            var statefuSetList = await k8s.AppsV1.ListNamespacedStatefulSetAsync(resource.Metadata.Namespace(),
+                labelSelector: $"app.kubernetes.io/name={resource.Name()}");
+
+            V1StatefulSet statefulSet;
+
+            if (statefuSetList.Items.Count > 0)
+            {
+                statefulSet = statefuSetList.Items[0];
+            }
+            else
+            {
+                statefulSet = new V1StatefulSet().Initialize();
+                statefulSet.Metadata.Name = resource.Name();
+                statefulSet.Metadata.SetNamespace(resource.Namespace());
+                statefulSet.AddOwnerReference(resource.MakeOwnerReference());
+            }
 
             statefulSet.Spec = new V1StatefulSetSpec()
             {
