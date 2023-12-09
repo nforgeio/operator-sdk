@@ -8,7 +8,7 @@
         <Product>Neon.Operator</Product>
         <Authors>NEONFORGE Team</Authors>
         <Company>NEONFORGE LLC</Company>
-        <NeonSdkPackageVersion>3.1.4</NeonSdkPackageVersion>
+        <NeonSdkPackageVersion>0</NeonSdkPackageVersion>
         <Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
         <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -44,7 +44,7 @@
 
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(NeonBuildUseNugets)' == '' And '$(NEON_BUILD_USE_NUGETS)' == 'true'">
+    <PropertyGroup Condition="'$(SolutionName)' == 'operator-sdk'">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
     </PropertyGroup>
 
