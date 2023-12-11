@@ -102,7 +102,7 @@ namespace Neon.Operator.Xunit
                 var d2 = typeof(IList<>);
                 var makeme2 = d2.MakeGenericType(typeArgs);
 
-                var s = NeonHelper.JsonSerialize(resources);
+                var s = KubernetesJson.Serialize(resources);
                 var instance = (dynamic)JsonSerializer.Deserialize(s, makeme2, jsonSerializerOptions);
 
                 o.Items = instance;
