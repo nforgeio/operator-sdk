@@ -85,7 +85,6 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Gets a resource as a list or by name <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="resource"></param>
         /// <returns>An action result containing the resource.</returns>
         [HttpGet]
         public async Task<ActionResult> GetAsync()
@@ -93,14 +92,14 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
 
             var key = $"{string.Empty}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
                 if (Name == null)
                 {
-                    var resources = testApiServer.Resources.Where(r => r.GetType() == type);
-
+                    var resources                   = testApiServer.Resources.Where(r => r.GetType() == type);
                     var CustomObjectListType        = typeof(V1CustomObjectList<>);
                     Type[] typeArgs                 = { type };
                     var customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
@@ -108,9 +107,8 @@ namespace Neon.Operator.Xunit
 
                     var iListType        = typeof(IList<>);
                     var iListGenericType = iListType.MakeGenericType(typeArgs);
-
-                    var stringList = NeonHelper.JsonSerialize(resources);
-                    var result     = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
+                    var stringList       = NeonHelper.JsonSerialize(resources);
+                    var result           = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
 
                     customObjectList.Items = result;
 
@@ -118,9 +116,8 @@ namespace Neon.Operator.Xunit
                 }
                 else
                 {
-                    var resource = testApiServer.Resources.Where(
-                        r => r.Kind == typeMetadata.Kind
-                        && r.Metadata.Name == Name).FirstOrDefault();
+                    var resource = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name)
+                        .FirstOrDefault();
 
                     if (resource == null)
                     {
@@ -150,8 +147,8 @@ namespace Neon.Operator.Xunit
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
-                var s = JsonSerializer.Serialize(resource);
-                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
+                var serializer = JsonSerializer.Serialize(resource);
+                var instance   = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
 
                 testApiServer.AddResource(string.Empty, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
@@ -172,16 +169,14 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
 
             var key = $"{string.Empty}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
+                var serializer   = JsonSerializer.Serialize(resource);
+                var instance     = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
 
-                var s = JsonSerializer.Serialize(resource);
-                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
-
-                var resourceQuery = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name);
+                var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))
                 {
@@ -196,7 +191,6 @@ namespace Neon.Operator.Xunit
                 }
 
                 testApiServer.Resources.Remove(existing);
-
                 testApiServer.AddResource(string.Empty, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
                 return Ok(resource);
@@ -221,9 +215,7 @@ namespace Neon.Operator.Xunit
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
-                var resourceQuery = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name);
+                var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))
                 {
@@ -255,18 +247,17 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
 
             var key = $"{string.Empty}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var resourceQuery = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name);
+                var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))
                 {
                     resourceQuery = resourceQuery.Where(r => r.EnsureMetadata().NamespaceProperty == Namespace);
                 }
+
                 var existing = resourceQuery.SingleOrDefault();
 
                 if (existing == null)
@@ -276,23 +267,22 @@ namespace Neon.Operator.Xunit
 
                 testApiServer.Resources.Remove(existing);
 
-                    if (existing.Metadata.OwnerReferences != null)
+                if (existing.Metadata.OwnerReferences != null)
+                {
+                    foreach (var child in existing.Metadata.OwnerReferences)
                     {
-                        foreach (var child in existing.Metadata.OwnerReferences)
-                        {
-                            testApiServer.Resources.Remove(
-                                testApiServer.Resources.Where(r => r.Uid() == child.Uid).Single());
-                        }
+                        testApiServer.Resources.Remove(testApiServer.Resources.Where(r => r.Uid() == child.Uid).Single());
                     }
+                }
 
                 return Ok(new V1Status()
                 {
-                    Code = 200,
+                    Code   = 200,
                     Status = "Success"
                 });
             }
+
             return NotFound();
         }
-
     }
 }

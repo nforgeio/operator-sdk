@@ -31,26 +31,27 @@ namespace Neon.Operator.Xunit
     /// <inheritdoc/>
     public class TestApiServer : ITestApiServer
     {
-        /// <inheritdoc/>
-        public List<IKubernetesObject<V1ObjectMeta>> Resources { get; } = new List<IKubernetesObject<V1ObjectMeta>>();
-
-        /// <inheritdoc/>
-        public Dictionary<string, Type> Types { get; } = new Dictionary<string, Type>();
-
-        public JsonSerializerOptions jsonSerializerOptions { get; set; }
+        private JsonSerializerOptions   jsonSerializerOptions;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="options">Specifies the test API server options.</param>
+        /// <param name="jsonSerializerOptions">Specifies the JSON serialization options.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public TestApiServer(
-            IOptions<TestApiServerOptions> options,
-            JsonSerializerOptions jsonSerializerOptions)
+        public TestApiServer(IOptions<TestApiServerOptions> options, JsonSerializerOptions jsonSerializerOptions)
         {
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
+            Covenant.Requires<ArgumentNullException>(jsonSerializerOptions != null, nameof(jsonSerializerOptions));
+
             this.jsonSerializerOptions = jsonSerializerOptions;
         }
+
+        /// <inheritdoc/>
+        public List<IKubernetesObject<V1ObjectMeta>> Resources { get; } = new List<IKubernetesObject<V1ObjectMeta>>();
+
+        /// <inheritdoc/>
+        public Dictionary<string, Type> Types { get; } = new Dictionary<string, Type>();
 
         /// <inheritdoc/>
         public virtual Task UnhandledRequest(HttpContext context)
@@ -70,8 +71,8 @@ namespace Neon.Operator.Xunit
 
             if (!string.IsNullOrEmpty(namespaceParameter))
             {
-                if (!string.IsNullOrEmpty(k8sObj.Metadata?.NamespaceProperty)
-                    && namespaceParameter != k8sObj.Metadata?.NamespaceProperty)
+                if (!string.IsNullOrEmpty(k8sObj.Metadata?.NamespaceProperty) &&
+                    namespaceParameter != k8sObj.Metadata?.NamespaceProperty)
                 {
                     throw new ArgumentException("Namespace mismatch");
                 }
@@ -90,8 +91,8 @@ namespace Neon.Operator.Xunit
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            var s = JsonSerializer.Serialize(resource);
-            var instance = (T)JsonSerializer.Deserialize(s, typeof(T), jsonSerializerOptions);
+            var serializer = JsonSerializer.Serialize(resource);
+            var instance   = (T)JsonSerializer.Deserialize(serializer, typeof(T), jsonSerializerOptions);
 
             AddResource(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, typeMetadata.Kind, instance, namespaceParameter);
         }
@@ -99,6 +100,7 @@ namespace Neon.Operator.Xunit
         private IKubernetesObject<V1ObjectMeta> EnsureMetadata(object _object)
         {
             var resource = (IKubernetesObject<V1ObjectMeta>)_object;
+
             if (resource.Uid() == null)
             {
                 resource.Metadata.Uid = Guid.NewGuid().ToString();

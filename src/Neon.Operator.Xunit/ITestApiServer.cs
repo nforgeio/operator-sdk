@@ -53,6 +53,7 @@ namespace Neon.Operator.Xunit
         /// <param name="group">Specifies the API group.</param>
         /// <param name="version">Specifies the API version.</param>
         /// <param name="plural">Specifies the plural name for the resource.</param>
+        /// <param name="kind">Specifies the resource kind.</param>
         /// <param name="resource">Specifies the resource.</param>
         /// <param name="namespaceParameter">Specifies the resource namespace.</param>
         void AddResource(string group, string version, string plural, string kind, object resource, string namespaceParameter = null);
@@ -61,9 +62,6 @@ namespace Neon.Operator.Xunit
         /// Adds a type-safe resource to the API server's resource collection.
         /// </summary>
         /// <typeparam name="TResource">Specifies the resource type.</typeparam>
-        /// <param name="group">Specifies the API group.</param>
-        /// <param name="version">Specifies the API version.</param>
-        /// <param name="plural">Specifies the plural name for the resource.</param>
         /// <param name="resource">Specifies the resource.</param>
         /// <param name="namespaceParameter">Specifies the resource namespace.</param>
         void AddResource<TResource>(TResource resource, string namespaceParameter = null)

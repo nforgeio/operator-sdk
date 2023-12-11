@@ -14,7 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 using k8s;
@@ -32,28 +34,8 @@ namespace Neon.Operator.Xunit
     /// </summary>
     public class TestOperatorFixture : TestFixture
     {
-        /// <summary>
-        /// The operator under test.
-        /// </summary>
-        public ITestOperator Operator { get; set; }
-
-        /// <summary>
-        /// Kubernetes client used for interacting with the API server.
-        /// </summary>
-        public IKubernetes KubernetesClient { get; private set; }
-
-        /// <summary>
-        /// The Kubernetes configuration for the test api server.
-        /// </summary>
-        public KubernetesClientConfiguration KubernetesClientConfiguration { get; private set; }
-
-        /// <summary>
-        /// The API server resource collection.
-        /// </summary>
-        public List<IKubernetesObject<V1ObjectMeta>> Resources => testApiServerHost.Cluster.Resources;
-        
-        private ITestApiServerHost testApiServerHost;
-        private bool started;
+        private ITestApiServerHost  testApiServerHost;
+        private bool                started;
 
         /// <summary>
         /// Constructor.
@@ -64,11 +46,30 @@ namespace Neon.Operator.Xunit
                 .Build();
 
             this.KubernetesClientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(testApiServerHost.KubeConfig);
-
-            this.KubernetesClient = new Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
-            this.Operator = new TestOperator(KubernetesClientConfiguration);
+            this.KubernetesClient              = new Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
+            this.Operator                      = new TestOperator(KubernetesClientConfiguration);
         }
 
+        /// <summary>
+        /// Returns the operator under test.
+        /// </summary>
+        public ITestOperator Operator { get; private set; }
+
+        /// <summary>
+        /// Returns the Kubernetes client used for interacting with the API server.
+        /// </summary>
+        public IKubernetes KubernetesClient { get; private set; }
+
+        /// <summary>
+        /// Returns the Kubernetes configuration for the test api server.
+        /// </summary>
+        public KubernetesClientConfiguration KubernetesClientConfiguration { get; private set; }
+
+        /// <summary>
+        /// Returns the API server resource collection.
+        /// </summary>
+        public List<IKubernetesObject<V1ObjectMeta>> Resources => testApiServerHost.Cluster.Resources;
+        
         /// <summary>
         /// Start the test fixture.
         /// </summary>
@@ -81,7 +82,6 @@ namespace Neon.Operator.Xunit
             }
 
             testApiServerHost.Start();
-
             Operator.Start();
 
             started = true;
@@ -89,35 +89,62 @@ namespace Neon.Operator.Xunit
             return TestFixtureStatus.Started;
         }
 
+        /// <summary>
+        /// Registers a custom resource definition type with the emulated cluster,
+        /// </summary>
+        /// <typeparam name="T">Specifies the custom resource type.</typeparam>
         public void RegisterType<T>()
             where T : IKubernetesObject<V1ObjectMeta>
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+            var key          = $"{typeMetadata.Group}/{typeMetadata.ApiVersion}/{typeMetadata.PluralName}";
 
-            var key = $"{typeMetadata.Group}/{typeMetadata.ApiVersion}/{typeMetadata.PluralName}";
             testApiServerHost.Cluster.Types.TryAdd(key, typeof(T));
         }
 
+        /// <summary>
+        /// Adds a custom resource with the emulated cluster.
+        /// </summary>
+        /// <typeparam name="T">Specifies the custom resource type for the new resource.</typeparam>
+        /// <param name="resource">Specifies the new resource.</param>
+        /// <param name="namespaceParameter">Optionally specifies the resource namespace for the non-namespaced resources.</param>
         public void AddResource<T>(T resource, string namespaceParameter = null)
             where T : IKubernetesObject<V1ObjectMeta>
         {
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
+
             testApiServerHost.Cluster.AddResource<T>(resource, namespaceParameter);
         }
 
+        /// <summary>
+        /// Returns custom resources of the specified type from the emulated cluster.
+        /// </summary>
+        /// <typeparam name="T">Specifies the custom resource type.</typeparam>
+        /// <param name="namespaceParameter">Optionally specifies the namespace for namespaced resources.</param>
+        /// <returns>The resources found.</returns>
         public IEnumerable<T> GetResources<T>(string namespaceParameter = null)
         {
             var query = this.Resources.AsQueryable();
 
             if (namespaceParameter != null)
             {
-                query = query.Where(r => r.EnsureMetadata().NamespaceProperty == namespaceParameter);
+                query = query.Where(resource => resource.EnsureMetadata().NamespaceProperty == namespaceParameter);
             }
 
             return query.OfType<T>();
         }
 
+        /// <summary>
+        /// Returns a specific resource from the emulated cluster.
+        /// </summary>
+        /// <typeparam name="T">Specifies the custom resource type.</typeparam>
+        /// <param name="name">Specifies the resource name.</param>
+        /// <param name="namespaceParameter">Optionally specifies the namespace for namespaced resources.</param>
+        /// <returns>The resource found or <c>null</c> when it dcoesn't exist.</returns>
         public T GetResource<T>(string name, string namespaceParameter = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
             var query = this.Resources.AsQueryable();
 
             if (namespaceParameter != null)
@@ -125,9 +152,14 @@ namespace Neon.Operator.Xunit
                 query = query.Where(r => r.EnsureMetadata().NamespaceProperty == namespaceParameter);
             }
 
-            return query.Where(r => r.EnsureMetadata().Name == name).OfType<T>().FirstOrDefault();
+            return query.Where(resource => resource.EnsureMetadata().Name == name)
+                .OfType<T>()
+                .SingleOrDefault();
         }
 
+        /// <summary>
+        /// Clears all resources from the emulated cluster.
+        /// </summary>
         public void ClearResources()
         {
             testApiServerHost.Cluster.Resources.Clear();

@@ -35,11 +35,6 @@ namespace Neon.Operator.Util
     {
         private static readonly JsonSerializerSettings k8sSerializerSettings;
 
-        public static DefaultContractResolver DefaultContractResolver = new DefaultContractResolver()
-        {
-            NamingStrategy = new CamelCaseNamingStrategy()
-        };
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -55,6 +50,15 @@ namespace Neon.Operator.Util
 
             };
         }
+
+        /// <summary>
+        /// Returns the default Newtonsoft contract resolver used for generating CRDs.
+        /// This defaults to <see cref="CamelCaseNamingStrategy"/>.
+        /// </summary>
+        public static DefaultContractResolver DefaultContractResolver = new DefaultContractResolver()
+        {
+            NamingStrategy = new CamelCaseNamingStrategy()
+        };
 
         /// <summary>
         /// Creates a new <see cref="JsonPatchDocument"/> that can be used to specify modifications
