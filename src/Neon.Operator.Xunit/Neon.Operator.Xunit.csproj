@@ -17,6 +17,8 @@
         <PackageIcon>nuget-icon.png</PackageIcon>
         <PackageTags>xunit kubernetes operator sdk neonkube k8s</PackageTags>
         <IsTestProject>false</IsTestProject>
+        <NeonOperatorGenerateCrds>false</NeonOperatorGenerateCrds>
+        <NeonOperatorGenerateRbac>false</NeonOperatorGenerateRbac>
     </PropertyGroup>
     
     <ItemGroup>
@@ -50,7 +52,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Neon.Operator\Neon.Operator.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\Neon.Operator\Neon.Operator.csproj" >
+            <ExcludeAssets>analyzers</ExcludeAssets>
+            <PrivateAssets>analyzers</PrivateAssets>
+        </ProjectReference>
         <ProjectReference Include="..\Neon.Operator.Core\Neon.Operator.Core.csproj" />
     </ItemGroup>
 
