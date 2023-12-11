@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using k8s;
@@ -36,14 +37,19 @@ namespace Neon.Operator.Xunit
         /// <inheritdoc/>
         public Dictionary<string, Type> Types { get; } = new Dictionary<string, Type>();
 
+        public JsonSerializerOptions jsonSerializerOptions { get; set; }
+
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="options">Specifies the test API server options.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public TestApiServer(IOptions<TestApiServerOptions> options)
+        public TestApiServer(
+            IOptions<TestApiServerOptions> options,
+            JsonSerializerOptions jsonSerializerOptions)
         {
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
+            this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
         /// <inheritdoc/>
@@ -53,9 +59,14 @@ namespace Neon.Operator.Xunit
         }
 
         /// <inheritdoc/>
-        public virtual void AddResource(string group, string version, string plural, object resource, string namespaceParameter = null)
+        public virtual void AddResource(string group, string version, string plural, string kind, object resource, string namespaceParameter = null)
         {
             var k8sObj = EnsureMetadata(resource);
+
+            if (string.IsNullOrEmpty(k8sObj.Kind))
+            {
+                k8sObj.Kind = kind;
+            }
 
             if (!string.IsNullOrEmpty(namespaceParameter))
             {
@@ -74,10 +85,15 @@ namespace Neon.Operator.Xunit
         }
 
         /// <inheritdoc/>
-        public virtual void AddResource<T>(string group, string version, string plural, T resource, string namespaceParameter = null)
+        public virtual void AddResource<T>(T resource, string namespaceParameter = null)
             where T : IKubernetesObject<V1ObjectMeta>
         {
-            AddResource(group, version, plural, typeof(T), namespaceParameter);
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+            var s = JsonSerializer.Serialize(resource);
+            var instance = (T)JsonSerializer.Deserialize(s, typeof(T), jsonSerializerOptions);
+
+            AddResource(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, typeMetadata.Kind, instance, namespaceParameter);
         }
 
         private IKubernetesObject<V1ObjectMeta> EnsureMetadata(object _object)

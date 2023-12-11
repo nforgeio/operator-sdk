@@ -157,7 +157,7 @@ namespace Neon.Operator.Xunit
                 var s = JsonSerializer.Serialize(resource);
                 var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
 
-                testApiServer.AddResource(Group, Version, Plural, instance, Namespace);
+                testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
                 return Ok(resource);
             }
@@ -183,16 +183,25 @@ namespace Neon.Operator.Xunit
                 var s = JsonSerializer.Serialize(resource);
                 var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
 
-                var resources = testApiServer.Resources.Where(
+                var resourceQuery = testApiServer.Resources.Where(
                     r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).ToList();
+                    && r.Metadata.Name == Name);
 
-                foreach (var r in resources)
+                if (!string.IsNullOrEmpty(Namespace))
                 {
-                    testApiServer.Resources.Remove(r);
+                    resourceQuery = resourceQuery.Where(r => r.EnsureMetadata().NamespaceProperty == Namespace);
                 }
 
-                testApiServer.AddResource(Group, Version, Plural, instance, Namespace);
+                var existing = resourceQuery.SingleOrDefault();
+
+                if (existing == null)
+                {
+                    return NotFound();
+                }
+
+                testApiServer.Resources.Remove(existing);
+
+                testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
                 return Ok(resource);
             }
@@ -272,8 +281,11 @@ namespace Neon.Operator.Xunit
                     }
                 }
 
-                return NoContent();
-
+                return Ok(new V1Status()
+                {
+                    Code = 200,
+                    Status = "Success"
+                });
             }
             return NotFound();
         }

@@ -98,6 +98,12 @@ namespace Neon.Operator.Xunit
             testApiServerHost.Cluster.Types.TryAdd(key, typeof(T));
         }
 
+        public void AddResource<T>(T resource, string namespaceParameter = null)
+            where T : IKubernetesObject<V1ObjectMeta>
+        {
+            testApiServerHost.Cluster.AddResource<T>(resource, namespaceParameter);
+        }
+
         public IEnumerable<T> GetResources<T>(string namespaceParameter = null)
         {
             var query = this.Resources.AsQueryable();
@@ -119,7 +125,7 @@ namespace Neon.Operator.Xunit
                 query = query.Where(r => r.EnsureMetadata().NamespaceProperty == namespaceParameter);
             }
 
-            return query.Where(r => r.EnsureMetadata().Name == name).OfType<T>().SingleOrDefault();
+            return query.Where(r => r.EnsureMetadata().Name == name).OfType<T>().FirstOrDefault();
         }
 
         public void ClearResources()

@@ -35,6 +35,11 @@ namespace Neon.Operator.Util
     {
         private static readonly JsonSerializerSettings k8sSerializerSettings;
 
+        public static DefaultContractResolver DefaultContractResolver = new DefaultContractResolver()
+        {
+            NamingStrategy = new CamelCaseNamingStrategy()
+        };
+
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -62,10 +67,7 @@ namespace Neon.Operator.Util
         {
             return new JsonPatchDocument<T>()
             {
-                ContractResolver = new DefaultContractResolver()
-                {
-                    NamingStrategy = new CamelCaseNamingStrategy()
-                }
+                ContractResolver = DefaultContractResolver
             };
         }
 

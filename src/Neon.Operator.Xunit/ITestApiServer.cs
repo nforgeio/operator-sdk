@@ -55,7 +55,7 @@ namespace Neon.Operator.Xunit
         /// <param name="plural">Specifies the plural name for the resource.</param>
         /// <param name="resource">Specifies the resource.</param>
         /// <param name="namespaceParameter">Specifies the resource namespace.</param>
-        void AddResource(string group, string version, string plural, object resource, string namespaceParameter);
+        void AddResource(string group, string version, string plural, string kind, object resource, string namespaceParameter = null);
 
         /// <summary>
         /// Adds a type-safe resource to the API server's resource collection.
@@ -66,7 +66,7 @@ namespace Neon.Operator.Xunit
         /// <param name="plural">Specifies the plural name for the resource.</param>
         /// <param name="resource">Specifies the resource.</param>
         /// <param name="namespaceParameter">Specifies the resource namespace.</param>
-        void AddResource<TResource>(string group, string version, string plural, TResource resource, string namespaceParameter)
+        void AddResource<TResource>(TResource resource, string namespaceParameter = null)
             where TResource : IKubernetesObject<V1ObjectMeta>;
     }
 }
