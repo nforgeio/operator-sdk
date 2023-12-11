@@ -15,8 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Linq;
 using System.Threading.Tasks;
+
+using FluentAssertions;
 
 using k8s.Models;
 
@@ -72,30 +73,30 @@ namespace Test.Neon.Operator
             {
                 Metadata = new V1ObjectMeta()
                 {
-                    Name = "test-database",
+                    Name              = "test-database",
                     NamespaceProperty = "test"
                 },
                 Spec = new TestDatabaseSpec()
                 {
-                    Image = "foo/bar:latest",
-                    Servers = 3,
+                    Image      = "foo/bar:latest",
+                    Servers    = 3,
                     VolumeSize = "1Gi"
                 }
             };
 
             await controller.ReconcileAsync(resource);
 
-            var statefulsets = fixture.Resources.OfType<V1StatefulSet>();
-            var services = fixture.Resources.OfType<V1Service>();
-
             Assert.Equal(2, fixture.Resources.Count);
 
             // verify statefulset
-            Assert.Contains(statefulsets, r => r.Metadata.Name == resource.Name());
-            Assert.Equal(resource.Spec.Servers, statefulsets.Single().Spec.Replicas);
+            var statefulSet = fixture.GetResource<V1StatefulSet>(resource.Name(), resource.Namespace());
+
+            statefulSet.Should().NotBeNull();
+            statefulSet.Spec.Replicas.Should().Be(resource.Spec.Servers);
 
             // verify service
-            Assert.Contains(services, r => r.Metadata.Name == resource.Name());
+            var service     = fixture.GetResource<V1Service>(resource.Name(), resource.Namespace());
+            service.Should().NotBeNull();
         }
     }
 }

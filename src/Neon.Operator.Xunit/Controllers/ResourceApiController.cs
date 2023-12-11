@@ -87,7 +87,7 @@ namespace Neon.Operator.Xunit
                 var s = JsonSerializer.Serialize(resource);
                 var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
 
-                testApiServer.AddResource(string.Empty, Version, Plural, instance);
+                testApiServer.AddResource(string.Empty, Version, Plural, instance, Namespace);
 
                 return Ok(resource);
             }

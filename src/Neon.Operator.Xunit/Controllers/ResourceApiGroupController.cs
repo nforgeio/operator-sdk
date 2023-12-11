@@ -39,6 +39,7 @@ namespace Neon.Operator.Xunit
     [Route("apis/{group}/{version}/{plural}")]
     [Route("apis/{group}/{version}/{plural}/{name}")]
     [Route("apis/{group}/{version}/namespaces/{namespace}/{plural}")]
+    [Route("apis/{group}/{version}/namespaces/{namespace}/{plural}/{name}")]
     public class ResourceApiGroupController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly ITestApiServer testApiServer;
@@ -156,7 +157,7 @@ namespace Neon.Operator.Xunit
                 var s = JsonSerializer.Serialize(resource);
                 var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
 
-                testApiServer.AddResource(Group, Version, Plural, instance);
+                testApiServer.AddResource(Group, Version, Plural, instance, Namespace);
 
                 return Ok(resource);
             }
@@ -191,7 +192,7 @@ namespace Neon.Operator.Xunit
                     testApiServer.Resources.Remove(r);
                 }
 
-                testApiServer.AddResource(Group, Version, Plural, instance);
+                testApiServer.AddResource(Group, Version, Plural, instance, Namespace);
 
                 return Ok(resource);
             }

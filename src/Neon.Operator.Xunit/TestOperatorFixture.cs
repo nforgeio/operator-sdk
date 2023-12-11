@@ -15,6 +15,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Linq;
 
 using k8s;
 using k8s.Models;
@@ -88,7 +89,6 @@ namespace Neon.Operator.Xunit
             return TestFixtureStatus.Started;
         }
 
-        /// <inheritdoc/>
         public void RegisterType<T>()
             where T : IKubernetesObject<V1ObjectMeta>
         {
@@ -98,7 +98,30 @@ namespace Neon.Operator.Xunit
             testApiServerHost.Cluster.Types.TryAdd(key, typeof(T));
         }
 
-        /// <inheritdoc/>
+        public IEnumerable<T> GetResources<T>(string namespaceParameter = null)
+        {
+            var query = this.Resources.AsQueryable();
+
+            if (namespaceParameter != null)
+            {
+                query = query.Where(r => r.EnsureMetadata().NamespaceProperty == namespaceParameter);
+            }
+
+            return query.OfType<T>();
+        }
+
+        public T GetResource<T>(string name, string namespaceParameter = null)
+        {
+            var query = this.Resources.AsQueryable();
+
+            if (namespaceParameter != null)
+            {
+                query = query.Where(r => r.EnsureMetadata().NamespaceProperty == namespaceParameter);
+            }
+
+            return query.Where(r => r.EnsureMetadata().Name == name).OfType<T>().SingleOrDefault();
+        }
+
         public void ClearResources()
         {
             testApiServerHost.Cluster.Resources.Clear();

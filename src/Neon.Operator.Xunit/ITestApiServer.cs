@@ -1,4 +1,4 @@
-﻿// FILE:	    ITestApiServer.cs
+// FILE:	    ITestApiServer.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -54,7 +54,8 @@ namespace Neon.Operator.Xunit
         /// <param name="version">Specifies the API version.</param>
         /// <param name="plural">Specifies the plural name for the resource.</param>
         /// <param name="resource">Specifies the resource.</param>
-        void AddResource(string group, string version, string plural, object resource);
+        /// <param name="namespaceParameter">Specifies the resource namespace.</param>
+        void AddResource(string group, string version, string plural, object resource, string namespaceParameter);
 
         /// <summary>
         /// Adds a type-safe resource to the API server's resource collection.
@@ -64,7 +65,8 @@ namespace Neon.Operator.Xunit
         /// <param name="version">Specifies the API version.</param>
         /// <param name="plural">Specifies the plural name for the resource.</param>
         /// <param name="resource">Specifies the resource.</param>
-        void AddResource<TResource>(string group, string version, string plural, TResource resource)
+        /// <param name="namespaceParameter">Specifies the resource namespace.</param>
+        void AddResource<TResource>(string group, string version, string plural, TResource resource, string namespaceParameter)
             where TResource : IKubernetesObject<V1ObjectMeta>;
     }
 }

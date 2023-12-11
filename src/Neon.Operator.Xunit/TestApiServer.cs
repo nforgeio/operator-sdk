@@ -53,16 +53,31 @@ namespace Neon.Operator.Xunit
         }
 
         /// <inheritdoc/>
-        public virtual void AddResource(string group, string version, string plural, object resource)
+        public virtual void AddResource(string group, string version, string plural, object resource, string namespaceParameter = null)
         {
-            Resources.Add(EnsureMetadata(resource));
+            var k8sObj = EnsureMetadata(resource);
+
+            if (!string.IsNullOrEmpty(namespaceParameter))
+            {
+                if (!string.IsNullOrEmpty(k8sObj.Metadata?.NamespaceProperty)
+                    && namespaceParameter != k8sObj.Metadata?.NamespaceProperty)
+                {
+                    throw new ArgumentException("Namespace mismatch");
+                }
+                else
+                {
+                    k8sObj.EnsureMetadata();
+                    k8sObj.Metadata.NamespaceProperty = namespaceParameter;
+                }
+            }
+            Resources.Add(k8sObj);
         }
 
         /// <inheritdoc/>
-        public virtual void AddResource<T>(string group, string version, string plural, T resource)
+        public virtual void AddResource<T>(string group, string version, string plural, T resource, string namespaceParameter = null)
             where T : IKubernetesObject<V1ObjectMeta>
         {
-            Resources.Add(EnsureMetadata(resource));
+            AddResource(group, version, plural, typeof(T), namespaceParameter);
         }
 
         private IKubernetesObject<V1ObjectMeta> EnsureMetadata(object _object)

@@ -114,32 +114,6 @@ namespace Neon.Operator.Xunit
         }
 
         /// <summary>
-        /// Creates a resource and stores it in <see cref="TestApiServer.Resources"/>
-        /// </summary>
-        /// <param name="resource"></param>
-        /// <returns>An action result containing the resource.</returns>
-        [HttpPost]
-        public async Task<ActionResult<ResourceObject>> CreateAsync([FromBody] object resource)
-        {
-            await SyncContext.Clear;
-
-            var key = $"{Group}/{Version}/{Plural}";
-            if (testApiServer.Types.TryGetValue(key, out Type type))
-            {
-                var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var s = JsonSerializer.Serialize(resource);
-                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
-
-                testApiServer.AddResource(Group, Version, Plural, instance);
-
-                return Ok(resource);
-            }
-
-            return NotFound();
-        }
-
-        /// <summary>
         /// Patches resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
         /// <param name="patch"></param>
