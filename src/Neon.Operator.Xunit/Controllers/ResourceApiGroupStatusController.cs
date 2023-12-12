@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -42,15 +43,16 @@ namespace Neon.Operator.Xunit
         private readonly JsonSerializerOptions jsonSerializerOptions;
 
         /// <summary>
-        /// Constructos.
+        /// Constructor.
         /// </summary>
-        /// <param name="testApiServer"></param>
-        /// <param name="jsonSerializerOptions"></param>
-        public ResourceApiGroupStatusController(
-            ITestApiServer testApiServer,
-            JsonSerializerOptions jsonSerializerOptions)
+        /// <param name="testApiServer">Specifies the test API server.</param>
+        /// <param name="jsonSerializerOptions">Specifies the JSON serializer options.</param>
+        public ResourceApiGroupStatusController(ITestApiServer testApiServer, JsonSerializerOptions jsonSerializerOptions)
         {
-            this.testApiServer = testApiServer;
+            Covenant.Requires<ArgumentNullException>(testApiServer != null, nameof(TestApiServer));
+            Covenant.Requires<ArgumentNullException>(jsonSerializerOptions != null, nameof(jsonSerializerOptions));
+
+            this.testApiServer         = testApiServer;
             this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
@@ -88,22 +90,19 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
 
             var key = $"{Group}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
-                var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var resources = testApiServer.Resources.Where(r => r.GetType() == type);
-
-                var d1 = typeof(V1CustomObjectList<>);
-                Type[] typeArgs = { type };
-                var makeme = d1.MakeGenericType(typeArgs);
-                dynamic o = Activator.CreateInstance(makeme);
-
-                var d2 = typeof(IList<>);
-                var makeme2 = d2.MakeGenericType(typeArgs);
-
-                var s = NeonHelper.JsonSerialize(resources);
-                var instance = (dynamic)JsonSerializer.Deserialize(s, makeme2, jsonSerializerOptions);
+                var     typeMetadata = type.GetKubernetesTypeMetadata();
+                var     resources   = testApiServer.Resources.Where(r => r.GetType() == type);
+                var     d1          = typeof(V1CustomObjectList<>);
+                Type[]  typeArgs    = { type };
+                var     makeme      = d1.MakeGenericType(typeArgs);
+                dynamic     o       = Activator.CreateInstance(makeme);
+                var     d2          = typeof(IList<>);
+                var     makeme2     = d2.MakeGenericType(typeArgs);
+                var     s           = KubernetesJson.Serialize(resources);
+                var     instance    = (dynamic)JsonSerializer.Deserialize(s, makeme2, jsonSerializerOptions);
 
                 o.Items = instance;
 
@@ -123,17 +122,15 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var s = KubernetesJson.Serialize(patch);
-            var p0 = NeonHelper.JsonDeserialize<JsonPatchDocument>(s);
+            var json = KubernetesJson.Serialize(patch);
+            var p0   = NeonHelper.JsonDeserialize<JsonPatchDocument>(json);
+            var key  = $"{Group}/{Version}/{Plural}";
 
-            var key = $"{Group}/{Version}/{Plural}";
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var resource = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).Single();
+                var resource     = testApiServer.Resources.Where(r => r.Kind == typeMetadata.Kind && r.Metadata.Name == Name)
+                    .Single();
 
                 p0.ApplyTo(resource);
 

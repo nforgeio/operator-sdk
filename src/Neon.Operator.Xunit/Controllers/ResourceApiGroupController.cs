@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -42,54 +43,55 @@ namespace Neon.Operator.Xunit
     [Route("apis/{group}/{version}/namespaces/{namespace}/{plural}/{name}")]
     public class ResourceApiGroupController : Microsoft.AspNetCore.Mvc.Controller
     {
-        private readonly ITestApiServer testApiServer;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
+        private readonly ITestApiServer         testApiServer;
+        private readonly JsonSerializerOptions  jsonSerializerOptions;
 
         /// <summary>
-        /// Constructos.
+        /// Constructors.
         /// </summary>
-        /// <param name="testApiServer"></param>
-        /// <param name="jsonSerializerOptions"></param>
-        public ResourceApiGroupController(
-            ITestApiServer testApiServer,
-            JsonSerializerOptions jsonSerializerOptions)
+        /// <param name="testApiServer">Specifies the test API server.</param>
+        /// <param name="jsonSerializerOptions">Specifies the JSON serializer options.</param>
+        public ResourceApiGroupController(ITestApiServer testApiServer, JsonSerializerOptions jsonSerializerOptions)
         {
-            this.testApiServer = testApiServer;
+            Covenant.Requires<ArgumentNullException>(testApiServer != null, nameof(testApiServer));
+            Covenant.Requires<ArgumentNullException>(jsonSerializerOptions != null, nameof(jsonSerializerOptions));
+
+            this.testApiServer         = testApiServer;
             this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
         /// <summary>
-        /// The group of the <see cref="IKubernetesObject"/>.
+        /// Specifies the group for the <see cref="IKubernetesObject"/>.
         /// </summary>
         [FromRoute]
         public string Group { get; set; }
 
         /// <summary>
-        /// The custom resource version. <see cref="IKubernetesObject.ApiVersion"/>.
+        /// Specifies the custom resource version. <see cref="IKubernetesObject.ApiVersion"/>.
         /// </summary>
         [FromRoute]
         public string Version { get; set; }
 
         /// <summary>
-        /// The plural name of the <see cref="IKubernetesObject"/>.
+        /// Specifies the plural name of the <see cref="IKubernetesObject"/>.
         /// </summary>
         [FromRoute]
         public string Plural { get; set; }
 
         /// <summary>
-        /// The namespace name of the <see cref="IKubernetesObject"/>.
+        /// Specifies the namespace name of the <see cref="IKubernetesObject"/>.
         /// </summary>
         [FromRoute]
         public string Namespace { get; set; }
 
         /// <summary>
-        /// The name name of the <see cref="IKubernetesObject"/>.
+        /// Specifies the name name of the <see cref="IKubernetesObject"/>.
         /// </summary>
         [FromRoute]
         public string Name { get; set; }
 
         /// <summary>
-        /// Get the list of resources
+        /// Fetches the list of resources held by the test API server.
         /// </summary>
         /// <returns>An action result containing the resources.</returns>
         [HttpGet]
@@ -98,24 +100,22 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
 
             var key = $"{Group}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
 
                 if (Name == null)
                 {
-                    var resources = testApiServer.Resources.Where(r => r.GetType() == type);
-
-                    var CustomObjectListType        = typeof(V1CustomObjectList<>);
-                    Type[] typeArgs                 = { type };
-                    var customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
-                    dynamic customObjectList        = Activator.CreateInstance(customObjectListGenericType);
-
-                    var iListType        = typeof(IList<>);
-                    var iListGenericType = iListType.MakeGenericType(typeArgs);
-
-                    var stringList = NeonHelper.JsonSerialize(resources);
-                    var result     = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
+                    var     resources                   = testApiServer.Resources.Where(r => r.GetType() == type);
+                    var     CustomObjectListType        = typeof(V1CustomObjectList<>);
+                    Type[]  typeArgs                    = { type };
+                    var     customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
+                    dynamic customObjectList            = Activator.CreateInstance(customObjectListGenericType);
+                    var     iListType                   = typeof(IList<>);
+                    var     iListGenericType            = iListType.MakeGenericType(typeArgs);
+                    var     stringList                  = KubernetesJson.Serialize(resources);
+                    var     result                      = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
 
                     customObjectList.Items = result;
 
@@ -123,9 +123,8 @@ namespace Neon.Operator.Xunit
                 }
                 else
                 {
-                    var resource = testApiServer.Resources.Where(
-                        r => r.Kind == typeMetadata.Kind
-                        && r.Metadata.Name == Name).FirstOrDefault();
+                    var resource = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name)
+                        .FirstOrDefault();
 
                     if (resource == null)
                     {
@@ -142,20 +141,21 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Creates a resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="resource"></param>
+        /// <param name="resource">Specifies the resource.</param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPost]
         public async Task<ActionResult<ResourceObject>> CreateAsync([FromBody] object resource)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             var key = $"{Group}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var s = JsonSerializer.Serialize(resource);
-                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
+                var json         = JsonSerializer.Serialize(resource);
+                var instance     = JsonSerializer.Deserialize(json, type, jsonSerializerOptions);
 
                 testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
@@ -168,24 +168,22 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Replaces a resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="resource"></param>
+        /// <param name="resource">Specifies the replacement resource.</param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPut]
         public async Task<ActionResult<ResourceObject>> UpdateAsync([FromBody] object resource)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             var key = $"{Group}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
-                var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var s = JsonSerializer.Serialize(resource);
-                var instance = JsonSerializer.Deserialize(s, type, jsonSerializerOptions);
-
-                var resourceQuery = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name);
+                var typeMetadata  = type.GetKubernetesTypeMetadata();
+                var json          = JsonSerializer.Serialize(resource);
+                var instance      = JsonSerializer.Deserialize(json, type, jsonSerializerOptions);
+                var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))
                 {
@@ -200,7 +198,6 @@ namespace Neon.Operator.Xunit
                 }
 
                 testApiServer.Resources.Remove(existing);
-
                 testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
                 return Ok(resource);
@@ -212,22 +209,22 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Patches a resource in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="patchDoc"></param>
+        /// <param name="patchDoc">Specifies the PATCH document.</param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPatch]
         public async Task<ActionResult<ResourceObject>> PatchAsync(
             [FromBody] JsonPatchDocument<IKubernetesObject<V1ObjectMeta>> patchDoc)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
 
             var key = $"{Group}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var resources = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).ToList();
+                var resources    = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name)
+                    .ToList();
 
                 var resource = resources.FirstOrDefault();
 
@@ -254,39 +251,39 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
 
             var key = $"{Group}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var resources = testApiServer.Resources.Where(
-                    r => r.Kind == typeMetadata.Kind
-                    && r.Metadata.Name == Name).ToList();
+                var resources    = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name).ToList();
 
                 if (resources.IsEmpty())
                 {
                     return NotFound();
                 }
 
-                foreach (var r in resources)
+                foreach (var resource in resources)
                 {
-                    testApiServer.Resources.Remove(r);
+                    testApiServer.Resources.Remove(resource);
 
-                    if (r.Metadata.OwnerReferences != null)
+                    if (resource.Metadata.OwnerReferences != null)
                     {
-                        foreach (var child in r.Metadata.OwnerReferences)
+                        foreach (var child in resource.Metadata.OwnerReferences)
                         {
-                            testApiServer.Resources.Remove(
-                                testApiServer.Resources.Where(r => r.Uid() == child.Uid).Single());
+                            testApiServer.Resources.Remove(testApiServer.Resources
+                                .Where(resource => resource.Uid() == child.Uid)
+                                .Single());
                         }
                     }
                 }
 
                 return Ok(new V1Status()
                 {
-                    Code = 200,
+                    Code   = 200,
                     Status = "Success"
                 });
             }
+
             return NotFound();
         }
     }

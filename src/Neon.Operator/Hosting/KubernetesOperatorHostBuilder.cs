@@ -74,29 +74,29 @@ namespace Neon.Operator
                         services.AddSingleton<CertManagerOptions>(this.operatorHost.CertManagerOptions);
                     }
 
-                    foreach (var s in this.Services)
+                    foreach (var service in this.Services)
                     {
-                        services.Add(s);
+                        services.Add(service);
                     }
                 })
                 .UseKestrel(options =>
                 {
                     if (!NeonHelper.IsDevWorkstation)
                     {
-                        options.ConfigureHttpsDefaults(o =>
+                        options.ConfigureHttpsDefaults(options =>
                         {
-                            o.ServerCertificateSelector = (connectionContext, name) =>
+                            options.ServerCertificateSelector = (connectionContext, name) =>
                             {
                                 return this.operatorHost.Certificate;
                             };
                         });
                     }
 
-                    options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port, o =>
+                    options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port, configure =>
                     {
                         if (!NeonHelper.IsDevWorkstation)
                         {
-                            o.UseHttps(httpsOptions =>
+                            configure.UseHttps(httpsOptions =>
                             {
                                 httpsOptions.ServerCertificateSelector = (connectionContext, name) =>
                                 {

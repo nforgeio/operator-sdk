@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -48,13 +49,14 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="testApiServer"></param>
-        /// <param name="jsonSerializerOptions"></param>
-        public ResourceApiController(
-            ITestApiServer testApiServer,
-            JsonSerializerOptions jsonSerializerOptions)
+        /// <param name="testApiServer">Specifies the test API swerver.</param>
+        /// <param name="jsonSerializerOptions">Specifies the JSON serializer options.</param>
+        public ResourceApiController(ITestApiServer testApiServer, JsonSerializerOptions jsonSerializerOptions)
         {
-            this.testApiServer = testApiServer;
+            Covenant.Requires<ArgumentNullException>(testApiServer != null, nameof(testApiServer));
+            Covenant.Requires<ArgumentNullException>(jsonSerializerOptions != null, nameof(jsonSerializerOptions));
+
+            this.testApiServer         = testApiServer;
             this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
@@ -99,16 +101,15 @@ namespace Neon.Operator.Xunit
 
                 if (Name == null)
                 {
-                    var resources                   = testApiServer.Resources.Where(r => r.GetType() == type);
-                    var CustomObjectListType        = typeof(V1CustomObjectList<>);
-                    Type[] typeArgs                 = { type };
-                    var customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
-                    dynamic customObjectList        = Activator.CreateInstance(customObjectListGenericType);
-
-                    var iListType        = typeof(IList<>);
-                    var iListGenericType = iListType.MakeGenericType(typeArgs);
-                    var stringList       = NeonHelper.JsonSerialize(resources);
-                    var result           = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
+                    var     resources                   = testApiServer.Resources.Where(r => r.GetType() == type);
+                    var     CustomObjectListType        = typeof(V1CustomObjectList<>);
+                    Type[]  typeArgs                    = { type };
+                    var     customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
+                    dynamic customObjectList            = Activator.CreateInstance(customObjectListGenericType);
+                    var     iListType                   = typeof(IList<>);
+                    var     iListGenericType            = iListType.MakeGenericType(typeArgs);
+                    var     stringList                  = NeonHelper.JsonSerialize(resources);
+                    var     result                      = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
 
                     customObjectList.Items = result;
 
@@ -134,21 +135,21 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Creates a resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="resource"></param>
+        /// <param name="resource">Specifies the new resource.</param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPost]
         public async Task<ActionResult<ResourceObject>> CreateAsync([FromBody] object resource)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             var key = $"{string.Empty}/{Version}/{Plural}";
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-
-                var serializer = JsonSerializer.Serialize(resource);
-                var instance   = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
+                var serializer   = JsonSerializer.Serialize(resource);
+                var instance     = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
 
                 testApiServer.AddResource(string.Empty, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
@@ -161,21 +162,21 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Replaces a resource and stores it in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="resource"></param>
+        /// <param name="resource">Specifies the replacement respource.</param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPut]
         public async Task<ActionResult<ResourceObject>> UpdateAsync([FromBody] object resource)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
             var key = $"{string.Empty}/{Version}/{Plural}";
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
-                var typeMetadata = type.GetKubernetesTypeMetadata();
-                var serializer   = JsonSerializer.Serialize(resource);
-                var instance     = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
-
+                var typeMetadata  = type.GetKubernetesTypeMetadata();
+                var serializer    = JsonSerializer.Serialize(resource);
+                var instance      = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
                 var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))
@@ -202,19 +203,19 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Patches a resource in <see cref="TestApiServer.Resources"/>
         /// </summary>
-        /// <param name="patchDoc"></param>
+        /// <param name="patchDoc">Specifies the PATCH document.</param>
         /// <returns>An action result containing the resource.</returns>
         [HttpPatch]
-        public async Task<ActionResult<ResourceObject>> PatchAsync(
-            [FromBody] JsonPatchDocument<IKubernetesObject<V1ObjectMeta>> patchDoc)
+        public async Task<ActionResult<ResourceObject>> PatchAsync([FromBody] JsonPatchDocument<IKubernetesObject<V1ObjectMeta>> patchDoc)
         {
             await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
 
             var key = $"{string.Empty}/{Version}/{Plural}";
+
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
-                var typeMetadata = type.GetKubernetesTypeMetadata();
-
+                var typeMetadata  = type.GetKubernetesTypeMetadata();
                 var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))
@@ -250,7 +251,7 @@ namespace Neon.Operator.Xunit
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
-                var typeMetadata = type.GetKubernetesTypeMetadata();
+                var typeMetadata  = type.GetKubernetesTypeMetadata();
                 var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
                 if (!string.IsNullOrEmpty(Namespace))

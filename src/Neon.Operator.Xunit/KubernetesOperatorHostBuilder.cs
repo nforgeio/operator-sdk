@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesOperatorHostBuilder.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -52,9 +52,9 @@ namespace Neon.Operator.Xunit
 
             this.operatorHost.HostBuilder.ConfigureServices(services =>
                     {
-                        foreach (var s in Services)
+                        foreach (var service in Services)
                         {
-                            services.Add(s);
+                            services.Add(service);
                         }
                     })
                 .UseStartup<TestKubernetesStartup>()
