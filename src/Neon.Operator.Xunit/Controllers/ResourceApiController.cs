@@ -107,8 +107,6 @@ namespace Neon.Operator.Xunit
 
                     var iListType        = typeof(IList<>);
                     var iListGenericType = iListType.MakeGenericType(typeArgs);
-                    var stringList       = NeonHelper.JsonSerialize(resources);
-                    var result           = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
 
                     var stringList = KubernetesJson.Serialize(resources);
                     var result     = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
