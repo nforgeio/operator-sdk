@@ -101,15 +101,13 @@ namespace Neon.Operator.Xunit
 
                 if (Name == null)
                 {
-                    var     resources                   = testApiServer.Resources.Where(r => r.GetType() == type);
-                    var     CustomObjectListType        = typeof(V1CustomObjectList<>);
-                    Type[]  typeArgs                    = { type };
-                    var     customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
-                    dynamic customObjectList            = Activator.CreateInstance(customObjectListGenericType);
-                    var     iListType                   = typeof(IList<>);
-                    var     iListGenericType            = iListType.MakeGenericType(typeArgs);
-                    var     stringList                  = NeonHelper.JsonSerialize(resources);
-                    var     result                      = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
+                    var resources                   = testApiServer.Resources.Where(r => r.GetType() == type);
+                    var CustomObjectListType        = typeof(V1CustomObjectList<>);
+                    Type[] typeArgs                 = { type };
+                    var customObjectListGenericType = CustomObjectListType.MakeGenericType(typeArgs);
+                    dynamic customObjectList        = Activator.CreateInstance(customObjectListGenericType);
+                    var iListType                   = typeof(IList<>);
+                    var iListGenericType            = iListType.MakeGenericType(typeArgs);
 
                     customObjectList.Items = result;
 
