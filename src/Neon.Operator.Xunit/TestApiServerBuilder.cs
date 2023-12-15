@@ -1,4 +1,4 @@
-﻿// FILE:	    TestApiServerBuilder.cs
+// FILE:	    TestApiServerBuilder.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -20,6 +20,7 @@ using k8s;
 using k8s.KubeConfigModels;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Neon.Net;
@@ -31,7 +32,9 @@ namespace Neon.Operator.Xunit
     /// </summary>
     public class TestApiServerBuilder
     {
-        private readonly IHostBuilder hostBuilder = new HostBuilder();
+        //internal IServiceCollection Services { get; set; } = new ServiceCollection();
+
+        internal readonly IHostBuilder hostBuilder = new HostBuilder();
 
         /// <summary>
         /// Builds an <see cref="ITestApiServerHost"/>
@@ -49,6 +52,14 @@ namespace Neon.Operator.Xunit
                 web.UseStartup<TestApiServerStartup>()
                    .UseUrls(ServerUrl);
             });
+
+            //hostBuilder.ConfigureServices((ctx) =>
+            //{
+            //    foreach (var svc in Services)
+            //    {
+            //        ctx.Add(svc);
+            //    }
+            //});
 
             var host = hostBuilder.Build();
 

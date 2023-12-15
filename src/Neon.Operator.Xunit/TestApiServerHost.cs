@@ -1,4 +1,4 @@
-﻿// FILE:	    TestApiServerHost.cs
+// FILE:	    TestApiServerHost.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -48,7 +48,6 @@ namespace Neon.Operator.Xunit
             this.host       = host;
             this.KubeConfig = kubeConfig;
             this.K8s        = k8s;
-            this.Services   = new ServiceCollection();
         }
 
         /// <summary>
@@ -79,9 +78,6 @@ namespace Neon.Operator.Xunit
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
-        /// <inheritdoc/>
-        public IServiceCollection Services { get; }
 
         /// <inheritdoc/>
         public ITestApiServer Cluster => host.Services.GetRequiredService<ITestApiServer>();

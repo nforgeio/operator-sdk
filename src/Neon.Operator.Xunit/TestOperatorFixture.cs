@@ -22,6 +22,7 @@ using System.Linq;
 using k8s;
 using k8s.Models;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Neon.K8s;
@@ -34,17 +35,17 @@ namespace Neon.Operator.Xunit
     /// </summary>
     public class TestOperatorFixture : TestFixture
     {
-        private ITestApiServerHost  testApiServerHost;
-        private bool                started;
+        public IServiceCollection    Services => Operator.Services;
+        private TestApiServerBuilder serverBuilder;
+        private ITestApiServerHost   testApiServerHost;
+        private bool                 started;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public TestOperatorFixture()
         {
-            this.testApiServerHost = new TestApiServerBuilder()
-                .Build();
-
+            this.testApiServerHost             = new TestApiServerBuilder().Build();
             this.KubernetesClientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(testApiServerHost.KubeConfig);
             this.KubernetesClient              = new Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
             this.Operator                      = new TestOperator(KubernetesClientConfiguration);
@@ -69,7 +70,7 @@ namespace Neon.Operator.Xunit
         /// Returns the API server resource collection.
         /// </summary>
         public List<IKubernetesObject<V1ObjectMeta>> Resources => testApiServerHost.Cluster.Resources;
-        
+
         /// <summary>
         /// Start the test fixture.
         /// </summary>
@@ -83,7 +84,6 @@ namespace Neon.Operator.Xunit
 
             testApiServerHost.Start();
             Operator.Start();
-
             started = true;
 
             return TestFixtureStatus.Started;

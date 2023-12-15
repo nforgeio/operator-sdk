@@ -69,15 +69,13 @@ namespace TestKubeOperator
         {
             fixture.ClearResources();
 
-            var configMap = new V1ConfigMap()
+            var configMap = new V1ConfigMap().Initialize();
+            configMap.Metadata = new V1ObjectMeta()
             {
-                Metadata = new V1ObjectMeta()
-                {
-                    Name = "test",
-                    NamespaceProperty = "test",
-                },
-                Data = new Dictionary<string, string>(){ { "foo", "bar" } }
+                Name = "test",
+                NamespaceProperty = "test",
             };
+            configMap.Data = new Dictionary<string, string>() { { "foo", "bar" } };
 
             await fixture.KubernetesClient.CoreV1.CreateNamespacedConfigMapAsync(configMap, configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
 

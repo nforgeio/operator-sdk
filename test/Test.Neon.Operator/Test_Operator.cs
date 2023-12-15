@@ -31,8 +31,8 @@ namespace Test.Neon.Operator
     {
         private TestOperatorFixture fixture;
 
-        public TestOperator(TestOperatorFixture fixture) 
-        { 
+        public TestOperator(TestOperatorFixture fixture)
+        {
             this.fixture = fixture;
             fixture.Operator.AddController<TestResourceController>();
             fixture.Operator.AddController<TestDatabaseController>();

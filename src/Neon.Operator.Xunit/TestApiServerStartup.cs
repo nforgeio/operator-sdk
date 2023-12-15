@@ -54,9 +54,6 @@ namespace Neon.Operator.Xunit
             var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
             var jsonOptions = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
 
-            var converters = jsonOptions.Converters.Where(c => c.GetType() == typeof(JsonStringEnumMemberConverter));
-            jsonOptions.Converters.Insert(0, new JsonStringEnumMemberConverter());
-
             services.AddSingleton(jsonOptions);
 
             services.AddControllers(options =>

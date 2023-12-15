@@ -32,6 +32,8 @@ namespace Neon.Operator.Xunit
     /// <inheritdoc/>
     public class TestOperator : ITestOperator
     {
+        public IServiceCollection Services { get; set; } = new ServiceCollection();
+        
         private KubernetesOperatorTestHost          host;
         private KubernetesOperatorTestHostBuilder   hostBuilder;
         private IOperatorBuilder                    operatorBuilder;
@@ -108,6 +110,10 @@ namespace Neon.Operator.Xunit
         /// <inheritdoc/>
         public void Start()
         {
+            foreach (var svc in Services)
+            {
+                hostBuilder.Services.Add(svc);
+            }
             host = (KubernetesOperatorTestHost)hostBuilder.Build();
             host.Host.Start();
         }

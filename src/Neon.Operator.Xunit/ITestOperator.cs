@@ -16,6 +16,8 @@
 
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Operator.Controllers;
 using Neon.Operator.Finalizers;
 using Neon.Operator.Webhooks;
@@ -27,6 +29,11 @@ namespace Neon.Operator.Xunit
     /// </summary>
     public interface ITestOperator
     {
+        /// <summary>
+        /// The <see cref="IServiceCollection"/> for the operator.
+        /// </summary>
+        IServiceCollection Services { get; }
+
         /// <summary>
         /// Starts the operator masynchronously.
         /// </summary>
