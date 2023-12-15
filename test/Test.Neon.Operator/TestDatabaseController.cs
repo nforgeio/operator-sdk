@@ -25,7 +25,9 @@ using k8s.Models;
 
 using Neon.Operator;
 using Neon.Operator.Controllers;
+using Neon.Operator.Util;
 
+using Neon.K8s;
 
 namespace Test.Neon.Operator
 {
@@ -48,6 +50,16 @@ namespace Test.Neon.Operator
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1TestDatabase resource)
         {
+            var patch = OperatorHelper.CreatePatch<V1TestDatabase>();
+
+            patch.Replace(path => path.Status, new TestDatabaseStatus());
+            patch.Replace(path => path.Status.Status, "reconciling");
+
+            await k8s.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(
+                patch:              OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
+                name:               resource.Name(),
+                namespaceParameter: resource.Namespace());
+
             var statefuSetList = await k8s.AppsV1.ListNamespacedStatefulSetAsync(resource.Metadata.Namespace(),
                 labelSelector: $"app.kubernetes.io/name={resource.Name()}");
 
@@ -119,6 +131,16 @@ namespace Test.Neon.Operator
             };
 
             await k8s.CoreV1.CreateNamespacedServiceAsync(service, service.Namespace());
+
+            patch = OperatorHelper.CreatePatch<V1TestDatabase>();
+
+            patch.Replace(path => path.Status, new TestDatabaseStatus());
+            patch.Replace(path => path.Status.Status, "reconciled");
+
+            await k8s.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(
+                patch:              OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
+                name:               resource.Name(),
+                namespaceParameter: resource.Namespace());
 
             return Ok();
         }

@@ -114,7 +114,7 @@ namespace Neon.Operator.Xunit
                     dynamic customObjectList            = Activator.CreateInstance(customObjectListGenericType);
                     var     iListType                   = typeof(IList<>);
                     var     iListGenericType            = iListType.MakeGenericType(typeArgs);
-                    var     stringList                  = KubernetesJson.Serialize(resources);
+                    var     stringList                  = JsonSerializer.Serialize(resources, jsonSerializerOptions);
                     var     result                      = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
 
                     customObjectList.Items = result;
@@ -154,7 +154,7 @@ namespace Neon.Operator.Xunit
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-                var json         = JsonSerializer.Serialize(resource);
+                var json         = JsonSerializer.Serialize(resource, jsonSerializerOptions);
                 var instance     = JsonSerializer.Deserialize(json, type, jsonSerializerOptions);
 
                 testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
@@ -181,7 +181,7 @@ namespace Neon.Operator.Xunit
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata  = type.GetKubernetesTypeMetadata();
-                var json          = JsonSerializer.Serialize(resource);
+                var json          = JsonSerializer.Serialize(resource, jsonSerializerOptions);
                 var instance      = JsonSerializer.Deserialize(json, type, jsonSerializerOptions);
                 var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 

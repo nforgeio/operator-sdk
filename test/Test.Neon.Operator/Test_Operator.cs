@@ -37,6 +37,7 @@ namespace Test.Neon.Operator
             fixture.Operator.AddController<TestResourceController>();
             fixture.Operator.AddController<TestDatabaseController>();
             fixture.RegisterType<V1TestChildResource>();
+            fixture.RegisterType<V1TestDatabase>();
             fixture.RegisterType<V1StatefulSet>();
             fixture.RegisterType<V1Service>();
             fixture.Start();
@@ -84,9 +85,14 @@ namespace Test.Neon.Operator
                 }
             };
 
+            fixture.AddResource<V1TestDatabase>(resource);
+
             await controller.ReconcileAsync(resource);
 
-            Assert.Equal(2, fixture.Resources.Count);
+            fixture.Resources.Count.Should().Be(3);
+
+            var updatedResource = fixture.GetResource<V1TestDatabase>(resource.Name(), resource.Namespace());
+            updatedResource.Status.Status.Should().Be("reconciled");
 
             // verify statefulset
             var statefulSet = fixture.GetResource<V1StatefulSet>(resource.Name(), resource.Namespace());

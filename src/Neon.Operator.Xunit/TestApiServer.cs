@@ -91,8 +91,8 @@ namespace Neon.Operator.Xunit
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
-            var serializer = JsonSerializer.Serialize(resource);
-            var instance   = (T)JsonSerializer.Deserialize(serializer, typeof(T), jsonSerializerOptions);
+            var serialized = JsonSerializer.Serialize(resource, jsonSerializerOptions);
+            var instance   = JsonSerializer.Deserialize<T>(serialized, jsonSerializerOptions);
 
             AddResource(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName, typeMetadata.Kind, instance, namespaceParameter);
         }

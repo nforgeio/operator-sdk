@@ -29,7 +29,7 @@ namespace Test.Neon.Operator
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Namespaced)]
-    public class V1TestDatabase : IKubernetesObject<V1ObjectMeta>, ISpec<TestDatabaseSpec>, IValidate
+    public class V1TestDatabase : IKubernetesObject<V1ObjectMeta>, ISpec<TestDatabaseSpec>, IStatus<TestDatabaseStatus>, IValidate
     {
         /// <summary>
         /// Object API group.
@@ -60,34 +60,20 @@ namespace Test.Neon.Operator
             Kind = KubeKind;
         }
 
-        /// <summary>
-        /// Gets or sets APIVersion defines the versioned schema of this
-        /// representation of an object. Servers should convert recognized
-        /// schemas to the latest internal value, and may reject unrecognized
-        /// values. More info:
-        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-        /// </summary>
+        /// <inheritdoc/>
         public string ApiVersion { get; set; }
 
-        /// <summary>
-        /// Gets or sets kind is a string value representing the REST resource
-        /// this object represents. Servers may infer this from the endpoint
-        /// the client submits requests to. Cannot be updated. In CamelCase.
-        /// More info:
-        /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-        /// </summary>
+        /// <inheritdoc/>
         public string Kind { get; set; }
 
-        /// <summary>
-        /// Gets or sets standard object metadata.
-        /// </summary>
+        /// <inheritdoc/>
         public V1ObjectMeta Metadata { get; set; }
 
-        /// <summary>
-        /// Gets or sets specification of the desired behavior of the
-        /// Tenant.
-        /// </summary>
+        /// <inheritdoc/>
         public TestDatabaseSpec Spec { get; set; }
+
+        /// <inheritdoc/>
+        public TestDatabaseStatus Status { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -99,7 +85,7 @@ namespace Test.Neon.Operator
     }
 
     /// <summary>
-    /// The node execute task specification.
+    /// Database spec.
     /// </summary>
     public class TestDatabaseSpec
     {
@@ -117,5 +103,13 @@ namespace Test.Neon.Operator
         /// The volume size
         /// </summary>
         public string VolumeSize { get; set; }
+    }
+
+    /// <summary>
+    /// status.
+    /// </summary>
+    public class TestDatabaseStatus
+    {
+        public string Status { get; set; }
     }
 }

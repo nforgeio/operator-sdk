@@ -1,4 +1,4 @@
-﻿// FILE:	    TestApiServerStartup.cs
+// FILE:	    TestApiServerStartup.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,8 +17,12 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using k8s;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.JsonPatch;
@@ -43,6 +47,18 @@ namespace Neon.Operator.Xunit
         {
             Covenant.Requires<ArgumentNullException>(services != null, nameof(services));
 
+            var kubernetesJsonType = typeof(KubernetesJson).Assembly.GetType("k8s.KubernetesJson");
+
+            RuntimeHelpers.RunClassConstructor(kubernetesJsonType.TypeHandle);
+
+            var member  = kubernetesJsonType.GetField("JsonSerializerOptions", BindingFlags.Static | BindingFlags.NonPublic);
+            var jsonOptions = (JsonSerializerOptions)member.GetValue(kubernetesJsonType);
+
+            var converters = jsonOptions.Converters.Where(c => c.GetType() == typeof(JsonStringEnumMemberConverter));
+            jsonOptions.Converters.Insert(0, new JsonStringEnumMemberConverter());
+
+            services.AddSingleton(jsonOptions);
+
             services.AddControllers(options =>
             {
                 options.InputFormatters.Insert(0, JPIF.GetJsonPatchInputFormatter());
@@ -52,20 +68,14 @@ namespace Neon.Operator.Xunit
                     {
                         options.JsonSerializerOptions.DictionaryKeyPolicy  = JsonNamingPolicy.CamelCase;
                         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                        foreach (var converter in jsonOptions.Converters)
+                        {
+                            options.JsonSerializerOptions.Converters.Add(converter);
+                        }
                     });
 
             services.AddSingleton<ITestApiServer, TestApiServer>();
-
-            var serializeOptions = new JsonSerializerOptions()
-            {
-                PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
-                IncludeFields               = true,
-                PropertyNameCaseInsensitive = true,
-            };
-
-            serializeOptions.Converters.Add(new JsonStringEnumMemberConverter());
-
-            services.AddSingleton(serializeOptions);
         }
 
         /// <summary>

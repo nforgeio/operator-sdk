@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Resources;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -31,6 +32,8 @@ using Microsoft.AspNetCore.Mvc;
 using Neon.Common;
 using Neon.K8s;
 using Neon.Tasks;
+
+using OpenTelemetry.Resources;
 
 namespace Neon.Operator.Xunit
 {
@@ -108,7 +111,7 @@ namespace Neon.Operator.Xunit
                     dynamic customObjectList            = Activator.CreateInstance(customObjectListGenericType);
                     var     iListType                   = typeof(IList<>);
                     var     iListGenericType            = iListType.MakeGenericType(typeArgs);
-                    var     stringList                  = NeonHelper.JsonSerialize(resources);
+                    var     stringList                  = JsonSerializer.Serialize(resources, jsonSerializerOptions);
                     var     result                      = (dynamic)JsonSerializer.Deserialize(stringList, iListGenericType, jsonSerializerOptions);
 
                     customObjectList.Items = result;
@@ -148,7 +151,7 @@ namespace Neon.Operator.Xunit
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-                var serializer   = JsonSerializer.Serialize(resource);
+                var serializer   = JsonSerializer.Serialize(resource, jsonSerializerOptions);
                 var instance     = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
 
                 testApiServer.AddResource(string.Empty, Version, Plural, typeMetadata.Kind, instance, Namespace);
@@ -175,7 +178,7 @@ namespace Neon.Operator.Xunit
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata  = type.GetKubernetesTypeMetadata();
-                var serializer    = JsonSerializer.Serialize(resource);
+                var serializer    = JsonSerializer.Serialize(resource, jsonSerializerOptions);
                 var instance      = JsonSerializer.Deserialize(serializer, type, jsonSerializerOptions);
                 var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
 
@@ -243,7 +246,7 @@ namespace Neon.Operator.Xunit
         /// </summary>
         /// <returns>An action result containing the resource.</returns>
         [HttpDelete]
-        public async Task<ActionResult> DeleteAsync()
+        public async Task<ActionResult<V1Status>> DeleteAsync()
         {
             await SyncContext.Clear;
 
@@ -276,11 +279,12 @@ namespace Neon.Operator.Xunit
                     }
                 }
 
-                return Ok(new V1Status()
-                {
-                    Code   = 200,
-                    Status = "Success"
-                });
+                var status = new V1Status().Initialize();
+                status.Message = "deleted";
+                status.Status = "deleted";
+                status.Code = 200;
+
+                return Content(NeonHelper.JsonSerialize(status), "application/json");
             }
 
             return NotFound();

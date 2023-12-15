@@ -37,6 +37,7 @@ namespace Neon.Operator.Xunit
     /// Generic resource API controller.
     /// </summary>
     [Route("apis/{group}/{version}/{plural}/{name}/status")]
+    [Route("apis/{group}/{version}/namespaces/{namespace}/{plural}/{name}/status")]
     public class ResourceApiGroupStatusController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly ITestApiServer testApiServer;
@@ -101,7 +102,7 @@ namespace Neon.Operator.Xunit
                 dynamic     o       = Activator.CreateInstance(makeme);
                 var     d2          = typeof(IList<>);
                 var     makeme2     = d2.MakeGenericType(typeArgs);
-                var     s           = KubernetesJson.Serialize(resources);
+                var     s           = JsonSerializer.Serialize(resources, jsonSerializerOptions);
                 var     instance    = (dynamic)JsonSerializer.Deserialize(s, makeme2, jsonSerializerOptions);
 
                 o.Items = instance;
@@ -122,7 +123,7 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var json = KubernetesJson.Serialize(patch);
+            var json = JsonSerializer.Serialize(patch, jsonSerializerOptions);
             var p0   = NeonHelper.JsonDeserialize<JsonPatchDocument>(json);
             var key  = $"{Group}/{Version}/{Plural}";
 
