@@ -81,7 +81,8 @@ namespace Neon.Operator
                 })
                 .UseKestrel(options =>
                 {
-                    if (!NeonHelper.IsDevWorkstation)
+                    if (!NeonHelper.IsDevWorkstation
+                        && this.operatorHost.Certificate != null)
                     {
                         options.ConfigureHttpsDefaults(options =>
                         {
@@ -94,7 +95,8 @@ namespace Neon.Operator
 
                     options.Listen(this.operatorHost.OperatorSettings.ListenAddress, this.operatorHost.OperatorSettings.Port, configure =>
                     {
-                        if (!NeonHelper.IsDevWorkstation)
+                        if (!NeonHelper.IsDevWorkstation
+                            && this.operatorHost.Certificate != null)
                         {
                             configure.UseHttps(httpsOptions =>
                             {
