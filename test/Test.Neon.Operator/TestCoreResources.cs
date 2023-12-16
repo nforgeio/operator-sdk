@@ -37,6 +37,7 @@ namespace TestKubeOperator
         {
             this.fixture = fixture;
             fixture.RegisterType<V1ConfigMap>();
+            fixture.RegisterType<V1Service>();
             fixture.Start();
         }
 
@@ -68,6 +69,8 @@ namespace TestKubeOperator
             fixture.ClearResources();
 
             var service = new V1Service().Initialize();
+            service.Metadata.Name = "test";
+            service.Metadata.NamespaceProperty = "test-ns";
             service.Spec = new V1ServiceSpec()
             {
                 Ports = new List<V1ServicePort>()
