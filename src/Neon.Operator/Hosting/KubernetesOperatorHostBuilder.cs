@@ -106,7 +106,7 @@ namespace Neon.Operator
                                 };
                             });
                         }
-                    });
+                    }); 
                 })
                 .UseStartup(this.operatorHost.StartupType);
         
