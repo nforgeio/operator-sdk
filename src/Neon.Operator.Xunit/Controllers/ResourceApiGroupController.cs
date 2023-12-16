@@ -277,11 +277,12 @@ namespace Neon.Operator.Xunit
                     }
                 }
 
-                return Ok(new V1Status()
-                {
-                    Code   = 200,
-                    Status = "Success"
-                });
+                var status = new V1Status().Initialize();
+                status.Message = "deleted";
+                status.Status = "deleted";
+                status.Code = 200;
+
+                return Content(NeonHelper.JsonSerialize(status), "application/json");
             }
 
             return NotFound();

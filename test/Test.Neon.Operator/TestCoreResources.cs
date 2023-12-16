@@ -38,6 +38,7 @@ namespace TestKubeOperator
             this.fixture = fixture;
             fixture.RegisterType<V1ConfigMap>();
             fixture.RegisterType<V1Service>();
+            fixture.RegisterType<V1StatefulSet>();
             fixture.Start();
         }
 
@@ -229,6 +230,29 @@ namespace TestKubeOperator
             deleted.Should().BeNull();
 
             fixture.Resources.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task TestDeleteStatefulSetAsync()
+        {
+            fixture.ClearResources();
+
+            var statefulSet = new V1StatefulSet().Initialize();
+            statefulSet.Metadata.Name = "test";
+            statefulSet.Metadata.NamespaceProperty = "test-ns";
+            statefulSet.Spec = new V1StatefulSetSpec()
+            {
+                Replicas = 1
+            };
+
+            fixture.AddResource(statefulSet);
+
+            await fixture.KubernetesClient.AppsV1.DeleteNamespacedStatefulSetAsync(statefulSet.Metadata.Name, statefulSet.Metadata.NamespaceProperty);
+
+            var deleted = fixture.GetResource<V1StatefulSet>(statefulSet.Metadata.Name,statefulSet.Metadata.NamespaceProperty);
+            deleted.Should().BeNull();
+
+            fixture.Resources.Should().HaveCount(0);
         }
     }
 }
