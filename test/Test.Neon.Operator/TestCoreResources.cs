@@ -15,10 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -28,7 +25,7 @@ using k8s.Models;
 
 using Neon.Operator.Util;
 using Neon.Operator.Xunit;
-using Test.Neon.Operator;
+
 using Xunit;
 
 namespace TestKubeOperator
@@ -64,6 +61,45 @@ namespace TestKubeOperator
 
             result.Should().NotBeNull();
         }
+
+        [Fact]
+        public async Task TestGetServiceAsync()
+        {
+            fixture.ClearResources();
+
+            var service = new V1Service().Initialize();
+            service.Spec = new V1ServiceSpec()
+            {
+                Ports = new List<V1ServicePort>()
+                {
+                    new V1ServicePort()
+                    {
+                        Name          = "http",
+                        Protocol      = "TCP",
+                        Port          = 6333,
+                        TargetPort    = 6333
+                    }
+                },
+                Selector = new Dictionary<string, string>()
+                {
+                    { "foo", "bar" }
+                },
+                Type = "ClusterIP",
+                InternalTrafficPolicy = "Cluster"
+
+            };
+            fixture.AddResource<V1Service>(service);
+
+            var serviceList = await fixture.KubernetesClient.CoreV1.ListNamespacedServiceAsync(service.Metadata.NamespaceProperty);
+
+            serviceList.Items.Should().HaveCount(1);
+
+            service = await fixture.KubernetesClient.CoreV1.ReadNamespacedServiceAsync(name: service.Metadata.Name,
+                namespaceParameter: service.Metadata.NamespaceProperty);
+
+            service.Should().NotBeNull();
+        }
+
         [Fact]
         public async Task TestCreateConfigMapAsync()
         {
@@ -111,7 +147,7 @@ namespace TestKubeOperator
 
             configMap.Data.Add("bar", "baz");
 
-            await fixture.KubernetesClient.CoreV1.ReplaceNamespacedConfigMapAsync(configMap,configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
 
             var updated = fixture.GetResource<V1ConfigMap>(configMap.Metadata.Name,configMap.Metadata.NamespaceProperty);
             updated.Should().NotBeEquivalentTo(configMap);
@@ -160,6 +196,7 @@ namespace TestKubeOperator
 
             fixture.Resources.Should().HaveCount(2);
         }
+
         [Fact]
         public async Task TestDeleteConfigMapAsync()
         {
