@@ -73,7 +73,7 @@
         <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
-    <!-- $hack(jefflill): We started needing these references after upgrading to .NET 8.0 for some reason. -->
+    <!-- Build breaks for some reason without this, since the .NET 8.0 upgrade -->
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
