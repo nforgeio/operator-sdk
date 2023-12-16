@@ -221,7 +221,6 @@ namespace Neon.Operator.ResourceManager
         {
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(ServiceProvider));
             Covenant.Requires<ArgumentException>(options.WatchNamespace == null || options.WatchNamespace != string.Empty, nameof(options.WatchNamespace));
-            Covenant.Requires<ArgumentException>(!(leaderConfig != null && leaderElectionDisabled), nameof(leaderElectionDisabled));
             
             this.serviceProvider        = serviceProvider;
             this.options                = options ?? serviceProvider.GetRequiredService<ResourceManagerOptions>();
