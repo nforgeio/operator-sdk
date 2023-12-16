@@ -120,7 +120,7 @@ namespace Neon.Operator
                     endpoints.MapMetrics(operatorSettings.MetricsEndpoint);
                     addedEndpoints.Add(operatorSettings.MetricsEndpoint);
 
-                    if (addedEndpoints.Contains(operatorSettings.StartupEndpooint))
+                    if (!addedEndpoints.Contains(operatorSettings.StartupEndpooint))
                     {{
                         endpoints.MapHealthChecks(operatorSettings.StartupEndpooint, new HealthCheckOptions()
                         {{
@@ -133,7 +133,7 @@ namespace Neon.Operator
                         addedEndpoints.Add(operatorSettings.StartupEndpooint);
                     }}
 
-                    if (addedEndpoints.Contains(operatorSettings.LivenessEndpooint))
+                    if (!addedEndpoints.Contains(operatorSettings.LivenessEndpooint))
                     {{
                         endpoints.MapHealthChecks(operatorSettings.LivenessEndpooint, new HealthCheckOptions()
                         {{
