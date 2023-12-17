@@ -30,10 +30,10 @@ using Xunit;
 
 namespace TestKubeOperator
 {
-    public class TestCoreResources : IClassFixture<TestOperatorFixture>
+    public class TestCoreResources : IClassFixture<OperatorFixture>
     {
-        private TestOperatorFixture fixture;
-        public TestCoreResources(TestOperatorFixture fixture)
+        private OperatorFixture fixture;
+        public TestCoreResources(OperatorFixture fixture)
         {
             this.fixture = fixture;
             fixture.RegisterType<V1ConfigMap>();
