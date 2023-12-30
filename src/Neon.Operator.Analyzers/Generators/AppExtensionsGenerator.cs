@@ -68,6 +68,7 @@ namespace Neon.Operator.Analyzers
             var usings = new HashSet<string>()
             {
                 "System",
+                "System.Collections.Generic",
                 "System.Linq",
                 "System.Reflection",
                 "System.Threading.Tasks",
@@ -113,32 +114,50 @@ namespace Neon.Operator
                     await SyncContext.Clear;
 
                     endpoints.MapControllers();
+                   
+                    var addedEndpoints = new HashSet<string>();
 
                     endpoints.MapMetrics(operatorSettings.MetricsEndpoint);
+                    addedEndpoints.Add(operatorSettings.MetricsEndpoint);
 
-                    endpoints.MapHealthChecks(operatorSettings.StartupEndpooint, new HealthCheckOptions()
+                    if (!addedEndpoints.Contains(operatorSettings.StartupEndpooint))
                     {{
-                        Predicate = (healthCheck =>
+                        endpoints.MapHealthChecks(operatorSettings.StartupEndpooint, new HealthCheckOptions()
                         {{
-                            return healthCheck.Tags.Contains(OperatorBuilder.StartupHealthProbeTag);
-                        }})
-                    }});
+                            Predicate = (healthCheck =>
+                            {{
+                                return healthCheck.Tags.Contains(OperatorBuilder.StartupHealthProbeTag);
+                            }})
+                        }});
 
-                    endpoints.MapHealthChecks(operatorSettings.LivenessEndpooint, new HealthCheckOptions()
-                    {{
-                        Predicate = (healthCheck =>
-                        {{
-                            return healthCheck.Tags.Contains(OperatorBuilder.LivenessHealthProbeTag);
-                        }})
-                    }});
+                        addedEndpoints.Add(operatorSettings.StartupEndpooint);
+                    }}
 
-                    endpoints.MapHealthChecks(operatorSettings.ReadinessEndpooint, new HealthCheckOptions()
+                    if (!addedEndpoints.Contains(operatorSettings.LivenessEndpooint))
                     {{
-                        Predicate = (healthCheck =>
+                        endpoints.MapHealthChecks(operatorSettings.LivenessEndpooint, new HealthCheckOptions()
                         {{
-                            return healthCheck.Tags.Contains(OperatorBuilder.ReadinessHealthProbeTag);
-                        }})
-                    }});
+                            Predicate = (healthCheck =>
+                            {{
+                                return healthCheck.Tags.Contains(OperatorBuilder.LivenessHealthProbeTag);
+                            }})
+                        }});
+
+                        addedEndpoints.Add(operatorSettings.LivenessEndpooint);
+                    }}
+
+                    if (!addedEndpoints.Contains(operatorSettings.ReadinessEndpooint))
+                    {{
+                        endpoints.MapHealthChecks(operatorSettings.ReadinessEndpooint, new HealthCheckOptions()
+                        {{
+                            Predicate = (healthCheck =>
+                            {{
+                                return healthCheck.Tags.Contains(OperatorBuilder.ReadinessHealthProbeTag);
+                            }})
+                        }});
+
+                        addedEndpoints.Add(operatorSettings.ReadinessEndpooint);
+                    }}
 
                     var tunnel = app.ApplicationServices.GetServices<IHostedService>()
                         .OfType<NgrokWebhookTunnel>()

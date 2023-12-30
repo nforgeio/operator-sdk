@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.IO;
 
 using Neon.Common;
 
@@ -47,12 +48,38 @@ namespace Neon.Operator.Util
             if (NeonHelper.IsDevWorkstation)
             {
                 Namespace = "default";
-                Name = Environment.MachineName;
+                Name      = Environment.MachineName;
             }
             else
             {
                 Namespace = Environment.GetEnvironmentVariable("POD_NAMESPACE");
-                Name = Environment.GetEnvironmentVariable("POD_NAME");
+                Name      = Environment.GetEnvironmentVariable("POD_NAME");
+
+                if (string.IsNullOrEmpty(Name))
+                {
+                    var hostFile = File.ReadAllText("/etc/hostname");
+                    if (File.Exists(hostFile))
+                    {
+                        Name = File.ReadAllText(hostFile).Trim();
+                    }
+                    else
+                    {
+                        Name = Environment.MachineName;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(Namespace))
+                {
+                    var nsFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
+                    if (File.Exists(nsFile))
+                    {
+                        Namespace = File.ReadAllText(nsFile).Trim();
+                    }
+                    else
+                    {
+                        Namespace = "default";
+                    }
+                }
             }
         }
     }
