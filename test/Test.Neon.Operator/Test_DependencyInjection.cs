@@ -16,11 +16,13 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 
 using k8s;
+using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -56,9 +58,13 @@ namespace TestKubeOperator
             this.Foo = foo;
         }
 
-        public override Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity)
         {
-            return base.ReconcileAsync(entity);
+            var config = await K8s.CoreV1.ReadNamespacedConfigMapAsync(name: "foo", namespaceParameter: "bar");
+
+            await base.ReconcileAsync(entity);
+
+            return ResourceControllerResult.Ok();
         }
     }
 
@@ -78,14 +84,20 @@ namespace TestKubeOperator
         {
             var controller = fixture.Operator.GetController<TestDiController>();
 
+            var config = new V1ConfigMap().Initialize();
+            config.Metadata.Name = "foo";
+            config.Metadata.NamespaceProperty = "bar";
+            config.Data = new Dictionary<string, string>();
+            config.Data.Add("foo", "bar");
+
             var resource = new V1TestResource();
             resource.Spec = new TestSpec()
             {
                 Message = "I'm the parent object"
             };
 
-            await controller.ReconcileAsync(resource);
-
+            var result = await controller.ReconcileAsync(resource);
+            result.Should().Be(null);
             controller.Foo.Should().NotBeNull();
             controller.Foo.Bar.Should().Be("bar");
         }
