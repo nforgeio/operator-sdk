@@ -76,6 +76,7 @@ namespace TestKubeOperator
             this.fixture = fixture;
             this.fixture.Services.AddSingleton<Foo>(new Foo("bar"));
             this.fixture.Operator.AddController<TestDiController>();
+            this.fixture.RegisterType<V1ConfigMap>();
             this.fixture.Start();
         }
 
@@ -89,6 +90,8 @@ namespace TestKubeOperator
             config.Metadata.NamespaceProperty = "bar";
             config.Data = new Dictionary<string, string>();
             config.Data.Add("foo", "bar");
+
+            fixture.AddResource(config);
 
             var resource = new V1TestResource();
             resource.Spec = new TestSpec()
