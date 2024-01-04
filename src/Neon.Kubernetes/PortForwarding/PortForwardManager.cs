@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    PortForwardManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -43,11 +43,12 @@ namespace Neon.K8s.PortForward
     /// <inheritdoc/>
     public class PortForwardManager : IPortForwardManager
     {
+        private static Random                       Random = new Random();
+
         private readonly IKubernetes                k8s;
         private readonly IPortForwardStreamManager  streamManager;
         private readonly ILoggerFactory             loggerFactory;
         private readonly ILogger                    logger;
-
         private ConcurrentDictionary<string, Task> containerPortForwards;
 
         /// <summary>
@@ -78,10 +79,30 @@ namespace Neon.K8s.PortForward
             Dictionary<string, List<string>> customHeaders     = null,
             CancellationToken                cancellationToken = default)
         {
+            StartPodPortForward(
+                names: new         string[] { name },
+                @namespace:        @namespace,
+                localPort:         localPort,
+                remotePort:        remotePort,
+                localAddress:      localAddress,
+                customHeaders:     customHeaders,
+                cancellationToken: cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public void StartPodPortForward(
+            IEnumerable<string>              names,
+            string                           @namespace,
+            int                              localPort,
+            int                              remotePort,
+            IPAddress                        localAddress      = null,
+            Dictionary<string, List<string>> customHeaders     = null,
+            CancellationToken                cancellationToken = default)
+        {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
 
-            var key = $"{@namespace}/{name}";
+            var key = $"{@namespace}/{string.Join(',', names)}";
 
             if (containerPortForwards.ContainsKey(key))
             {
@@ -98,38 +119,42 @@ namespace Neon.K8s.PortForward
                 {
                     using (var portListener = new PortListener(localPort, localAddress, loggerFactory, cancellationToken))
                     {
+                        var podName = "";
+
                         try
                         {
-                            logger?.LogDebugEx(() => $"Starting listener for forwarding: {localPort} --> {remotePort}");
-
-                            RemoteConnectionFactory remoteConnectionFactory = 
-                                async () =>
-                                {
-                                    logger?.LogDebugEx(() => $"Creating socket forwarding: {localPort} --> {remotePort}");
-
-                                    var retry = new LinearRetryPolicy(typeof(WebSocketException), maxAttempts: 3, retryInterval: TimeSpan.FromMilliseconds(100));
-
-                                    return await retry.InvokeAsync(
-                                        async () =>
-                                        {
-                                            return await k8s.WebSocketNamespacedPodPortForwardAsync(
-                                                name:                 name,
-                                                @namespace:           @namespace,
-                                                ports:                new int[] { remotePort },
-                                                webSocketSubProtocol: WebSocketProtocol.V4BinaryWebsocketProtocol,
-                                                customHeaders:        customHeaders);
-                                        });
-                                };
-
                             while (!cancellationToken.IsCancellationRequested)
                             {
-                                var localConnection = await portListener.Listener.AcceptTcpClientAsync();
+                                podName = names.ElementAt(Random.Next(0, names.Count()));
 
-                                streamManager.Start(
-                                    localConnection:         localConnection,
-                                    remoteConnectionFactory: remoteConnectionFactory,
-                                    remotePort:              remotePort,
-                                    cancellationToken:       cancellationToken);
+                                logger?.LogDebugEx(() => $"Starting listener for forwarding: {localPort} --> {remotePort}");
+
+                                RemoteConnectionFactory remoteConnectionFactory =
+                                    async () =>
+                                    {
+                                        logger?.LogDebugEx(() => $"Creating socket forwarding: {localPort} --> {remotePort}");
+
+                                        var retry = new LinearRetryPolicy(typeof(WebSocketException), maxAttempts: 3, retryInterval: TimeSpan.FromMilliseconds(100));
+
+                                        return await retry.InvokeAsync(
+                                            async () =>
+                                            {
+                                                return await k8s.WebSocketNamespacedPodPortForwardAsync(
+                                                    name:                 podName,
+                                                    @namespace:           @namespace,
+                                                    ports:                new int[] { remotePort },
+                                                    webSocketSubProtocol: WebSocketProtocol.V4BinaryWebsocketProtocol,
+                                                    customHeaders:        customHeaders);
+                                            });
+                                    };
+
+                                    var localConnection = await portListener.Listener.AcceptTcpClientAsync();
+
+                                    streamManager.Start(
+                                        localConnection:         localConnection,
+                                        remoteConnectionFactory: remoteConnectionFactory,
+                                        remotePort:              remotePort,
+                                        cancellationToken:       cancellationToken);
                             }
                         }
                         catch (ObjectDisposedException)
@@ -138,20 +163,65 @@ namespace Neon.K8s.PortForward
                         }
                         catch (Exception e)
                         {
-                            logger?.LogErrorEx(e, () => $"Port forwarding {@namespace}/{name} {localPort}:{remotePort} failed.");
+                            logger?.LogErrorEx(e, () => $"Port forwarding {@namespace}/{podName} {localPort}:{remotePort} failed.");
                             throw;
                         }
                     }
-                }, 
+                },
                 cancellationToken);
 
             cancellationToken.Register(
-                () => 
+                () =>
                 {
                     containerPortForwards.Remove(key, out _);
                 });
 
             containerPortForwards.TryAdd(key, forwardingTask);
+        }
+
+
+        /// <inheritdoc/>
+        public async Task StartServicePortForwardAsync(
+            string                           name,
+            string                           @namespace,
+            int                              localPort,
+            int                              remotePort,
+            IPAddress                        localAddress      = null,
+            Dictionary<string, List<string>> customHeaders     = null,
+            CancellationToken                cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
+
+            var key = $"{@namespace}/{name}";
+
+            if (containerPortForwards.ContainsKey(key))
+            {
+                return;
+            }
+
+            if (localAddress == null)
+            {
+                localAddress = IPAddress.Loopback;
+            }
+
+            var endpoints = await k8s.CoreV1.ReadNamespacedEndpointsAsync(
+                name:               name,
+                namespaceParameter: @namespace,
+                cancellationToken:  cancellationToken);
+
+            var pods = endpoints.Subsets.FirstOrDefault()?.Addresses.Where(a => a.TargetRef.Kind == "Pod").Select(a => a.TargetRef.Name);
+
+            StartPodPortForward(
+                names:             pods,
+                @namespace:        @namespace,
+                localPort:         localPort,
+                remotePort:        remotePort,
+                localAddress:      localAddress,
+                customHeaders:     customHeaders,
+                cancellationToken: cancellationToken);
+
+            
         }
     }
 }

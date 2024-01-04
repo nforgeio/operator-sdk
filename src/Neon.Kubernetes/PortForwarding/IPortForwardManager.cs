@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IPortForwardManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -41,16 +41,56 @@ namespace Neon.K8s.PortForward
         /// Establishes a <see cref="PortForwardStream"/> connection from the local
         /// workstation toa pod running in the cluster.
         /// </summary>
-        /// <param name="namespaceName">Specifies the remote pod namespace.</param>
         /// <param name="podName">Specifies the remote pod name.</param>
+        /// <param name="namespace">Specifies the remote pod namespace.</param>
         /// <param name="localPort">Specifies the local port on the workstation.</param>
         /// <param name="remotePort">Specifies the target port for the remotye pod.</param>
         /// <param name="localAddress">Specifies the listen port. If not set, <see cref="IPAddress.Loopback"/> is used.</param>
         /// <param name="customHeaders">Optionally specifies any custom connection headers.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         void StartPodPortForward(
-            string                           namespaceName,
-            string                           podName,
+            string podName,
+            string @namespace,
+            int localPort,
+            int remotePort,
+            IPAddress localAddress = null,
+            Dictionary<string, List<string>> customHeaders = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Establishes a <see cref="PortForwardStream"/> connection from the local
+        /// workstation toa pod running in the cluster.
+        /// </summary>
+        /// <param name="podNames">Specifies the remote pod names to choose from. Only 1 pod will be forwarded at a time.</param>
+        /// <param name="namespace">Specifies the remote pod namespace.</param>
+        /// <param name="localPort">Specifies the local port on the workstation.</param>
+        /// <param name="remotePort">Specifies the target port for the remotye pod.</param>
+        /// <param name="localAddress">Specifies the listen port. If not set, <see cref="IPAddress.Loopback"/> is used.</param>
+        /// <param name="customHeaders">Optionally specifies any custom connection headers.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        void StartPodPortForward(
+            IEnumerable<string> podNames,
+            string @namespace,
+            int localPort,
+            int remotePort,
+            IPAddress localAddress = null,
+            Dictionary<string, List<string>> customHeaders = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Establishes a <see cref="PortForwardStream"/> connection from the local
+        /// workstation toa pod running in the cluster.
+        /// </summary>
+        /// <param name="serviceName">Specifies the service name to forward.</param>
+        /// <param name="namespace">Specifies the remote pod namespace.</param>
+        /// <param name="localPort">Specifies the local port on the workstation.</param>
+        /// <param name="remotePort">Specifies the target port for the remotye pod.</param>
+        /// <param name="localAddress">Specifies the listen port. If not set, <see cref="IPAddress.Loopback"/> is used.</param>
+        /// <param name="customHeaders">Optionally specifies any custom connection headers.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
+        Task StartServicePortForwardAsync(
+            string                           serviceName,
+            string                           @namespace,
             int                              localPort,
             int                              remotePort,
             IPAddress                        localAddress      = null,
