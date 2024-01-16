@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -34,7 +32,6 @@ namespace Neon.K8s.Resources.CertManager
         /// values. More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
         /// </summary>
-        [JsonProperty(PropertyName = "apiVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string ApiVersion { get; set; }
 
@@ -45,21 +42,18 @@ namespace Neon.K8s.Resources.CertManager
         /// More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
         /// </summary>
-        [JsonProperty(PropertyName = "kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Kind { get; set; }
 
         /// <summary>
         /// Describes the attributes for the ACME solver request.
         /// </summary>
-        [JsonProperty(PropertyName = "request", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public ChallengeRequest Request { get; set; }
 
         /// <summary>
         /// Describes the attributes for the ACME solver response.
         /// </summary>
-        [JsonProperty(PropertyName = "response", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public ChallengeResponse Response { get; set; }
     }

@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -40,7 +38,6 @@ namespace Neon.K8s.Resources.CertManager
         /// the solver will be treated as the ‘default’ solver with the lowest priority, i.e. if any other solver has a more specific match, 
         /// it will be used instead.
         /// </summary>
-        [JsonProperty(PropertyName = "selector", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "selector", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public CertificateDnsNameSelector Selector { get; set; } = null;
@@ -50,7 +47,6 @@ namespace Neon.K8s.Resources.CertManager
         /// be set. It will be used to contact you in case of issues with your account or certificates, including expiry notification emails. 
         /// This field may be updated after the account is initially registered.
         /// </summary>
-        [JsonProperty(PropertyName = "dns01", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "dns01", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AcmeChallengeSolverDns01 Dns01 { get; set; } = null;

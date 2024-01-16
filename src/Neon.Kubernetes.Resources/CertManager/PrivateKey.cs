@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -37,7 +35,6 @@ namespace Neon.K8s.Resources.CertManager
         /// RotationPolicy controls how private keys should be regenerated when a re-issuance is being processed.
         /// Default is 'Never' for backward compatibility.
         /// </summary>
-        [JsonProperty(PropertyName = "rotationPolicy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(RotationPolicy.Never)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public RotationPolicy RotationPolicy { get; set; }
@@ -47,7 +44,6 @@ namespace Neon.K8s.Resources.CertManager
         /// If provided, allowed values are `PKCS1` and `PKCS8` standing for PKCS#1 and PKCS#8, respectively.
         /// Defaults to `PKCS1` if not specified.
         /// </summary>
-        [JsonProperty(PropertyName = "encoding", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KeyEncoding.PKCS1)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public KeyEncoding Encoding { get; set; }
@@ -55,7 +51,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// The private key algorithm of the corresponding private key for this certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "algorithm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(KeyAlgorithm.RSA)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public KeyAlgorithm Algorithm { get; set; }
@@ -63,7 +58,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// The private key algorithm of the corresponding private key for this certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "size", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public int? Size { get; set; }
     }

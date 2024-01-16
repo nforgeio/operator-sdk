@@ -20,8 +20,6 @@ using System.ComponentModel;
 
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -41,7 +39,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// A label selector that is used to refine the set of certificate’s that this challenge solver will apply to.
         /// </summary>
-        [JsonProperty(PropertyName = "matchLabels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "matchLabels", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public V1LabelSelector MatchLabels { get; set; } = null;
@@ -51,7 +48,6 @@ namespace Neon.K8s.Resources.CertManager
         /// over a dnsZones selector. If multiple solvers match with the same dnsNames value, the solver with the most matching labels in 
         /// matchLabels will be selected. If neither has more matches, the solver defined earlier in the list will be selected.
         /// </summary>
-        [JsonProperty(PropertyName = "dnsNames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "dnsNames", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> DnsNames { get; set; } = null;
@@ -62,7 +58,6 @@ namespace Neon.K8s.Resources.CertManager
         /// www.sys.example.com. If multiple solvers match with the same dnsZones value, the solver with the most matching labels in matchLabels 
         /// will be selected. If neither has more matches, the solver defined earlier in the list will be selected.
         /// </summary>
-        [JsonProperty(PropertyName = "dnsZones", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "dnsZones", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> DnsZones { get; set; } = null;

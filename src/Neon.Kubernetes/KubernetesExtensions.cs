@@ -83,6 +83,21 @@ namespace Neon.K8s
         }
 
         /// <summary>
+        /// Sets a collection of labels within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="labels">The dictionary of labels to set.</param>
+        public static void SetLabels(this V1ObjectMeta metadata, Dictionary<string, string> labels)
+        {
+            Covenant.Requires<ArgumentNullException>(labels != null, nameof(labels));
+
+            foreach (var label in labels)
+            {
+                metadata.SetLabel(label.Key, label.Value);
+            }
+        }
+
+        /// <summary>
         /// Fetches the value of a label from the metadata.
         /// </summary>
         /// <param name="metadata">The metadata instance.</param>

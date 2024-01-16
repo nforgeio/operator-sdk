@@ -18,8 +18,6 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -40,7 +38,6 @@ namespace Neon.K8s.Resources.CertManager
         /// The AccessKeyID is used for authentication. If not set we fall-back to using env vars, shared credentials file or AWS Instance 
         /// metadata see: https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html#specifying-credentials
         /// </summary>
-        [JsonProperty(PropertyName = "accessKeyID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "accessKeyID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string AccessKeyId { get; set; } = null;
@@ -49,7 +46,6 @@ namespace Neon.K8s.Resources.CertManager
         /// The SecretAccessKey is used for authentication. If not set we fall-back to using env vars, shared credentials file or AWS Instance 
         /// metadata https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html#specifying-credentials
         /// </summary>
-        [JsonProperty(PropertyName = "secretAccessKeySecretRef", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public AcmeSecretKeySelector SecretAccessKeySecretRef  { get; set; } = null;
 
@@ -58,7 +54,6 @@ namespace Neon.K8s.Resources.CertManager
         /// metadata https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html#specifying-credentials
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        [JsonProperty(PropertyName = "secretAccessKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "secretAccessKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SecretAccessKey { get; set; } = null;
@@ -67,7 +62,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Role is a Role ARN which the Route53 provider will assume using either the explicit credentials AccessKeyID/SecretAccessKey 
         /// or the inferred credentials from environment variables, shared credentials file or AWS Instance metadata
         /// </summary>
-        [JsonProperty(PropertyName = "role", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "role", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Role { get; set; } = null;
@@ -75,7 +69,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// If set, the provider will manage only this zone in Route53 and will not do an lookup using the route53:ListHostedZonesByName api call.
         /// </summary>
-        [JsonProperty(PropertyName = "hostedZoneID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "hostedZoneID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string HostedZoneId { get; set; } = null;
@@ -83,7 +76,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Always set the region when using AccessKeyID and SecretAccessKey
         /// </summary>
-        [JsonProperty(PropertyName = "region", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "region", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Region { get; set; } = null;

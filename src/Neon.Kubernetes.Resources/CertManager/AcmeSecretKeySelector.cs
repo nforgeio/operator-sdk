@@ -17,9 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -43,7 +40,6 @@ namespace Neon.K8s.Resources.CertManager
         /// The key of the entry in the Secret resource’s data field to be used. Some instances of this field may be defaulted, 
         /// in others it may be required.
         /// </summary>
-        [JsonProperty(PropertyName = "key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "key", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Key { get; set; } = null;
@@ -51,7 +47,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Name of the resource being referred to. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
         /// </summary>
-        [JsonProperty(PropertyName = "name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Name { get; set; } = null;
