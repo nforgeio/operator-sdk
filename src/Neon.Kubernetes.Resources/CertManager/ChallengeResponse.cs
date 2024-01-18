@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -36,14 +34,12 @@ namespace Neon.K8s.Resources.CertManager
         /// It is suitable for correlating log entries between the webhook and apiserver, for either auditing or debugging.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "uid", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Uid { get; set; }
 
         /// <summary>
         /// Indicates whether the request was successful.
         /// </summary>
-        [JsonProperty(PropertyName = "success", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool Success { get; set; }
     }

@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AsyncKeyedLock;
 using k8s;
 
 using Microsoft.Extensions.Logging;
@@ -46,7 +47,7 @@ namespace Neon.K8s.PortForward
     {
         private const int BUFFER_SIZE = 8192;
 
-        private SemaphoreSlim           syncLock = new SemaphoreSlim(1);
+        private AsyncNonKeyedLocker     syncLock = new(1);
         private TcpClient               localConnection;
         private RemoteConnectionFactory remoteConnectionFactory;
         private ILogger                 logger;
@@ -199,8 +200,7 @@ namespace Neon.K8s.PortForward
                 return;
             }
             StreamDemuxer remoteStreams = null;
-            await syncLock.WaitAsync();
-            try
+            using (await syncLock.LockAsync())
             {
                 if (remote == null)
                 {
@@ -209,10 +209,6 @@ namespace Neon.K8s.PortForward
                     this.remoteStreams.ConnectionClosed += this.RemoteConnectionClosed;
                     remoteStreams = this.remoteStreams;
                 }
-            }
-            finally
-            {
-                syncLock.Release();
             }
             if (remoteStreams != null)
             {
@@ -265,24 +261,18 @@ namespace Neon.K8s.PortForward
 
         private void StopLocal()
         {
-            syncLock.Wait();
-            try
+            using (syncLock.Lock())
             {
                 localConnection?.Close();
                 localConnection = null;
                 localStream?.Close();
                 localStream = null;
             }
-            finally
-            {
-                syncLock.Release();
-            }
         }
 
         private void StopRemote()
         {
-            syncLock.Wait();
-            try
+            using (syncLock.Lock())
             {
                 var remoteStreams = this.remoteStreams;
                 if (remoteStreams != null)
@@ -295,10 +285,6 @@ namespace Neon.K8s.PortForward
                 this.remoteStreams = null;
                 remote?.Dispose();
                 remote = null;
-            }
-            finally
-            {
-                syncLock.Release();
             }
         }
     }

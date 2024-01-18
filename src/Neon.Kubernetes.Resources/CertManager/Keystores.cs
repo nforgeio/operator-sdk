@@ -15,8 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -34,13 +32,11 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Configures options for storing a JKS keystore in the `spec.secretName` Secret resource.
         /// </summary>
-        [JsonProperty(PropertyName = "jks")]
         public string Jks { get; set; }
 
         /// <summary>
         /// Configures options for storing a PKCS12 keystore in the `spec.secretName` Secret resource.
         /// </summary>
-        [JsonProperty(PropertyName = "pkcs12")]
         public string Pkcs12 { get; set; }
     }
 }

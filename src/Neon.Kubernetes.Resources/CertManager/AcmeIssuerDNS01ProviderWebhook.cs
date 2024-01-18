@@ -18,8 +18,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -40,7 +38,6 @@ namespace Neon.K8s.Resources.CertManager
         /// The API group name that should be used when POSTing ChallengePayload resources to the webhook apiserver. This should be 
         /// the same as the GroupName specified in the webhook provider implementation.
         /// </summary>
-        [JsonProperty(PropertyName = "groupName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "groupName", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string GroupName { get; set; } = null;
@@ -49,7 +46,6 @@ namespace Neon.K8s.Resources.CertManager
         /// The name of the solver to use, as defined in the webhook provider implementation. This will typically be the name of the 
         /// provider, e.g. ‘neon-acme’.
         /// </summary>
-        [JsonProperty(PropertyName = "solverName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "solverName", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SolverName { get; set; } = null;
@@ -60,7 +56,6 @@ namespace Neon.K8s.Resources.CertManager
         /// you should use a SecretKeySelector to reference a Secret resource. For details on the schema of this field, consult the webhook
         /// provider implementation’s documentation.
         /// </summary>
-        [JsonProperty(PropertyName = "config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "config", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, object> Config { get; set; } = null;

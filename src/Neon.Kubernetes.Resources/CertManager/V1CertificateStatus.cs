@@ -21,8 +21,6 @@ using System.ComponentModel;
 
 using k8s.Models;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -40,28 +38,24 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// List of status conditions to indicate the status of certificates.Known condition types are `Ready` and `Issuing`.
         /// </summary>
-        [JsonProperty(PropertyName = "conditions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<V1Condition> Conditions { get; set; }
 
         /// <summary>
         /// The expiration time of the certificate stored in the secret named by this resource in `spec.secretName`.
         /// </summary>
-        [JsonProperty(PropertyName = "notAfter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public DateTime? NotAfter { get; set; }
 
         /// <summary>
         /// The time after which the certificate stored in the secret named by this resource in spec.secretName is valid.
         /// </summary>
-        [JsonProperty(PropertyName = "notBefore", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public DateTime? NotBefore { get; set; }
 
         /// <summary>
         /// The time at which the certificate will be next renewed.If not set, no upcoming renewal is scheduled.
         /// </summary>
-        [JsonProperty(PropertyName = "renewalTime", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public DateTime? RenewalTime { get; set; }
 
@@ -69,14 +63,12 @@ namespace Neon.K8s.Resources.CertManager
         /// The time as recorded by the Certificate controller of the most recent failure to complete a CertificateRequest for this Certificate 
         /// resource.If set, cert-manager will not re-request another Certificate until 1 hour has elapsed from this time.
         /// </summary>
-        [JsonProperty(PropertyName = "lastFailureTime", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public DateTime? LastFailureTime { get; set; }
 
         /// <summary>
         /// Controls whether key usages should be present in the CertificateRequest.
         /// </summary>
-        [JsonProperty(PropertyName = "revision", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public int? Revision { get; set; }
 
@@ -85,7 +77,6 @@ namespace Neon.K8s.Resources.CertManager
         /// will automatically set this field if the `Issuing` condition is set to `True`. It will automatically unset this field when the 
         /// Issuing condition is not set or False.
         /// </summary>
-        [JsonProperty(PropertyName = "nextPrivateKeySecretName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string NextPrivateKeySecretName { get; set; }
     }

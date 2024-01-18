@@ -20,8 +20,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -43,7 +41,6 @@ namespace Neon.K8s.Resources.CertManager
         /// be set. It will be used to contact you in case of issues with your account or certificates, including expiry notification emails. 
         /// This field may be updated after the account is initially registered.
         /// </summary>
-        [JsonProperty(PropertyName = "email", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "email", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Email { get; set; } = null;
@@ -52,7 +49,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Server is the URL used to access the ACME server’s ‘directory’ endpoint. For example, for Let’s Encrypt’s staging endpoint, 
         /// you would use: “https://acme-staging-v02.api.letsencrypt.org/directory”. Only ACME v2 endpoints (i.e. RFC 8555) are supported.
         /// </summary>
-        [JsonProperty(PropertyName = "server", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "server", ApplyNamingConventions = false)]
         [DefaultValue("https://acme-v02.api.letsencrypt.org/directory")]
         public string Server { get; set; } = "https://acme-v02.api.letsencrypt.org/directory";
@@ -63,7 +59,6 @@ namespace Neon.K8s.Resources.CertManager
         /// for the newer Let’s Encrypt root CA. This value picks the first certificate bundle in the ACME alternative chains that has a 
         /// certificate with this value as its issuer’s CN
         /// </summary>
-        [JsonProperty(PropertyName = "preferredChain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "preferredChain", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PreferredChain { get; set; } = null;
@@ -73,7 +68,6 @@ namespace Neon.K8s.Resources.CertManager
         /// certificate validated (i.e. insecure connections will be allowed). Only enable this option in development environments. 
         /// The cert-manager system installed roots will be used to verify connections to the ACME server if this is false. Defaults to false.
         /// </summary>
-        [JsonProperty(PropertyName = "skipTLSVerify", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "skipTLSVerify", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool? SkipTlsVerify { get; set; } = null;
@@ -83,7 +77,6 @@ namespace Neon.K8s.Resources.CertManager
         /// associate the given external account credentials with the registered ACME account.
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-        [JsonProperty(PropertyName = "externalAccountBinding", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "externalAccountBinding", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AcmeExternalAccountBinding ExternalAccountBinding { get; set; } = null;
@@ -92,7 +85,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Specifies the private key.
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        [JsonProperty(PropertyName = "privateKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "privateKey", ApplyNamingConventions = false, ScalarStyle = YamlDotNet.Core.ScalarStyle.Literal)]
         [DefaultValue(null)]
         public string PrivateKey { get; set; } = null;
@@ -102,7 +94,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Optionally, a key may be specified to select a specific entry within the named Secret resource. If key is not specified, a default of tls.key
         /// will be used.
         /// </summary>
-        [JsonProperty(PropertyName = "privateKeySecretRef", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public AcmeSecretKeySelector PrivateKeySecretRef { get; set; } = null;
 
@@ -110,7 +101,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Solvers is a list of challenge solvers that will be used to solve ACME challenges for the matching domains. Solver configurations must be 
         /// provided in order to obtain certificates from an ACME server. For more information, see: https://cert-manager.io/docs/configuration/acme/
         /// </summary>
-        [JsonProperty(PropertyName = "solvers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "solvers", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public List<AcmeChallengeSolver> Solvers { get; set; } = new List<AcmeChallengeSolver>();
@@ -120,7 +110,6 @@ namespace Neon.K8s.Resources.CertManager
         /// key to be supplied via an existing secret. If false, the cert-manager system will generate a new ACME account key for the Issuer. Defaults to 
         /// false.
         /// </summary>
-        [JsonProperty(PropertyName = "disableAccountKeyGeneration", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "disableAccountKeyGeneration", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool? DisableAccountKeyGeneration { get; set; } = null;
@@ -129,7 +118,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Enables requesting a Not After date on certificates that matches the duration of the certificate. This is not supported by all ACME servers like 
         /// Let’s Encrypt. If set to true when the ACME server does not support it it will create an error on the Order. Defaults to false.
         /// </summary>
-        [JsonProperty(PropertyName = "enableDurationFeature", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "enableDurationFeature", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool? EnableDurationFeature { get; set; }

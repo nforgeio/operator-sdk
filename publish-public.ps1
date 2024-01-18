@@ -36,9 +36,7 @@
 param 
 (
     [switch]$dirty   = $false,    # use GitHub sources for SourceLink even if local repo is dirty
-    [switch]$restore = $false, # RELEASE build instead of DEBUG (the default)
-    [string]$packageVersion,
-    [string]$neonSdkVersion
+    [switch]$restore = $false     # RELEASE build instead of DEBUG (the default)
 )
 
 # Import the global solution include file.
@@ -70,24 +68,6 @@ if (!(Test-Path env:NC_ROOT))
 $nugetApiKey = Get-SecretPassword "NUGET_PUBLIC_KEY"
 
 #------------------------------------------------------------------------------
-# Sets the package version in the specified project file.
-
-function SetVersion
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]$project,
-        [Parameter(Position=1, Mandatory=$true)]
-        [string]$version
-    )
-
-    "$project"
-	neon-build pack-version "$env:NK_ROOT\Lib\Neon.Kube\KubeVersions.cs" NeonKube "$env:NO_ROOT\src\$project\$project.csproj"
-    ThrowOnExitCode
-}
-
-#------------------------------------------------------------------------------
 # Builds and publishes the project packages.
 
 function Publish
@@ -97,7 +77,9 @@ function Publish
         [Parameter(Position=0, Mandatory=$true)]
         [string]$project,
         [Parameter(Position=1, Mandatory=$true)]
-        [string]$version
+        [string]$version,
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]$neonSdkVersion
     )
 
     $projectPath = [io.path]::combine($env:NO_ROOT, "src", "$project", "$project" + ".csproj")
@@ -120,18 +102,15 @@ try
         $env:SolutionName = "neonKUBE"
     }
 
-    $msbuild         = $env:MSBUILDPATH
-    $neonBuild       = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
-    $config          = "Release"
-    $nfRoot          = "$env:NF_ROOT"
-    $nkRoot          = "$env:NK_ROOT"
-    $nkSolution      = "$nkRoot\neonKUBE.sln"
-    $nkBuild         = "$env:NK_BUILD"
-    $nkLib           = "$nkRoot\Lib"
-    $nfLib           = "$nfRoot\Lib"
-    $nkTools         = "$nkRoot\Tools"
-    $neonSdkVersion  = $(& "neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonSdkVersion)
-    $neonkubeVersion = $(& "neon-build" read-version "$nkLib/Neon.Kube/KubeVersions.cs" NeonKube)
+    $msbuild             = $env:MSBUILDPATH
+    $neonBuild           = "$env:NF_ROOT\ToolBin\neon-build\neon-build.exe"
+    $config              = "Release"
+    $nfRoot              = "$env:NF_ROOT"
+    $noRoot              = "$env:NO_ROOT"
+    $noBuild             = "$env:NO_BUILD"
+    $nfLib               = "$nfRoot\Lib"
+    $neonSdkVersion      = $(& "neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonSdkVersion)
+    $neonOperatorVersion = $(& "neon-build" read-version "$noRoot/src/Neon.Operator/Build.cs" OperatorSdkVersion)
 
     #------------------------------------------------------------------------------
     # Save the publish version to [$/build/nuget/version.text] so release tools can
@@ -164,13 +143,16 @@ try
         #------------------------------------------------------------------------------
         # Build and publish the projects.
 
-        Publish Neon.Kubernetes                $packageVersion
-        Publish Neon.Kubernetes.Resources      $packageVersion
-        Publish Neon.Operator                  $packageVersion
-        Publish Neon.Operator.Analyzers        $packageVersion
-        Publish Neon.Operator.Core             $packageVersion
-        Publish Neon.Operator.Templates        $packageVersion
-        Publish Neon.Operator.Xunit            $packageVersion
+        Write-Info "OperatorSdkVersion: $neonOperatorVersion"
+        Write-Info "NeonSdkVersion: $neonSdkVersion"
+
+        Publish -project Neon.Kubernetes                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Kubernetes.Resources      -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator                  -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Analyzers        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Core             -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Templates        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Xunit            -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
     }
 
     #------------------------------------------------------------------------------

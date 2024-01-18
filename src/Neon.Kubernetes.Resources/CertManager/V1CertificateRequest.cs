@@ -23,8 +23,6 @@ using k8s.Models;
 using Neon.JsonConverters;
 using Neon.Operator.Attributes;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -75,7 +73,6 @@ namespace Neon.K8s.Resources.CertManager
         /// values. More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
         /// </summary>
-        [JsonProperty(PropertyName = "apiVersion")]
         public string ApiVersion { get; set; }
 
         /// <summary>
@@ -85,20 +82,17 @@ namespace Neon.K8s.Resources.CertManager
         /// More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
         /// </summary>
-        [JsonProperty(PropertyName = "kind")]
         public string Kind { get; set; }
 
         /// <summary>
         /// Gets or sets standard object metadata.
         /// </summary>
-        [JsonProperty(PropertyName = "metadata")]
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
         /// CertificateRequest.
         /// </summary>
-        [JsonProperty(PropertyName = "spec")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonGenericConverter<dynamic>))]
         public dynamic Spec { get; set; }
 

@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -36,7 +34,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// ACME configures this issuer to communicate with a RFC8555 (ACME) server to obtain signed x509 certificates.
         /// </summary>
-        [JsonProperty(PropertyName = "Acme", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public AcmeIssuer Acme { get; set; } = null;
 

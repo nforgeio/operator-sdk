@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
-// FILE:        ClusterIssuer.cs
+// FILE:        V1ServiceMonitor.cs
 // CONTRIBUTOR: Marcus Bowyer
-// COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+// COPYRIGHT:   Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,18 +22,14 @@ using k8s.Models;
 
 using Neon.Operator.Attributes;
 
-using Newtonsoft.Json;
-
-namespace Neon.K8s.Resources.CertManager
+namespace Neon.K8s.Resources.Prometheus
 {
     /// <summary>
-    /// A ClusterIssuer represents a certificate issuing authority which can be referenced as part of issuerRef fields. 
-    /// It is similar to an Issuer, however it is cluster-scoped and therefore can be referenced by resources that exist 
-    /// in any namespace, not just the same namespace as the referent.
+    /// ServiceMonitor.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [Ignore]
-    public class ClusterIssuer : IKubernetesObject<V1ObjectMeta>, ISpec<V1IssuerSpec>, IValidate
+    public class V1ServiceMonitor : IKubernetesObject<V1ObjectMeta>, ISpec<V1ServiceMonitorSpec>, IValidate
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -43,22 +39,22 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// The Kubernetes named schema this object is based on.
         /// </summary>
-        public const string KubeKind = "ClusterIssuer";
+        public const string KubeKind = "ServiceMonitor";
 
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "cert-manager.io";
+        public const string KubeGroup = "monitoring.coreos.com";
 
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "clusterissuers";
+        public const string KubePlural = "servicemonitors";
+
         /// <summary>
-        /// Initializes a new instance of the ClusterIssuer class.
+        /// Initializes a new instance of the ServiceMonitor class.
         /// </summary>
-        /// 
-        public ClusterIssuer()
+        public V1ServiceMonitor()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind       = KubeKind;
@@ -71,7 +67,6 @@ namespace Neon.K8s.Resources.CertManager
         /// values. More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
         /// </summary>
-        [JsonProperty(PropertyName = "apiVersion")]
         public string ApiVersion { get; set; }
 
         /// <summary>
@@ -81,21 +76,18 @@ namespace Neon.K8s.Resources.CertManager
         /// More info:
         /// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
         /// </summary>
-        [JsonProperty(PropertyName = "kind")]
         public string Kind { get; set; }
 
         /// <summary>
         /// Gets or sets standard object metadata.
         /// </summary>
-        [JsonProperty(PropertyName = "metadata")]
         public V1ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets specification of the desired behavior of the
-        /// ClusterIssuer.
+        /// ServiceMonitor.
         /// </summary>
-        [JsonProperty(PropertyName = "spec")]
-        public V1IssuerSpec Spec { get; set; }
+        public V1ServiceMonitorSpec Spec { get; set; }
 
         /// <summary>
         /// Validate the object.

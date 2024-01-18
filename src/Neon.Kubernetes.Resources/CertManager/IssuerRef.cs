@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -40,20 +38,17 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Group of the resource being referred to.
         /// </summary>
-        [JsonProperty(PropertyName = "group", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public string Group { get; set; }
 
         /// <summary>
         /// Kind of the resource being referred to.
         /// </summary>
-        [JsonProperty(PropertyName = "kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Kind { get; set; }
 
         /// <summary>
         /// Name of the resource being referred to.
         /// </summary>
-        [JsonProperty(PropertyName = "name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Name { get; set; }
     }

@@ -17,8 +17,6 @@
 
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -39,7 +37,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// CNAMEStrategy configures how the DNS01 provider should handle CNAME records when found in DNS zones.
         /// </summary>
-        [JsonProperty(PropertyName = "cnameStrategy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "cnameStrategy", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CnameStrategy { get; set; } = null;
@@ -47,7 +44,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Specifies configuration for AWS Route53 DNS01 provider.
         /// </summary>
-        [JsonProperty(PropertyName = "route53", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "route53", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AcmeIssuerDns01ProviderRoute53 Route53 { get; set; } = null;
@@ -55,7 +51,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Specifies configuration for a webhook DNS01 provider, including where to POST ChallengePayload resources.
         /// </summary>
-        [JsonProperty(PropertyName = "webhook", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "webhook", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AcmeIssuerDns01ProviderWebhook Webhook { get; set; } = null;

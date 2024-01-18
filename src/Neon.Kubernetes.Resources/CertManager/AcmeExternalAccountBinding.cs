@@ -18,9 +18,6 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
 using YamlDotNet.Serialization;
 
 namespace Neon.K8s.Resources.CertManager
@@ -43,8 +40,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// The ID of the CA key that the External Account is bound to.
         /// </summary>
-        [JsonPropertyName("keyID")]
-        [JsonProperty(PropertyName = "keyID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "keyID", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KeyId { get; set; } = null;
@@ -53,7 +48,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Specifies a Secret Key as a string. This is only used when setting the secret via the ClusterDefinition/>.
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        [JsonProperty(PropertyName = "key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "key", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Key { get; set; } = null;
@@ -64,7 +58,6 @@ namespace Neon.K8s.Resources.CertManager
         /// key data itself, or indeed with the External Account Binding keyID above. The secret key stored in the Secret must be un-padded, 
         /// base64 URL encoded data.
         /// </summary>
-        [JsonProperty(PropertyName = "keySecretRef", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public AcmeSecretKeySelector KeySecretRef { get; set; } = null;
 

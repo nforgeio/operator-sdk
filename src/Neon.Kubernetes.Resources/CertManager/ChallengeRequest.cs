@@ -18,8 +18,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -37,7 +35,6 @@ namespace Neon.K8s.Resources.CertManager
         /// It is suitable for correlating log entries between the webhook and apiserver, for either auditing or debugging.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "uid", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Uid { get; set; }
 
@@ -54,7 +51,6 @@ namespace Neon.K8s.Resources.CertManager
         /// solving service.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "action", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
         public ChallengeAction Action { get; set; }
@@ -62,7 +58,6 @@ namespace Neon.K8s.Resources.CertManager
         /// <summary>
         /// Type is the type of ACME challenge. Only dns-01 is currently supported.
         /// </summary>
-        [JsonProperty(PropertyName = "type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Type { get; set; }
 
@@ -76,7 +71,6 @@ namespace Neon.K8s.Resources.CertManager
         /// '*.example.com' for wildcards.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "dnsName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string DnsName { get; set; }
 
@@ -90,7 +84,6 @@ namespace Neon.K8s.Resources.CertManager
         /// ResolveFQDN.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "key", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Key { get; set; }
 
@@ -108,7 +101,6 @@ namespace Neon.K8s.Resources.CertManager
         /// the configured 'cluster resource namespace'
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "resourceNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string ResourceNamespace { get; set; }
 
@@ -124,7 +116,6 @@ namespace Neon.K8s.Resources.CertManager
         /// This will be of the form '_acme-challenge.example.com.'.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "resolvedFQDN", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string ResolvedFQDN { get; set; }
 
@@ -143,7 +134,6 @@ namespace Neon.K8s.Resources.CertManager
         /// This will be of the form 'example.com.'.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "resolvedZone", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string ResolvedZone { get; set; }
 
@@ -159,7 +149,6 @@ namespace Neon.K8s.Resources.CertManager
         /// an implementation may ignore it.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "allowAmbientCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool AllowAmbientCredentials { get; set; }
 
@@ -174,7 +163,6 @@ namespace Neon.K8s.Resources.CertManager
         /// references to Kubernetes Secret resources that the webhook can fetch.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "config", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public Dictionary<string, object> Config { get; set; }
     }

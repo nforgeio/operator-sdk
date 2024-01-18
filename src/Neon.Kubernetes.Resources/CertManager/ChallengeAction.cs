@@ -9,14 +9,11 @@
 
 using System.Runtime.Serialization;
 
-using Newtonsoft.Json.Converters;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
     /// ACME challenge action.
     /// </summary>
-    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
     public enum ChallengeAction
     {

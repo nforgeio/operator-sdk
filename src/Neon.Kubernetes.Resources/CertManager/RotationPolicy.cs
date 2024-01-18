@@ -17,14 +17,11 @@
 
 using System.Runtime.Serialization;
 
-using Newtonsoft.Json.Converters;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
     /// RotationPolicy controls how private keys should be regenerated when a re-issuance is being processed.
     /// </summary>
-    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
     public enum RotationPolicy
     {

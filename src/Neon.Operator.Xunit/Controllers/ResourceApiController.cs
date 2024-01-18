@@ -38,7 +38,7 @@ using OpenTelemetry.Resources;
 namespace Neon.Operator.Xunit
 {
     /// <summary>
-    /// Generic resource API controller.
+    /// Generic resource API controller. 
     /// </summary>
     [Route("api/{version}/{plural}")]
     [Route("api/{version}/{plural}/{name}")]

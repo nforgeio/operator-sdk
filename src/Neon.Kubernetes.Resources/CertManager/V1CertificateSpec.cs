@@ -26,8 +26,6 @@ using k8s.Models;
 
 using Neon.K8s.Resources.JsonConverters;
 
-using Newtonsoft.Json;
-
 namespace Neon.K8s.Resources.CertManager
 {
     /// <summary>
@@ -47,14 +45,12 @@ namespace Neon.K8s.Resources.CertManager
         /// generating invalid CSRs. This value is ignored by TLS clients when any subject alt name is set. This is x509 
         /// behaviour: https://tools.ietf.org/html/rfc6125#section-6.4.4'
         /// </summary>
-        [JsonProperty(PropertyName = "commonName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string CommonName { get; set; }
 
         /// <summary>
         /// A list of DNS subjectAltNames to be set on the Certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "dnsNames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> DnsNames { get; set; }
 
@@ -64,49 +60,42 @@ namespace Neon.K8s.Resources.CertManager
         /// whichever is later. Minimum accepted duration is 1 hour. Value must be in units accepted by GOLANG <b>time.ParseDuration()</b>:
         /// https://golang.org/pkg/time/#ParseDuration
         /// </summary>
-        [JsonProperty(PropertyName = "duration", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Duration { get; set; }
 
         /// <summary>
         /// A list of email <b>subjectAltNames</b> to be set on the Certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "emailAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> EmailAddresses { get; set; }
 
         /// <summary>
         /// Controls whether key usages should be present in the CertificateRequest.
         /// </summary>
-        [JsonProperty(PropertyName = "encodeUsagesInRequest", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public bool? EncodeUsagesInRequest { get; set; }
 
         /// <summary>
         /// A list of IP address <b>subjectAltNames</b> to be set on the Certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "ipAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> IpAddresses { get; set; }
 
         /// <summary>
         /// Whether this Certificate as valid for certificate signing. This will automatically add the `cert sign` usage to the list of `usages`.
         /// </summary>
-        [JsonProperty(PropertyName = "isCA", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
         public bool? IsCA { get; set; }
 
         /// <summary>
         /// Configures additional keystore output formats stored in the `secretName` Secret resource.
         /// </summary>
-        [JsonProperty(PropertyName = "keystores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public Keystores Keystores { get; set; }
 
         /// <summary>
         /// A reference to the issuer for this certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "issuerRef", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public IssuerRef IssuerRef { get; set; }
 
@@ -115,21 +104,18 @@ namespace Neon.K8s.Resources.CertManager
         /// `4096` or `8192`, and will default to `2048` if not specified. If `keyAlgorithm` is set to `ecdsa`, valid values are `256`, `384` 
         /// or `521`, and will default to `256` if not specified. No other values are allowed.
         /// </summary>
-        [JsonProperty(PropertyName = "keySize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(256)]
         public int? KeySize { get; set; }
 
         /// <summary>
         /// A list of organizations to be used on the Certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "organization", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> Organization { get; set; }
 
         /// <summary>
         /// Options to control private keys used for the Certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "privateKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public PrivateKey PrivateKey { get; set; }
 
@@ -138,7 +124,6 @@ namespace Neon.K8s.Resources.CertManager
         /// certificate's duration. Minimum accepted value is 5 minutes. Value must be in units accepted by 
         /// Go time.ParseDuration https://golang.org/pkg/time/#ParseDuration
         /// </summary>
-        [JsonProperty(PropertyName = "renewBefore", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string RenewBefore { get; set; }
 
@@ -148,7 +133,6 @@ namespace Neon.K8s.Resources.CertManager
         /// Revisions will be removed by oldest first if the number of revisions exceeds this number. If set, revisionHistoryLimit must be a value 
         /// of `1` or greater. If unset (`nil`), revisions will not be garbage collected. Default value is `nil`.
         /// </summary>
-        [JsonProperty(PropertyName = "revisionHistoryLimit", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public int? RevisionHistoryLimit { get; set; }
 
@@ -156,28 +140,24 @@ namespace Neon.K8s.Resources.CertManager
         /// The name of the secret resource that will be automatically created and managed by this Certificate resource. It will be populated 
         /// with a private key and certificate, signed by the denoted issuer.
         /// </summary>
-        [JsonProperty(PropertyName = "secretName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string SecretName { get; set; }
 
         /// <summary>
         /// A list of URI subjectAltNames to be set on the Certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "uris", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<string> Uris { get; set; }
 
         /// <summary>
         /// Full X509 name specification (https://golang.org/pkg/crypto/x509/pkix/#Name).
         /// </summary>
-        [JsonProperty(PropertyName = "subject", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public Subject Subject { get; set; }
 
         /// <summary>
         /// Usages is the set of x509 usages that are requested for the certificate.
         /// </summary>
-        [JsonProperty(PropertyName = "usages", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonCollectionItemConverter<X509Usages, System.Text.Json.Serialization.JsonStringEnumMemberConverter>))]
         public IEnumerable<X509Usages> Usages { get; set; }
