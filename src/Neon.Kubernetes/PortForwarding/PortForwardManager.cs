@@ -43,8 +43,6 @@ namespace Neon.K8s.PortForward
     /// <inheritdoc/>
     public class PortForwardManager : IPortForwardManager
     {
-        private static Random                       Random = new Random();
-
         private readonly IKubernetes                k8s;
         private readonly IPortForwardStreamManager  streamManager;
         private readonly ILoggerFactory             loggerFactory;
@@ -125,7 +123,7 @@ namespace Neon.K8s.PortForward
                         {
                             while (!cancellationToken.IsCancellationRequested)
                             {
-                                podName = names.ElementAt(Random.Next(0, names.Count()));
+                                podName = names.ElementAt(Random.Shared.Next(0, names.Count()));
 
                                 logger?.LogDebugEx(() => $"Starting listener for forwarding: {localPort} --> {remotePort}");
 
