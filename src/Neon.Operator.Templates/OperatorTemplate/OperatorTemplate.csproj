@@ -4,6 +4,6 @@
         <RootNamespace>OperatorTemplate</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Neon.Operator" Version="1.0.0-beta.21" />
+        <PackageReference Include="Neon.Operator" Version="1.0.0" />
     </ItemGroup>
 </Project>

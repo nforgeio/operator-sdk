@@ -12,4 +12,10 @@ A Kubernetes operator framework for .NET.
 ## Documentation:
 - [Docs](https://docs.neonforge.com/docs/operator-sdk)
 
+## Used by
+
+- [qdrant-operator](https://github.com/qdrant-operator/qdrant-operator)
+- [neon-cluster-operator](https://github.com/nforgeio/neonKUBE/tree/master/Services/neon-cluster-operator)
+- [neon-node-agent](https://github.com/nforgeio/neonKUBE/tree/master/Services/neon-node-agent)
+
 Neon.Operator is an open source project released under the Apache-2.0 license.

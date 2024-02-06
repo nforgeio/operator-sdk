@@ -51,7 +51,7 @@ namespace Neon
         /// release scripts to match.
         /// </note>
         /// </summary>
-        public const string OperatorSdkVersion = "1.0.0-beta.21";
+        public const string OperatorSdkVersion = "1.0.0";
 
         /// <summary>
         /// The product license.

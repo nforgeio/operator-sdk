@@ -14,7 +14,7 @@ This package contains a set of project templates for building Kubernetes operato
 To install the template package, run the following command:
 
 ```
-dotnet new install Neon.Operator.Templates::1.0.0-beta.21
+dotnet new install Neon.Operator.Templates::1.0.0
 ```
 
 Now you can create a new operator project using the following command:
