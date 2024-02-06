@@ -107,12 +107,10 @@ namespace Neon.Operator.Analyzers
                 }
             }
 
-            if (string.IsNullOrEmpty(webhookOutputDirectory))
+            if (!string.IsNullOrEmpty(webhookOutputDirectory))
             {
-                throw new Exception("Webhook output directory not defined.");
+                Directory.CreateDirectory(webhookOutputDirectory);
             }
-
-            Directory.CreateDirectory(webhookOutputDirectory);
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorName", out var oName))
             {
@@ -198,23 +196,26 @@ namespace Neon.Operator.Analyzers
 
                             var entitySystemType = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
 
-                            CreateYaml(
-                                operatorName: operatorName,
-                                operatorNamespace: operatorNamespace,
-                                webhook: webhook,
-                                webhookEntityTypeIdentifier: webhookEntityTypeIdentifier,
-                                webhookSystemType: webhookSystemType,
-                                entitySystemType: entitySystemType,
-                                webhookEntityFullyQualifiedName: webhookEntityFullyQualifiedName,
-                                certManagerDisabled: certManagerDisabled,
-                                webhookOutputDirectory: webhookOutputDirectory);
+                            if (!string.IsNullOrEmpty(webhookOutputDirectory))
+                            {
+                                CreateYaml(
+                                    operatorName:                    operatorName,
+                                    operatorNamespace:               operatorNamespace,
+                                    webhook:                         webhook,
+                                    webhookEntityTypeIdentifier:     webhookEntityTypeIdentifier,
+                                    webhookSystemType:               webhookSystemType,
+                                    entitySystemType:                entitySystemType,
+                                    webhookEntityFullyQualifiedName: webhookEntityFullyQualifiedName,
+                                    certManagerDisabled:             certManagerDisabled,
+                                    webhookOutputDirectory:          webhookOutputDirectory);
+                            }
 
                             GenerateController(
-                                context: context,
-                                webhook: webhook,
-                                webhookEntityTypeIdentifier: webhookEntityTypeIdentifier,
-                                webhookSystemType: webhookSystemType,
-                                entitySystemType: entitySystemType,
+                                context:                         context,
+                                webhook:                         webhook,
+                                webhookEntityTypeIdentifier:     webhookEntityTypeIdentifier,
+                                webhookSystemType:               webhookSystemType,
+                                entitySystemType:                entitySystemType,
                                 webhookEntityFullyQualifiedName: webhookEntityFullyQualifiedName);
                         }
                         catch (Exception e)

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -32,7 +33,8 @@ namespace Test.Analyzers
         public static string GetGeneratedOutput<T>(
             string source,
             bool executable = false,
-            ITestOutputHelper output = null)
+            ITestOutputHelper output = null,
+            List<Assembly> additionalAssemblies = null)
             where T : ISourceGenerator, new()
         {
             var outputCompilation = CreateCompilation<T>(source, executable);
@@ -50,7 +52,10 @@ namespace Test.Analyzers
             return (trees[1].ToString());
         }
 
-        public static Compilation CreateCompilation<T>(string source, bool executable)
+        public static Compilation CreateCompilation<T>(
+            string         source,
+            bool           executable,
+            List<Assembly> additionalAssemblies = null)
             where T : ISourceGenerator, new()
         {
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
@@ -59,6 +64,13 @@ namespace Test.Analyzers
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 if (!assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
                     references.Add(MetadataReference.CreateFromFile(assembly.Location));
+
+            if (additionalAssemblies != null)
+            {
+                foreach (var assembly in additionalAssemblies)
+                    if (!assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
+                        references.Add(MetadataReference.CreateFromFile(assembly.Location));
+            }
 
             var compilation = CSharpCompilation.Create("Foo",
                                                    new SyntaxTree[] { syntaxTree },

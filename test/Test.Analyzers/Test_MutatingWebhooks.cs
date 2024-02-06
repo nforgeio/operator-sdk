@@ -2,6 +2,8 @@ using System;
 
 using FluentAssertions;
 
+using k8s.Models;
+
 using Neon.Operator.Analyzers;
 
 using Xunit.Abstractions;
@@ -77,18 +79,26 @@ using Neon.Operator.Webhooks;
 
 using Prometheus;
 
+using TestOperator;
+
 namespace TestOperator.Controllers
 {
+    /// <summary>
+    /// Auto-generated implementation of PodWebhookController.
+    /// </summary>
     [ApiController]
     public class PodWebhookController : ControllerBase
     {
         private WebhookMetrics<V1Pod> metrics;
-        private IAdmissionWebhook<V1Pod, MutationResult> webhook;
+        private PodWebhook webhook;
         private OperatorSettings operatorSettings;
         private ILogger<PodWebhookController> logger;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public PodWebhookController(
-            IAdmissionWebhook<V1Pod, MutationResult> webhook,
+            PodWebhook webhook,
             WebhookMetrics<V1Pod> metrics,
             OperatorSettings operatorSettings,
             ILogger<PodWebhookController> logger = null)
@@ -99,7 +109,11 @@ namespace TestOperator.Controllers
             this.logger = logger;
         }
 
-
+        /// <summary>
+        /// Auto-generated implementation of V1PodWebhook
+        /// </summary>
+        /// <param name=""admissionRequest"">The admission request</param>
+        /// <returns>The mutation result</returns>
         [HttpPost(""v1/pods/podwebhook/mutate"")]
         public async Task<ActionResult<MutationResult>> V1PodWebhookAsync([FromBody] AdmissionReview<V1Pod> admissionRequest)
         {
@@ -165,14 +179,15 @@ namespace TestOperator.Controllers
             logger?.LogInformationEx(() => @$""AdmissionHook """"{webhook.Name}"""" did return """"{admissionRequest.Response?.Allowed}"""" for """"{admissionRequest.Request.Operation}""""."");
             admissionRequest.Request = null;
 
-            metrics.RequestsTotal.WithLabels(new string[] { operatorSettings.Name, webhook.Endpoint, response.Status?.Code.ToString() }).Inc();
+            metrics.RequestsTotal.WithLabels(new string[] { operatorSettings.Name, webhook.GetEndpoint(), response.Status?.Code.ToString() }).Inc();
 
             return Ok(admissionRequest);
         }
     }
-}";
+}
+";
 
-            var generatedCode = CompilationHelper.GetGeneratedOutput<MutatingWebhookGenerator>(mutatingWebhook);
+            var generatedCode = CompilationHelper.GetGeneratedOutput<MutatingWebhookGenerator>(mutatingWebhook, additionalAssemblies: [typeof(V1Pod).Assembly]);
             generatedCode.Should().NotBeNull();
 
             generatedCode.TrimEnd().Should().BeEquivalentTo(expectedController.TrimEnd());
@@ -240,18 +255,26 @@ using Neon.Operator.Webhooks;
 
 using Prometheus;
 
+using TestOperator;
+
 namespace TestOperator.Controllers
 {
+    /// <summary>
+    /// Auto-generated implementation of PodWebhookController.
+    /// </summary>
     [ApiController]
     public class PodWebhookController : ControllerBase
     {
         private WebhookMetrics<V1Pod> metrics;
-        private IAdmissionWebhook<V1Pod, MutationResult> webhook;
+        private PodWebhook webhook;
         private OperatorSettings operatorSettings;
         private ILogger<PodWebhookController> logger;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public PodWebhookController(
-            IAdmissionWebhook<V1Pod, MutationResult> webhook,
+            PodWebhook webhook,
             WebhookMetrics<V1Pod> metrics,
             OperatorSettings operatorSettings,
             ILogger<PodWebhookController> logger = null)
@@ -262,7 +285,11 @@ namespace TestOperator.Controllers
             this.logger = logger;
         }
 
-
+        /// <summary>
+        /// Auto-generated implementation of V1PodWebhook
+        /// </summary>
+        /// <param name=""admissionRequest"">The admission request</param>
+        /// <returns>The mutation result</returns>
         [HttpPost(""v1/pods/podwebhook/mutate"")]
         public async Task<ActionResult<MutationResult>> V1PodWebhookAsync([FromBody] AdmissionReview<V1Pod> admissionRequest)
         {
@@ -328,14 +355,15 @@ namespace TestOperator.Controllers
             logger?.LogInformationEx(() => @$""AdmissionHook """"{webhook.Name}"""" did return """"{admissionRequest.Response?.Allowed}"""" for """"{admissionRequest.Request.Operation}""""."");
             admissionRequest.Request = null;
 
-            metrics.RequestsTotal.WithLabels(new string[] { operatorSettings.Name, webhook.Endpoint, response.Status?.Code.ToString() }).Inc();
+            metrics.RequestsTotal.WithLabels(new string[] { operatorSettings.Name, webhook.GetEndpoint(), response.Status?.Code.ToString() }).Inc();
 
             return Ok(admissionRequest);
         }
     }
-}";
+}
+";
 
-            var generatedCode = CompilationHelper.GetGeneratedOutput<MutatingWebhookGenerator>(mutatingWebhook);
+            var generatedCode = CompilationHelper.GetGeneratedOutput<MutatingWebhookGenerator>(mutatingWebhook, additionalAssemblies: [typeof(V1Pod).Assembly]);
             generatedCode.Should().NotBeNull();
 
             generatedCode.TrimEnd().Should().BeEquivalentTo(expectedController.TrimEnd());
