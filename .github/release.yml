@@ -14,4 +14,10 @@ changelog:
         - '*'
       exclude:
         labels:
+          - enhancement
+          - bug
+          - documentation
           - dependencies
+    - title: 👒 Dependencies
+      labels:
+        - dependencies
