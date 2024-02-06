@@ -8,8 +8,8 @@
         <Product>Neon.Operator</Product>
         <Authors>NEONFORGE Team</Authors>
         <Company>NEONFORGE LLC</Company>
-        <NeonSdkPackageVersion>4.0.0-rc.3</NeonSdkPackageVersion>
-        <Copyright>Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.</Copyright>
+        <NeonSdkPackageVersion>4.0.0-rc.16</NeonSdkPackageVersion>
+        <Copyright>Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.</Copyright>
         <PackageReadmeFile Condition="Exists('README.md')">README.md</PackageReadmeFile>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <LangVersion>latest</LangVersion>
