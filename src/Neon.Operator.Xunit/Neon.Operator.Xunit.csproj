@@ -5,7 +5,6 @@
         <OutputType>Library</OutputType>
         <RootNamespace>Neon.Operator.Xunit</RootNamespace>
         <PackageId>Neon.Operator.Xunit</PackageId>
-        <Version>0.10.0-beta.0</Version>
         <Description>Test framework for Neon.Operator</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
