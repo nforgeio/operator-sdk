@@ -15,6 +15,7 @@
         <PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
         <PackageReleaseNotes>https://github.com/nforgeio/operator-sdk/releases</PackageReleaseNotes>
         <DebugType>full</DebugType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -61,6 +62,7 @@
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
         <None Include="build\*" Pack="true" PackagePath="build\" />
+        <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
     
 </Project>
