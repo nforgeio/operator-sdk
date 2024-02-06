@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesRetryHandler.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright © 2005-2023 by NEONFORGE LLC.  All rights reserved.
@@ -100,7 +100,7 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="retryPolicy">Optionally specifies anm overriding retry policy.</param>
         public KubernetesRetryHandler(IRetryPolicy retryPolicy = null)
-            : base()
+            : base(new HttpClientHandler())
         {
             this.retryPolicy = retryPolicy ?? defaultRetryPolicy;
         }
