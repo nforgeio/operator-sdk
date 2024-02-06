@@ -54,7 +54,16 @@
 
     <PropertyGroup Condition="'$(SolutionName)' == 'operator-sdk'">
         <NeonBuildUseNugets>true</NeonBuildUseNugets>
-    </PropertyGroup>    
+    </PropertyGroup>
+
+
+    <PropertyGroup Condition="'$(NO_ROOT)' == ''">
+
+        <!-- Use solution directory when NO_ROOT isn't set (CI) -->
+
+        <NO_ROOT>$(SolutionDir)</NO_ROOT>
+        
+    </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
