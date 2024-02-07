@@ -139,7 +139,14 @@ namespace Neon.Operator.Analyzers
                 {
                     try
                     {
-                        var crTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == cr.Identifier.ValueText).SingleOrDefault();
+                        var crTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.Name == cr.Identifier.ValueText);
+
+                        if (cr.TypeParameterList != null)
+                        {
+                            crTypeIdentifiers = crTypeIdentifiers.Where(ntm => ntm.TypeArguments.Length == cr.TypeParameterList.Parameters.Count);
+                        }
+
+                        var crTypeIdentifier     = crTypeIdentifiers.SingleOrDefault();
                         var crFullyQualifiedName = crTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
                         var fn                   = crTypeIdentifier.GetFullMetadataName();
 
