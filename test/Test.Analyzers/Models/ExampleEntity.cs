@@ -8,7 +8,7 @@ using Neon.Operator.Attributes;
 
 using RangeAttribute = Neon.Operator.Attributes.RangeAttribute;
 
-namespace TestOperator
+namespace Test_Analyzers
 {
     /// <summary>
     /// This is an example description. A <see cref="V1ExampleEntity"/> is a <see cref="IKubernetesObject{V1ObjectMeta}"/>
@@ -17,7 +17,7 @@ namespace TestOperator
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [EntityVersion(Served = true, Storage = false)]
     [ShortName("ex")]
-    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec<string>>, IStatus<V1ExampleEntity.V1ExampleStatus>
+    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -60,7 +60,7 @@ namespace TestOperator
         /// <summary>
         /// This is the description for the spec.
         /// </summary>
-        public V1ExampleSpec<string> Spec { get; set; }
+        public V1ExampleSpec Spec { get; set; }
 
         /// <inheritdoc/>
         public V1ExampleStatus Status { get; set; }
@@ -69,7 +69,7 @@ namespace TestOperator
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public class V1ExampleSpec<T>
+        public class V1ExampleSpec
         {
             /// <summary>
             /// The message

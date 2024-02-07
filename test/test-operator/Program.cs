@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 
-using k8s;
-using k8s.Models ;
+using k8s.Models;
 
 using Microsoft.AspNetCore.Hosting;
 
@@ -13,7 +12,9 @@ namespace TestOperator
 {
     [RbacRule<V1ConfigMap>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
     [RbacRule<V1Secret>(Verbs = RbacVerb.All, Scope = EntityScope.Cluster)]
-    public static partial class Program
+    [RbacRule<V1Service>(Verbs = Neon.Operator.Rbac.RbacVerb.Watch)]
+    [RbacRule<V1Pod>(Verbs = Neon.Operator.Rbac.RbacVerb.Watch)]
+    public static class Program
     {
         public static async Task Main(string[] args)
         {
