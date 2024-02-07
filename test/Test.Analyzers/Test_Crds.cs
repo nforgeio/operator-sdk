@@ -11,6 +11,7 @@ using Neon.Operator.Analyzers;
 using Neon.Operator.Attributes;
 
 using Xunit.Abstractions;
+using System.ComponentModel.DataAnnotations;
 
 namespace Test.Analyzers
 {
@@ -136,6 +137,7 @@ namespace TestOperator
             /// <summary>
             /// <inheritdoc/>
             /// </summary>
+            [Required]
             public string Name { get; set; }
 
             /// <summary>
@@ -317,6 +319,8 @@ spec:
                     enum:
                     - foo
                     type: string
+                required:
+                - name
                 type: object
             type: object
           status:
@@ -348,7 +352,8 @@ spec:
                 additionalAssemblies: [
                     typeof(KubernetesEntityAttribute).Assembly,
                     typeof(AdditionalPrinterColumnAttribute).Assembly,
-                    typeof(V1Pod).Assembly
+                    typeof(V1Pod).Assembly,
+                    typeof(RequiredAttribute).Assembly,
                 ],
                 optionsProvider: optionsProvider);
 

@@ -108,6 +108,7 @@ namespace TestOperator
             /// <summary>
             /// <inheritdoc/>
             /// </summary>
+            [Required]
             public string Name { get; set; }
 
             /// <summary>
