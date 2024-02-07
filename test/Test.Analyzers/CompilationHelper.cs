@@ -23,6 +23,7 @@ using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 using Xunit.Abstractions;
 
@@ -34,10 +35,11 @@ namespace Test.Analyzers
             string source,
             bool executable = false,
             ITestOutputHelper output = null,
-            List<Assembly> additionalAssemblies = null)
+            List<Assembly> additionalAssemblies = null,
+            OperatorAnalyzerConfigOptionsProvider optionsProvider = null)
             where T : ISourceGenerator, new()
         {
-            var outputCompilation = CreateCompilation<T>(source, executable);
+            var outputCompilation = CreateCompilation<T>(source, executable, additionalAssemblies, optionsProvider);
             var trees = outputCompilation.SyntaxTrees.Reverse().Take(2).Reverse().ToList();
 
             if (output != null)
@@ -49,13 +51,19 @@ namespace Test.Analyzers
                 }
             }
 
-            return (trees[1].ToString());
+            if (trees.Count > 1)
+            {
+                return (trees[1].ToString());
+            }
+
+            return null;
         }
 
         public static Compilation CreateCompilation<T>(
             string         source,
             bool           executable,
-            List<Assembly> additionalAssemblies = null)
+            List<Assembly> additionalAssemblies = null,
+            OperatorAnalyzerConfigOptionsProvider optionsProvider = null)
             where T : ISourceGenerator, new()
         {
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
@@ -76,10 +84,9 @@ namespace Test.Analyzers
                                                    new SyntaxTree[] { syntaxTree },
                                                    references,
                                                    new CSharpCompilationOptions(executable ? OutputKind.ConsoleApplication : OutputKind.DynamicallyLinkedLibrary));
-
             var generator = new T();
 
-            var driver = CSharpGeneratorDriver.Create(generator);
+            var driver = CSharpGeneratorDriver.Create(generators: [generator], optionsProvider: optionsProvider);
             driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var generateDiagnostics);
 
             return outputCompilation;
