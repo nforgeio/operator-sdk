@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    CleanupStatus.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -22,20 +22,15 @@ using System.Text;
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// CleanupStatus represents information about the status of cleanup while a CSV is pending deletion
     /// </summary>
-    
-    public class Provider
+    public class CleanupStatus
     {
         /// <summary>
-        /// Provider name
+        /// PendingDeletion is the list of custom resource objects that are pending
+        /// deletion and blocked on finalizers. This indicates the progress of cleanup
+        /// that is blocking CSV deletion or operator uninstall.
         /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Provider URL
-        /// </summary>
-        public string Url { get; set; }
-        
+        public PendingDeletion PendingDeletion {  get; set; }
     }
 }

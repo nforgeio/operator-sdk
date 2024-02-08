@@ -92,6 +92,9 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// </summary>
         public V1ClusterServiceVersionSpec Spec { get; set; }
 
+        /// <summary>
+        /// ClusterServiceVersionStatus represents information about the status of a CSV. Status may trail the actual state of a system.
+        /// </summary>
         public V1ClusterServiceVersionStatus Status { get; set; }
 
     }

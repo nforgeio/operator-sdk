@@ -21,6 +21,9 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// NamedInstallStrategy represents the block of an ClusterServiceVersion resource where the install strategy is specified.
+    /// </summary>
     public class NamedInstallStrategy
     {
         /// <summary>

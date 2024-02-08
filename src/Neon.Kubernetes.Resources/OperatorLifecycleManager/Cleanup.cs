@@ -21,8 +21,14 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Cleanup specifies the cleanup behaviour when the CSV gets deleted
+    /// </summary>
     public class Cleanup
     {
+        /// <summary>
+        /// enable cleanup
+        /// </summary>
         public bool Enabled {  get; set; }
 
     }

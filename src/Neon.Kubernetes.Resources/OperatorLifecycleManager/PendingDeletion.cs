@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    PendingDeletion.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -22,20 +22,26 @@ using System.Text;
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// PendingDeletion is the list of custom resource objects that are
+    /// pending deletion and blocked on finalizers. This indicates the
+    /// progress of cleanup that is blocking CSV deletion or operator uninstall.
     /// </summary>
-    
-    public class Provider
+    public class PendingDeletion
     {
         /// <summary>
-        /// Provider name
+        /// group
         /// </summary>
-        public string Name { get; set; }
-
+        public string Group { get; set; }
         /// <summary>
-        /// Provider URL
+        /// instances 
         /// </summary>
-        public string Url { get; set; }
-        
+        public List<Instances> Instances { get; set; }
+
+       /// <summary>
+       /// kind
+       /// </summary>
+        public string Kind { get; set; }
+
+
     }
 }

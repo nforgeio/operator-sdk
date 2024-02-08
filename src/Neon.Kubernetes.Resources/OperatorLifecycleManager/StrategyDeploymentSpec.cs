@@ -17,11 +17,38 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
+
+using k8s;
+using k8s.Models;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// .StrategyDeploymentSpec contains the name, spec and labels for the deployment ALM should create
+    /// </summary>
     public class StrategyDeploymentSpec
     {
+        /// <summary>
+        /// Set is a map of label:value. It implements Labels.
+        /// </summary>
+        public Dictionary<string, string> Label { get; set; }
+
+        /// <summary>
+        /// name of the deployment
+        /// </summary>
+        [Required]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// DeploymentSpec is the specification of the desired behavior of the Deployment.
+        /// </summary>
+        [Required]
+        public V1DeploymentSpec Spec {  get; set; }
+
+
+ 
     }
 }

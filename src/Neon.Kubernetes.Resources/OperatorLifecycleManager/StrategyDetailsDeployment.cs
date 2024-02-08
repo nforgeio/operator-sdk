@@ -17,26 +17,31 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// StrategyDetailsDeployment represents the parsed details of a Deployment InstallStrategy.
+    /// </summary>
     public class StrategyDetailsDeployment
     {
         /// <summary>
         /// StrategyDeploymentPermissions describe the rbac rules and service account needed by the install strategy
         /// </summary>
-        public StrategyDeploymentPermissions clusterPermissions {  get; set; }
+        public List<StrategyDeploymentPermissions> ClusterPermissions {  get; set; }
 
         /// <summary>
         /// StrategyDeploymentSpec contains the name, spec and labels for the deployment ALM should create
         /// </summary>
-        public StrategyDeploymentSpec  Deployments { get; set; }
+        [Required]
+        public List<StrategyDeploymentSpec> Deployments { get; set; }
 
         /// <summary>
         /// StrategyDeploymentPermissions describe the rbac rules and service account needed by the install strategy
         /// </summary>
-        public StrategyDeploymentPermissions Permissions {  get; set; }
+        public List<StrategyDeploymentPermissions> Permissions {  get; set; }
 
     }
 }

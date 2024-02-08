@@ -19,9 +19,63 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using k8s.Models;
+
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// ClusterServiceVersionStatus represents information about the status of a CSV. Status may trail the actual state of a system.
+    /// </summary>
     public class V1ClusterServiceVersionStatus
     {
+        /// <summary>
+        /// Last time the owned APIService certs were updated
+        /// </summary>
+        public string CertsLastUpdated { get; set; }
+
+        /// <summary>
+        /// Time the owned APIService certs will rotate next
+        /// </summary>
+        public string CertsRotateAt { get; set; }
+
+        /// <summary>
+        /// CleanupStatus represents information about the status of cleanup while a CSV is pending deletion
+        /// </summary>
+        public CleanupStatus Cleanup {  get; set; }
+
+        /// <summary>
+        /// Conditions appear in the status as a record of state transitions on the ClusterServiceVersion
+        /// </summary>
+        public List<Condition> Conditions { get; set; }
+
+        /// <summary>
+        /// Last time the status transitioned from one status to another.
+        /// </summary>
+        public string LastTransitionTime { get; set; }
+
+        /// <summary>
+        /// Last time we updated the status
+        /// </summary>
+        public string LastUpdateTime { get; set; }
+
+        /// <summary>
+        /// A human readable message indicating details about why the ClusterServiceVersion is in this condition.
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// Current condition of the ClusterServiceVersion
+        /// </summary>
+        public string Phase { get; set; }
+
+        /// <summary>
+        /// A brief CamelCase message indicating details about why the ClusterServiceVersion is in this state. e.g. 'RequirementsNotMet'
+        /// </summary>
+        public string Reason { get; set; }
+
+        
+
+
+
     }
 }

@@ -17,23 +17,29 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 using k8s.Models;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// StrategyDeploymentPermissions describe the rbac rules and service account needed by the install strategy
+    /// </summary>
     public class StrategyDeploymentPermissions
     {
         /// <summary>
         /// service account name needed by the install strategy
         /// </summary>
+        [Required]
         public string ServiceAccountName { get; set; }
 
         /// <summary>
         /// PolicyRule holds information that describes a policy rule,
         /// but does not contain information about who the rule applies to or which namespace the rule applies to.
         /// </summary>
-        public PolicyRule  Rules {get;set;}
+        [Required]
+        public V1PolicyRule  Rules {get;set;}
     }
 }

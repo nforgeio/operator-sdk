@@ -27,8 +27,19 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
     /// </summary>
     public class GroupVersionKind
     {
+        /// <summary>
+        /// group
+        /// </summary>
         public string Group {  get; set; }
+
+        /// <summary>
+        /// Version
+        /// </summary>
         public string Version { get; set; }
+
+        /// <summary>
+        /// Kind
+        /// </summary>
         public string Kind { get; set; }
 
     }

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    Condition.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -19,23 +19,28 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using k8s.Models;
+
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// Conditions appear in the status as a record of state transitions on the ClusterServiceVersion
     /// </summary>
-    
-    public class Provider
+    public class Condition : V1Condition
     {
         /// <summary>
-        /// Provider name
+        /// Last time we updated the status
         /// </summary>
-        public string Name { get; set; }
+        public string LastUpdateTime { get; set; }
 
         /// <summary>
-        /// Provider URL
+        /// Condition of the ClusterServiceVersion
         /// </summary>
-        public string Url { get; set; }
-        
+        public string Phase {  get; set; }
+
+
+
+
+
     }
 }

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    ApiResourceReference.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -19,23 +19,30 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using OpenTelemetry.Resources;
+
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// APIResourceReference is a reference to a Kubernetes resource type that the referrer utilizes.
     /// </summary>
-    
-    public class Provider
+    public class ApiResourceReference
     {
         /// <summary>
-        /// Provider name
+        /// Kind of the referenced resource type.
+        /// </summary>
+        public string Kind { get; set; }
+
+        /// <summary>
+        /// Plural name of the referenced resource type
+        /// (CustomResourceDefinition.Spec.Names[].Plural).
+        /// Empty string if the referenced resource type is not a custom resource.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Provider URL
+        /// API Version of the referenced resource type.
         /// </summary>
-        public string Url { get; set; }
-        
+        public string Version { get; set; }
     }
 }

@@ -21,6 +21,9 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// A list of organizational entities maintaining the operator.
+    /// </summary>
     public class Maintainers
     {
         /// <summary>

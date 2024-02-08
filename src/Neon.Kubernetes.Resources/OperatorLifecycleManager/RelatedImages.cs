@@ -21,9 +21,23 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// List any related images, or other container images that your Operator
+    /// might require to perform their functions. This list should also include
+    /// operand images as well. All image references
+    /// should be specified by digest (SHA) and not by tag. This field is only
+    /// used during catalog creation and plays no part in cluster runtime.
+    /// </summary>
     public class RelatedImages
     {
+        /// <summary>
+        /// image reference
+        /// </summary>
         public string Image {  get; set; }
+
+        /// <summary>
+        /// name of the image
+        /// </summary>
         public string Name { get; set; }
 
     }

@@ -21,8 +21,21 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// APIServiceDefinitions declares all of the extension apis managed or required by an operator being ran by ClusterServiceVersion.
+    /// </summary>
     public class ApiServiceDefinitions
     {
+        /// <summary>
+        /// APIServiceDescription provides details to OLM about apis provided via aggregation
+        /// </summary>
+        public List<ApiServiceDescription> Owned {  get; set; }
+
+        /// <summary>
+        /// APIServiceDescription provides details to OLM about apis provided via aggregation
+        /// </summary>
+        public List<ApiServiceDescription> Required {  get; set; }
+
 
     }
 }

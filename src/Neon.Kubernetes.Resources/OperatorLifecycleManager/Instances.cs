@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    Instances.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,25 +17,26 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// Instances class
     /// </summary>
-    
-    public class Provider
+    public class Instances
     {
         /// <summary>
-        /// Provider name
+        /// name of the instance
         /// </summary>
+        [Required]
         public string Name { get; set; }
 
         /// <summary>
-        /// Provider URL
+        ///Namespace can be empty for cluster-scoped resources
         /// </summary>
-        public string Url { get; set; }
-        
+        public string Namespace { get; set; }
+
     }
 }

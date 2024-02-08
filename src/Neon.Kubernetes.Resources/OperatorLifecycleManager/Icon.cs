@@ -23,12 +23,21 @@ using YamlDotNet.Serialization;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// The icon for this operator.
+    /// </summary>
     public class Icon
     {
+        /// <summary>
+        /// base64 data
+        /// </summary>
         [YamlMember(Alias = "base64data", ApplyNamingConventions = false)]
         public string Base64Data { get; set; }
 
+        /// <summary>
+        /// mediaType
+        /// </summary>
         [YamlMember(Alias = "mediatype", ApplyNamingConventions = false)]
-        public string mediaType { get; set; }
+        public string MediaType { get; set; }
     }
 }

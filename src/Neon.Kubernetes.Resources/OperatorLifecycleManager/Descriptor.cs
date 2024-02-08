@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    SpecDescriptor.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,25 +17,44 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// Descriptor describes a field in a spec block of a CRD so that OLM can consume it
     /// </summary>
-    
-    public class Provider
+    public class Descriptor
     {
         /// <summary>
-        /// Provider name
+        /// Description
         /// </summary>
-        public string Name { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// Provider URL
+        /// Display name
         /// </summary>
-        public string Url { get; set; }
-        
+        public string DisplayName { get; set; }
+
+        /// <summary>
+        /// path
+        /// </summary>
+        [Required]
+        public string Path { get; set; }
+
+        /// <summary>
+        /// RawMessage is a raw encoded JSON value.
+        /// It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
+        /// </summary>
+        public string Value { get; set; }
+
+        /// <summary>
+        /// x- descriptors
+        /// </summary>
+        [YamlMember(Alias = "x-descriptors", ApplyNamingConventions = false)]
+        public List<string> XDescriptors { get; set; }
     }
 }

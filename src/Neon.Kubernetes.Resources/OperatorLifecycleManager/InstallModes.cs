@@ -19,8 +19,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using k8s.Models;
+
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// InstallModes specify supported installation types
+    /// </summary>
     public class InstallModes
     {
         /// <summary>
@@ -32,5 +37,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// InstallModeType is a supported type of install mode for CSV installation
         /// </summary>
         public string Type { get; set; }
+        
+
     }
 }

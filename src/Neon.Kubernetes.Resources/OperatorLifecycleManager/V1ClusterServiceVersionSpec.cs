@@ -21,10 +21,15 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
+using k8s.Models;
+
 using static Neon.K8s.Resources.Istio.AuthorizationPolicyRule;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// ClusterServiceVersionSpec declarations tell OLM how to install an operator that can manage apps for a given version.
+    /// </summary>
     public class V1ClusterServiceVersionSpec
     {
         /// <summary>
@@ -41,31 +46,43 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         public Dictionary<string, string> Annotations { get; set; }
 
         /// <summary>
-        /// Description of the operator. Can include the features, limitations or use-cases of the operator.
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
         /// APIServiceDefinitions declares all of the extension apis managed or required by an operator
         /// being ran by ClusterServiceVersion.
         /// </summary>
-        public ApiServiceDefinitions APIServiceDefinitions { get ; set; }
+        public ApiServiceDefinitions APIServiceDefinitions { get; set; }
+
 
         /// <summary>
         /// Cleanup specifies the cleanup behaviour when the CSV gets deleted
         /// </summary>
-        public Cleanup Cleanup {  get; set; }
+        public Cleanup Cleanup { get; set; }
+
+        /// <summary>
+        /// CustomResourceDefinitions declares all of the CRDs managed or required by an operator being
+        /// ran by ClusterServiceVersion. If the CRD is present in the Owned list, it is implicitly required.
+        /// </summary>
+        public CustomResourceDefinitions CustomResourceDefinitions { get; set; }
+
+        /// <summary>
+        /// Description of the operator. Can include the features, limitations or use-cases of the operator.
+        /// </summary>
+        public string Description { get; set; }
+
+
 
         /// <summary>
         /// The name of the operator in display format.
         /// </summary>
-        public string DisplayName {  get; set; }
+        public string DisplayName { get; set; }
 
         /// <summary>
         /// Icon for this operator
         /// </summary>
         public List<Icon> Icon { get; set; }
 
+        /// <summary>
+        /// NamedInstallStrategy represents the block of an ClusterServiceVersion resource where the install strategy is specified.
+        /// </summary>
         public NamedInstallStrategy Install { get; set; }
 
         /// <summary>
@@ -76,12 +93,12 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// A list of keywords describing the operator.
         /// </summary>
-        public List<string> Keywords {  get; set; }
+        public List<string> Keywords { get; set; }
 
         /// <summary>
         /// Map of string keys and values that can be used to organize and categorize(scope and select) objects.
         /// </summary>
-        public Dictionary<string,string> Labels { get; set; }
+        public Dictionary<string, string> Labels { get; set; }
 
         /// <summary>
         /// A list of links related to the operator.
@@ -91,28 +108,28 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// A list of organizational entities maintaining the operator.
         /// </summary>
-        public List<Maintainers> Maintainers {  get; set; }
+        public List<Maintainers> Maintainers { get; set; }
 
         /// <summary>
         /// Maturity of the operator.
         /// </summary>
-        public string Maturity {  get; set; }
+        public string Maturity { get; set; }
 
         /// <summary>
         /// MinKubeVersion is the minimum version of the Kubernetes to run the operator
         /// </summary>
-        public string MinKubeVersion {  get; set; }
+        public string MinKubeVersion { get; set; }
 
         /// <summary>
         ///  GroupVersionKind unambiguously identifies a kind. It doesn’t anonymously
         ///  include GroupVersion to avoid automatic coercion.It doesn’t use a GroupVersion to avoid custom marshalling
         /// </summary>
-        public List<GroupVersionKind> NativeApis {  get; set; }
+        public List<GroupVersionKind> NativeApis { get; set; }
 
         /// <summary>
         /// The publishing entity behind the operator.
         /// </summary>
-        public Provider Provider {  get; set; }
+        public Provider Provider { get; set; }
 
         /// <summary>
         /// List any related images, or other container images that your Operator might require to perform their functions.
@@ -124,16 +141,30 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// The name of a CSV this one replaces. Should match the metadata.Name field of the old CSV.
         /// </summary>
-        public string Replaces {  get; set; }
+        public string Replaces { get; set; }
+
+        /// <summary>
+        /// Label selector for related resources.
+        /// </summary>
+        public V1LabelSelector Selector { get; set; }
+
 
         /// <summary>
         /// The name(s) of one or more CSV(s) that should be skipped in the upgrade graph. Should match the metadata.
         /// Name field of the CSV that should be skipped. This field is only used during catalog creation and plays no
         /// spart in cluster runtime.
         /// </summary>
-        public List<string> Skips {  get; set; }
+        public List<string> Skips { get; set; }
 
+        /// <summary>
+        /// version of the operator
+        /// </summary>
         public string Version { get; set; }
+
+        /// <summary>
+        ///  WebhookDescription provides details to OLM about required webhooks
+        /// </summary>
+        public WebHookDescription WebHookDefinitions {get;set;}
 
 
 

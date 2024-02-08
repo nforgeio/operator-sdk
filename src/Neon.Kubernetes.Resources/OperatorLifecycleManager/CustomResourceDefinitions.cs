@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    APIServiceDefinitions.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -22,20 +22,21 @@ using System.Text;
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// The publishing entity behind the operator
+    /// CustomResourceDefinitions declares all of the CRDs managed or required
+    /// by an operator being ran by ClusterServiceVersion. If the CRD is present in the Owned list, it is implicitly required.
     /// </summary>
-    
-    public class Provider
+    public class CustomResourceDefinitions
     {
         /// <summary>
-        /// Provider name
+        /// CRDDescription provides details to OLM about the CRDs
         /// </summary>
-        public string Name { get; set; }
+        public List<CRDDescription> Owned {  get; set; }
 
         /// <summary>
-        /// Provider URL
+        /// CRDDescription provides details to OLM about the CRDs
         /// </summary>
-        public string Url { get; set; }
-        
+        public List<CRDDescription> Required {  get; set; }
+
+
     }
 }
