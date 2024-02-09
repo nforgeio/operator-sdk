@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Links.cs
+// FILE:	    StrategyDeploymentPermission.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,21 +17,29 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
+
+using k8s.Models;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
-    public class Links
+    /// <summary>
+    /// StrategyDeploymentPermission describe the rbac rules and service account needed by the install strategy
+    /// </summary>
+    public class StrategyDeploymentPermission
     {
         /// <summary>
-        /// Link name
+        /// service account name needed by the install strategy
         /// </summary>
-        public string Name { get; set; }
+        [Required]
+        public string ServiceAccountName { get; set; }
 
         /// <summary>
-        /// Link URL
+        /// PolicyRule holds information that describes a policy rule,
+        /// but does not contain information about who the rule applies to or which namespace the rule applies to.
         /// </summary>
-        public string Url { get; set; }
-
+        [Required]
+        public List<V1PolicyRule> Rules {get;set;}
     }
 }

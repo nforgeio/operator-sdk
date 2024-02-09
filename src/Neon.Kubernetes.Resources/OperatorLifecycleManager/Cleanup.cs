@@ -30,6 +30,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// enable cleanup
         /// </summary>
         public bool Enabled {  get; set; }
-
     }
 }

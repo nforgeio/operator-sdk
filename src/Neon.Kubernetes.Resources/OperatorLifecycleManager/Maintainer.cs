@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    InstallModes.cs
+// FILE:	    Maintainer.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,29 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-using k8s.Models;
-
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// InstallModes specify supported installation types
+    /// A list of organizational entities maintaining the operator.
     /// </summary>
-    public class InstallModes
+    public class Maintainer
     {
         /// <summary>
-        ///  flag representing if the CSV supports it
+        /// Maintainer name
         /// </summary>
-        public bool Supported {  get; set; }
+        public string Name {  get; set; }
 
         /// <summary>
-        /// InstallModeType is a supported type of install mode for CSV installation
+        /// Maintainer email
         /// </summary>
-        public string Type { get; set; }
-        
-
+        public string Email { get; set; }
     }
 }

@@ -47,7 +47,7 @@ namespace Neon.Operator.Xunit
         {
             this.testApiServerHost             = new TestApiServerBuilder().Build();
             this.KubernetesClientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(testApiServerHost.KubeConfig);
-            this.KubernetesClient              = new Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
+            this.KubernetesClient              = new k8s.Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
             this.Operator                      = new TestOperator(KubernetesClientConfiguration);
         }
 

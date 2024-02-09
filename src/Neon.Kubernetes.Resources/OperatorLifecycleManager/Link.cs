@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Provider.cs
+// FILE:	    Link.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -21,19 +21,15 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
-    /// <summary>
-    /// The publishing entity behind the operator
-    /// </summary>
-    
-    public class Provider
+    public class Link
     {
         /// <summary>
-        /// Provider name
+        /// Link name
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Provider URL
+        /// Link URL
         /// </summary>
         public string Url { get; set; }
     }

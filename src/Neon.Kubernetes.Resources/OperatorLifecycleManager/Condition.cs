@@ -37,10 +37,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// Condition of the ClusterServiceVersion
         /// </summary>
         public string Phase {  get; set; }
-
-
-
-
-
     }
 }

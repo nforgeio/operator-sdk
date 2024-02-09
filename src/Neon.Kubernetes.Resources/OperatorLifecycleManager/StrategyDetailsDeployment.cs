@@ -15,10 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
@@ -28,9 +26,9 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
     public class StrategyDetailsDeployment
     {
         /// <summary>
-        /// StrategyDeploymentPermissions describe the rbac rules and service account needed by the install strategy
+        /// StrategyDeploymentPermission describe the rbac rules and service account needed by the install strategy
         /// </summary>
-        public List<StrategyDeploymentPermissions> ClusterPermissions {  get; set; }
+        public List<StrategyDeploymentPermission> ClusterPermissions {  get; set; }
 
         /// <summary>
         /// StrategyDeploymentSpec contains the name, spec and labels for the deployment ALM should create
@@ -39,9 +37,9 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         public List<StrategyDeploymentSpec> Deployments { get; set; }
 
         /// <summary>
-        /// StrategyDeploymentPermissions describe the rbac rules and service account needed by the install strategy
+        /// StrategyDeploymentPermission describe the rbac rules and service account needed by the install strategy
         /// </summary>
-        public List<StrategyDeploymentPermissions> Permissions {  get; set; }
+        public List<StrategyDeploymentPermission> Permissions {  get; set; }
 
     }
 }

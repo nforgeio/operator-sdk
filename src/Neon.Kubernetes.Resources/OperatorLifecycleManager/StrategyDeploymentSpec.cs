@@ -15,13 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
-using k8s;
 using k8s.Models;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
@@ -47,8 +43,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// </summary>
         [Required]
         public V1DeploymentSpec Spec {  get; set; }
-
-
- 
     }
 }

@@ -37,6 +37,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         ///Namespace can be empty for cluster-scoped resources
         /// </summary>
         public string Namespace { get; set; }
-
     }
 }

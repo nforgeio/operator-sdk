@@ -15,10 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
@@ -35,6 +31,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// StrategyDetailsDeployment represents the parsed details of a Deployment InstallStrategy.
         /// </summary>
         public StrategyDetailsDeployment Spec { get; set; }
-
     }
 }

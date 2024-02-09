@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>TestOperatorLifecycleManager</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <AssemblyName>Test.OLM</AssemblyName>
+        <Configurations>Debug;Release</Configurations>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <!-- Non-NEONFORGE package references -->
+
+    <ItemGroup>
+        <PackageReference Include="FluentAssertions" Version="6.12.0" />
+        <PackageReference Include="FluentAssertions.Analyzers" Version="0.27.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
+        <PackageReference Include="xunit" Version="2.6.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.4">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
+        <ProjectReference Include="..\..\src\Neon.Kubernetes\Neon.Kubernetes.csproj" />
+        <ProjectReference Include="..\..\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+    </ItemGroup>
+
+</Project>

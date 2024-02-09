@@ -15,11 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-
-using Neon.Common;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
@@ -87,6 +83,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// Version
         /// </summary>
         public string Version { get; set; }
-
     }
 }

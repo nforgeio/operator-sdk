@@ -15,13 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-using k8s.Models;
 using k8s;
-using Neon.K8s.Resources.Prometheus;
+using k8s.Models;
+
 using Neon.Operator.Attributes;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
@@ -37,7 +33,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1";
+        public const string KubeApiVersion = "v1alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
@@ -47,7 +43,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// The Group this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeGroup = "monitoring.coreos.com";
+        public const string KubeGroup = "operators.coreos.com";
 
         /// <summary>
         /// The plural name of the entity.
@@ -96,6 +92,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// ClusterServiceVersionStatus represents information about the status of a CSV. Status may trail the actual state of a system.
         /// </summary>
         public V1ClusterServiceVersionStatus Status { get; set; }
-
     }
 }

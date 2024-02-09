@@ -15,11 +15,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 using k8s.Models;
+
+using YamlDotNet.Serialization;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
@@ -42,7 +42,8 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// ConversionCRDs
         /// </summary>
-        public List<string> ConversionCRDs { get; set; }
+        [YamlMember(Alias = "conversionCRDs", ApplyNamingConventions = false)]
+        public List<string> ConversionCrds { get; set; }
 
         /// <summary>
         /// DeploymentName
@@ -61,9 +62,16 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         public string GenerateName {  get; set; }
 
         /// <summary>
-        ///MatchPolicyType specifies the type of match policy.
+        /// MatchPolicyType specifies the type of match policy.
         /// </summary>
         public string MatchPolicy {  get; set; }
+
+        /// <summary>
+        /// A label selector is a label query over a set of resources.
+        /// The result of matchLabels and matchExpressions are ANDed.
+        /// An empty label selector matches all objects.A null label selector matches no objects.
+        /// </summary>
+        public V1LabelSelector ObjectSelector { get; set; }
 
         /// <summary>
         /// ReinvocationPolicyType specifies what type of policy the admission hook uses.
@@ -82,7 +90,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         public string SideEffects {  get; set; }
 
         /// <summary>
-        /// target port
+        /// Target port
         /// </summary>
         public int TargetPort {  get; set; }
 
@@ -100,16 +108,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// web hook path
         /// </summary>
         public string WebHookPath {  get; set; }
-
-        /// <summary>
-        ///  A label selector is a label query over a set of resources.
-        ///  The result of matchLabels and matchExpressions are ANDed.
-        ///  An empty label selector matches all objects.A null label selector matches no objects.
-        /// </summary>
-        public V1LabelSelector ObjectSelector {  get; set; }
-
-
-
-
     }
 }

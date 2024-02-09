@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    StrategyDeploymentPermissions.cs
+// FILE:	    InstallMode.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 using k8s.Models;
@@ -25,21 +24,18 @@ using k8s.Models;
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// StrategyDeploymentPermissions describe the rbac rules and service account needed by the install strategy
+    /// InstallMode specify supported installation types
     /// </summary>
-    public class StrategyDeploymentPermissions
+    public class InstallMode
     {
         /// <summary>
-        /// service account name needed by the install strategy
+        ///  flag representing if the CSV supports it
         /// </summary>
-        [Required]
-        public string ServiceAccountName { get; set; }
+        public bool Supported {  get; set; }
 
         /// <summary>
-        /// PolicyRule holds information that describes a policy rule,
-        /// but does not contain information about who the rule applies to or which namespace the rule applies to.
+        /// InstallModeType is a supported type of install mode for CSV installation
         /// </summary>
-        [Required]
-        public V1PolicyRule  Rules {get;set;}
+        public string Type { get; set; }
     }
 }

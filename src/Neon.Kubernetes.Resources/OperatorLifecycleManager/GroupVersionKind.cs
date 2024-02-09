@@ -41,6 +41,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// Kind
         /// </summary>
         public string Kind { get; set; }
-
     }
 }

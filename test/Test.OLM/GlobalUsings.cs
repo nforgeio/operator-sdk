@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    Maintainers.cs
+// FILE:	    GlobalUsings.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,25 +15,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
-{
-    /// <summary>
-    /// A list of organizational entities maintaining the operator.
-    /// </summary>
-    public class Maintainers
-    {
-        /// <summary>
-        /// Maintainer name
-        /// </summary>
-        public string Name {  get; set; }
-
-        /// <summary>
-        /// Maintainer email
-        /// </summary>
-        public string Email { get; set; }
-    }
-}
+global using Xunit;

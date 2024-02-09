@@ -39,6 +39,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// name of the image
         /// </summary>
         public string Name { get; set; }
-
     }
 }

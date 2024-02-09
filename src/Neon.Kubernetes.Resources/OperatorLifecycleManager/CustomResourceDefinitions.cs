@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    APIServiceDefinitions.cs
+// FILE:	    ApiServiceDefinitions.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -28,15 +28,13 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
     public class CustomResourceDefinitions
     {
         /// <summary>
-        /// CRDDescription provides details to OLM about the CRDs
+        /// CrdDescription provides details to OLM about the CRDs
         /// </summary>
-        public List<CRDDescription> Owned {  get; set; }
+        public List<CrdDescription> Owned {  get; set; }
 
         /// <summary>
-        /// CRDDescription provides details to OLM about the CRDs
+        /// CrdDescription provides details to OLM about the CRDs
         /// </summary>
-        public List<CRDDescription> Required {  get; set; }
-
-
+        public List<CrdDescription> Required {  get; set; }
     }
 }

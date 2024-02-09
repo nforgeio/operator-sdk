@@ -132,7 +132,7 @@ namespace Neon.Operator.Builder
                     retryHandler = new KubernetesRetryHandler();
                 }
 
-                var k8s = new Kubernetes(k8sClientConfig, retryHandler);
+                var k8s = new k8s.Kubernetes(k8sClientConfig, retryHandler);
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {

@@ -15,15 +15,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 using k8s.Models;
 
-using static Neon.K8s.Resources.Istio.AuthorizationPolicyRule;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
@@ -46,11 +42,11 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         public Dictionary<string, string> Annotations { get; set; }
 
         /// <summary>
-        /// APIServiceDefinitions declares all of the extension apis managed or required by an operator
+        /// ApiServiceDefinitions declares all of the extension apis managed or required by an operator
         /// being ran by ClusterServiceVersion.
         /// </summary>
-        public ApiServiceDefinitions APIServiceDefinitions { get; set; }
-
+        [YamlMember(Alias = "apiservicedefinitions", ApplyNamingConventions = false)]
+        public ApiServiceDefinitions ApiServiceDefinitions { get; set; }
 
         /// <summary>
         /// Cleanup specifies the cleanup behaviour when the CSV gets deleted
@@ -61,14 +57,13 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// CustomResourceDefinitions declares all of the CRDs managed or required by an operator being
         /// ran by ClusterServiceVersion. If the CRD is present in the Owned list, it is implicitly required.
         /// </summary>
+        [YamlMember(Alias = "customresourcedefinitions", ApplyNamingConventions = false)]
         public CustomResourceDefinitions CustomResourceDefinitions { get; set; }
 
         /// <summary>
         /// Description of the operator. Can include the features, limitations or use-cases of the operator.
         /// </summary>
         public string Description { get; set; }
-
-
 
         /// <summary>
         /// The name of the operator in display format.
@@ -88,7 +83,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// InstallMode associates an InstallModeType with a flag representing if the CSV supports it
         /// </summary>
-        public List<InstallModes> InstallModes { get; set; }
+        public List<InstallMode> InstallModes { get; set; }
 
         /// <summary>
         /// A list of keywords describing the operator.
@@ -103,12 +98,12 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// A list of links related to the operator.
         /// </summary>
-        public List<Links> Links { get; set; }
+        public List<Link> Links { get; set; }
 
         /// <summary>
         /// A list of organizational entities maintaining the operator.
         /// </summary>
-        public List<Maintainers> Maintainers { get; set; }
+        public List<Maintainer> Maintainers { get; set; }
 
         /// <summary>
         /// Maturity of the operator.
@@ -124,6 +119,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         ///  GroupVersionKind unambiguously identifies a kind. It doesn’t anonymously
         ///  include GroupVersion to avoid automatic coercion.It doesn’t use a GroupVersion to avoid custom marshalling
         /// </summary>
+        [YamlMember(Alias = "nativeAPIs", ApplyNamingConventions = false)]
         public List<GroupVersionKind> NativeApis { get; set; }
 
         /// <summary>
@@ -148,7 +144,6 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// </summary>
         public V1LabelSelector Selector { get; set; }
 
-
         /// <summary>
         /// The name(s) of one or more CSV(s) that should be skipped in the upgrade graph. Should match the metadata.
         /// Name field of the CSV that should be skipped. This field is only used during catalog creation and plays no
@@ -165,18 +160,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         ///  WebhookDescription provides details to OLM about required webhooks
         /// </summary>
         public WebHookDescription WebHookDefinitions {get;set;}
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

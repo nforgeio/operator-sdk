@@ -24,9 +24,9 @@ using Neon.Common;
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// CRDDescription provides details to OLM about the CRDs
+    /// CrdDescription provides details to OLM about the CRDs
     /// </summary>
-    public class CRDDescription
+    public class CrdDescription
     {
         /// <summary>
         /// ActionDescriptor describes a declarative action that can be performed on a custom resource instance
@@ -72,6 +72,5 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// Version
         /// </summary>
         public string Version { get; set; }
-
     }
 }
