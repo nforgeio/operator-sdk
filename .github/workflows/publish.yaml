@@ -28,3 +28,5 @@ jobs:
       run: dotnet pack --output ./artifacts -p:version=${GITHUB_REF_NAME}
     - name: publish
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    - name: publish-github
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.PACKAGES_PAT }} --source https://nuget.pkg.github.com/nforgeio/index.json --skip-duplicate
