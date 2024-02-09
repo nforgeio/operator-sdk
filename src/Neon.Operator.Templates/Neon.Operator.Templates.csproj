@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0</TargetFrameworks>
-        <Version>0.10.0-beta.0</Version>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
         <PackageTags>kubernetes operator sdk neonkube k8s template templates</PackageTags>
@@ -18,6 +17,7 @@
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <ContentTargetFolders>content</ContentTargetFolders>
         <NoWarn>$(NoWarn);1591;CS2008</NoWarn>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -36,6 +36,7 @@
     <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+        <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>

@@ -10,6 +10,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="Models\*" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Models\*;Outputs\*" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
         <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
         <PackageReference Include="FluentAssertions" Version="6.12.0" />

@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
         <Configurations>Debug;Release</Configurations>
-        <Version>0.10.0-beta.0</Version>
         <Description>Kubernetes SDK extensions and helpers.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
@@ -14,6 +13,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
         <PackageReleaseNotes>https://github.com/nforgeio/operator-sdk/releases</PackageReleaseNotes>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -44,6 +44,7 @@
     <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+        <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>

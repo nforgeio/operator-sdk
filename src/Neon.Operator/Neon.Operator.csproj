@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
         <Configurations>Debug;Release</Configurations>
-        <Version>0.10.0-beta.0</Version>
         <Description>Kubernetes Operator SDK.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageProjectUrl>https://docs.neonforge.com/docs/operator-sdk</PackageProjectUrl>
@@ -15,6 +14,7 @@
         <PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
         <PackageReleaseNotes>https://github.com/nforgeio/operator-sdk/releases</PackageReleaseNotes>
         <DebugType>full</DebugType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,12 +26,9 @@
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
         <PackageReference Include="NgrokSharp" Version="1.0.13" />
         <PackageReference Include="NJsonSchema" Version="10.9.0" />
-        <PackageReference Include="NSwag.Generation" Version="13.20.0" />
         <PackageReference Include="prometheus-net" Version="8.2.0" />
         <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.0" />
         <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="8.0.1" />
-        <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-        <PackageReference Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
         <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="1.3.1" />
     </ItemGroup>
 
@@ -61,6 +58,7 @@
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
         <None Include="build\*" Pack="true" PackagePath="build\" />
+        <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
     
 </Project>

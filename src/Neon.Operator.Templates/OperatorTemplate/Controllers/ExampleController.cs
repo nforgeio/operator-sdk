@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using k8s;
+using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
 using Neon.Operator.Controllers;
 using Neon.Operator.Finalizers;
-using Neon.Operator.ResourceManager;
 using Neon.Tasks;
-
-using k8s;
-using k8s.Models;
 
 namespace OperatorTemplate
 {

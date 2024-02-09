@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    KubernetesExtensions.NamespacedCustom.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -599,9 +599,11 @@ namespace Neon.K8s
             // We're going to try fetching the resource first.  If it doesn't exist, we'll
             // create it otherwise we'll replace it.
 
+            T existing;
+
             try
             {
-                await k8s.ReadNamespacedCustomObjectAsync<T>(
+                existing = await k8s.ReadNamespacedCustomObjectAsync<T>(
                     name:               name,
                     namespaceParameter: namespaceParameter,
                     cancellationToken:  cancellationToken);
@@ -623,6 +625,11 @@ namespace Neon.K8s
                     throw;
                 }
             }
+
+            body.Metadata.ResourceVersion   = existing.Metadata.ResourceVersion;
+            body.Metadata.Generation        = existing.Metadata.Generation;
+            body.Metadata.CreationTimestamp = existing.Metadata.CreationTimestamp;
+            body.Metadata.Uid               = existing.Metadata.Uid;
 
             return await k8s.ReplaceNamespacedCustomObjectAsync<T>(
                 body:               body,

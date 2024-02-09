@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -140,7 +139,14 @@ namespace Neon.Operator.Analyzers
                 {
                     try
                     {
-                        var crTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == cr.Identifier.ValueText).SingleOrDefault();
+                        var crTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.Name == cr.Identifier.ValueText);
+
+                        if (cr.TypeParameterList != null)
+                        {
+                            crTypeIdentifiers = crTypeIdentifiers.Where(ntm => ntm.TypeArguments.Length == cr.TypeParameterList.Parameters.Count);
+                        }
+
+                        var crTypeIdentifier     = crTypeIdentifiers.SingleOrDefault();
                         var crFullyQualifiedName = crTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
                         var fn                   = crTypeIdentifier.GetFullMetadataName();
 
@@ -148,10 +154,8 @@ namespace Neon.Operator.Analyzers
                         {
 
                         }
-                        var desc     = crTypeIdentifier.GetDocumentationCommentXml();
 
                         var crSystemType = metadataLoadContext.ResolveType(crTypeIdentifier);
-                        // var description = crSystemType.GetXmlDocsElement();
 
                         try
                         {
@@ -181,6 +185,8 @@ namespace Neon.Operator.Analyzers
                         var schema           = new V1CustomResourceValidation(MapType(namedTypeSymbols, crSystemType, additionalPrinterColumns, string.Empty));
                         var pluralNameGroup  = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
                         var implementsStatus = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
+
+                        schema.OpenAPIV3Schema.Description = crTypeIdentifier.GetSummary();
 
                         var version = new V1CustomResourceDefinitionVersion(
                         name:         k8sAttr.ApiVersion,
@@ -219,17 +225,18 @@ namespace Neon.Operator.Analyzers
                                 kind:       V1CustomResourceDefinition.KubeKind,
                                 metadata:   new V1ObjectMeta(name: pluralNameGroup),
                                 spec:       new V1CustomResourceDefinitionSpec(
-                                group:      k8sAttr.Group,
-                                names:      new V1CustomResourceDefinitionNames(
-                                kind:       k8sAttr.Kind,
-                                plural:     k8sAttr.PluralName,
-                                singular:   k8sAttr.Kind.ToLowerInvariant(),
-                                shortNames: shortNames),
-                                scope:      scope.ToMemberString(),
-                                versions:   new List<V1CustomResourceDefinitionVersion>
-                                {
-                                    version,
-                                }));
+                                    group:      k8sAttr.Group,
+                                    names:      new V1CustomResourceDefinitionNames(
+                                        kind:       k8sAttr.Kind,
+                                        plural:     k8sAttr.PluralName,
+                                        singular:   k8sAttr.Kind.ToLowerInvariant(),
+                                        shortNames: shortNames
+                                    ),
+                                    scope:      scope.ToMemberString(),
+                                    versions:   new List<V1CustomResourceDefinitionVersion>
+                                    {
+                                        version,
+                                    }));
 
                             customResourceDefinitions.Add(pluralNameGroup, crd);
                         }
@@ -326,10 +333,7 @@ namespace Neon.Operator.Analyzers
                 throw new Exception(ex.Message);
             }
 
-            //if (props.Description == null)
-            //{
-            //    props.Description = info.GetPropertySymbol().GetSummary();
-            //}
+            props.Description ??= info.GetPropertySymbol().GetSummary();
 
             // get additional printer column information
             var additionalColumn = info.GetCustomAttribute<AdditionalPrinterColumnAttribute>();
@@ -382,6 +386,12 @@ namespace Neon.Operator.Analyzers
 
             var interfaces = type.GetInterfaces();
 
+            if (type.IsGenericType &&
+                    type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+            {
+                type = type.GenericTypeArguments[0];
+            }
+
             if (type.Equals(typeof(V1ObjectMeta)))
             {
                 props.Type = Constants.ObjectTypeString;
@@ -421,7 +431,7 @@ namespace Neon.Operator.Analyzers
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                     additionalColumns,
                     jsonPath);
-                //props.Description ??= typeSymbol.GetSummary();
+                props.Description ??= typeSymbol.GetSummary();
             }
             else if (type.Equals(typeof(IntstrIntOrString)))
             {
@@ -462,13 +472,15 @@ namespace Neon.Operator.Analyzers
             }
             else if (type.IsEnum)
             {
-                props.Type = Constants.StringTypeString;
-                //props.EnumProperty = new List<object>(Enum.GetNames(type));
-            }
-            else if (Nullable.GetUnderlyingType(type)?.IsEnum == true)
-            {
-                props.Type = Constants.StringTypeString;
-                //props.EnumProperty = new List<object>(Enum.GetNames(Nullable.GetUnderlyingType(type)!));
+                try
+                {
+                    var x = Nullable.GetUnderlyingType(type.UnderlyingSystemType);
+                }
+                catch { }
+                props.Type         = Constants.StringTypeString;
+                props.EnumProperty = type.GetMembers()
+                        .Where(static member => member.MemberType is MemberTypes.Field)
+                        .Select(static member => (object)member.Name.ToLower()).ToList();
             }
             else 
             {
@@ -495,8 +507,9 @@ namespace Neon.Operator.Analyzers
                 {
                     props.Required = null;
                 }
-                //props.Description ??= typeSymbol.GetSummary();
             }
+
+            props.Description ??= typeSymbol.GetSummary();
 
             return props;
         }
