@@ -110,11 +110,68 @@ namespace Neon.Operator.Resources
                 .Build();
 
             var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
+
+            testCompilation.HasOutputSyntax($@"using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using Neon.Operator.Attributes;
+using Neon.Operator.Resources;
+using k8s;
+using k8s.Models;
+
+namespace Neon.Operator.Resources
+{{
+    [KubernetesEntityAttribute(Group = ""monitoring.coreos.com"", Kind = ""ServiceMonitor"", ApiVersion = ""v1"", PluralName = ""servicemonitors"")]
+    public class V1ServiceMonitor : IKubernetesObject<V1ObjectMeta>, ISpec<global::Neon.Operator.Resources.V1ServiceMonitorSpec>
+    {{
+        public V1ServiceMonitor()
+        {{
+            ApiVersion = ""monitoring.coreos.com/v1"";
+            Kind = ""ServiceMonitor"";
+        }}
+
+        public string ApiVersion {{ get; set; }}
+        public string Kind {{ get; set; }}
+        public V1ObjectMeta Metadata {{ get; set; }}
+        public global::Neon.Operator.Resources.V1ServiceMonitorSpec Spec {{ get; set; }}
+    }}
+}}").Should().BeTrue();
+
+            testCompilation.HasOutputSyntax($@"using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using Neon.Operator.Attributes;
+using Neon.Operator.Resources;
+using k8s;
+using k8s.Models;
+
+namespace Neon.Operator.Resources
+{{
+    public class V1ServiceMonitorSpec
+    {{
+        public global::Neon.Operator.Resources.AttachMetadata AttachMetadata {{ get; set; }}
+        public List<global::Neon.Operator.Resources.Endpoint> Endpoints {{ get; set; }}
+        public string JobLabel {{ get; set; }}
+        public long? KeepDroppedTargets {{ get; set; }}
+        public long? LabelLimit {{ get; set; }}
+        public long? LabelNameLengthLimit {{ get; set; }}
+        public long? LabelValueLengthLimit {{ get; set; }}
+        public global::Neon.Operator.Resources.NamespaceSelector NamespaceSelector {{ get; set; }}
+        public List<string> PodTargetLabels {{ get; set; }}
+        public long? SampleLimit {{ get; set; }}
+        public global::Neon.Operator.Resources.Selector Selector {{ get; set; }}
+        public List<string> TargetLabels {{ get; set; }}
+        public long? TargetLimit {{ get; set; }}
+    }}
+}}").Should().BeTrue();
+
+            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(23);
         }
 
         [Fact]
         public void TestV1ServiceMonitorEquals()
         {
+            // create servicemonitor using existing k8s client classes.
             var sm0 = new Neon.K8s.Resources.Prometheus.V1ServiceMonitor().Initialize();
             sm0.Spec = new Neon.K8s.Resources.Prometheus.V1ServiceMonitorSpec()
             {
@@ -122,13 +179,24 @@ namespace Neon.Operator.Resources
                     new Neon.K8s.Resources.Prometheus.Endpoint(){
                         Interval = "1m",
                         HonorLabels = true,
-                        TargetPort = 999
+                        TargetPort = 999,
+                        Path = "/metrics",
+                        Port = "http-metrics",
+                        Scheme = "https"
                     }
                 ],
                 JobLabel = "job-label",
                 LabelLimit = 10,
                 LabelNameLengthLimit = 10,
                 SampleLimit = 10,
+                LabelValueLengthLimit = 10,
+                NamespaceSelector = new Neon.K8s.Resources.Prometheus.NamespaceSelector()
+                {
+                    MatchNames = [ "foo", "bar" ]
+                },
+                TargetLabels = ["foo", "123"],
+                PodTargetLabels = ["foo"],
+                TargetLimit = null,
                 Selector = new V1LabelSelector()
                 {
                     MatchExpressions = [
@@ -140,6 +208,8 @@ namespace Neon.Operator.Resources
                 },
             };
 
+            // create servicemonitor with same values using roslyn generated classes.
+
             var sm1 = new Neon.Operator.Resources.V1ServiceMonitor().Initialize();
             sm1.Spec = new Neon.Operator.Resources.V1ServiceMonitorSpec()
             {
@@ -147,13 +217,25 @@ namespace Neon.Operator.Resources
                     new Neon.Operator.Resources.Endpoint(){
                         Interval = "1m",
                         HonorLabels = true,
-                        TargetPort = 999
+                        TargetPort = 999,
+                        Path = "/metrics",
+                        Port = "http-metrics",
+                        Scheme = "https"
                     }
                 ],
                 JobLabel = "job-label",
                 LabelLimit = 10,
                 LabelNameLengthLimit = 10,
                 SampleLimit = 10,
+                LabelValueLengthLimit = 10,
+                NamespaceSelector = new Neon.Operator.Resources.NamespaceSelector()
+                {
+                    MatchNames = ["foo", "bar"],
+                    Any = false
+                },
+                TargetLabels = ["foo", "123"],
+                PodTargetLabels = ["foo"],
+                TargetLimit = null,
                 Selector = new Neon.Operator.Resources.Selector()
                 {
                     MatchExpressions = [
@@ -171,9 +253,9 @@ namespace Neon.Operator.Resources
                 {
                     Modifiers = { JsonExtensions.AlphabetizeProperties() },
                 },
-                WriteIndented = true,
+                WriteIndented          = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy   = JsonNamingPolicy.CamelCase
             };
 
             var sm0String = KubernetesJson.Serialize(sm0, options);
@@ -184,7 +266,10 @@ namespace Neon.Operator.Resources
     }
 
 
-    public static partial class JsonExtensions
+    /// <summary>
+    /// Used for testing, to ensure that serialization is consistent.
+    /// </summary>
+    internal static partial class JsonExtensions
     {
         public static Action<JsonTypeInfo> AlphabetizeProperties(Type type)
         {
