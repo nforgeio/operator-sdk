@@ -5,6 +5,7 @@ using FluentAssertions;
 using k8s.Models;
 
 using Neon.Operator.Analyzers;
+using Neon.Roslyn.Xunit;
 
 using Xunit.Abstractions;
 
@@ -187,10 +188,13 @@ namespace TestOperator.Controllers
 }
 ";
 
-            var generatedCode = CompilationHelper.GetGeneratedOutput<MutatingWebhookGenerator>(mutatingWebhook, additionalAssemblies: [typeof(V1Pod).Assembly]);
-            generatedCode.Should().NotBeNull();
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<MutatingWebhookGenerator>()
+                .AddSource(mutatingWebhook)
+                .AddAssemblies(typeof(V1Pod).Assembly)
+                .Build();
 
-            generatedCode.TrimEnd().Should().BeEquivalentTo(expectedController.TrimEnd());
+            testCompilation.HasOutputSyntax(expectedController).Should().BeTrue();
 
         }
 
@@ -363,11 +367,13 @@ namespace TestOperator.Controllers
 }
 ";
 
-            var generatedCode = CompilationHelper.GetGeneratedOutput<MutatingWebhookGenerator>(mutatingWebhook, additionalAssemblies: [typeof(V1Pod).Assembly]);
-            generatedCode.Should().NotBeNull();
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<MutatingWebhookGenerator>()
+                .AddSource(mutatingWebhook)
+                .AddAssemblies(typeof(V1Pod).Assembly)
+                .Build();
 
-            generatedCode.TrimEnd().Should().BeEquivalentTo(expectedController.TrimEnd());
-
+            testCompilation.HasOutputSyntax(expectedController).Should().BeTrue();
         }
     }
 }
