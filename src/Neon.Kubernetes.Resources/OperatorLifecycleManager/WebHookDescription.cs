@@ -102,7 +102,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// <summary>
         /// WebhookAdmissionType is the type of admission webhooks supported by OLM
         /// </summary>
-        public string Type {  get; set; }
+        public WebhookAdmissionType Type {  get; set; }
 
         /// <summary>
         /// web hook path

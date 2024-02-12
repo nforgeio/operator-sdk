@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    InstallMode.cs
+// FILE:	    DependentStatus.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -19,23 +19,42 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using k8s.Models;
-
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
-    /// InstallMode specify supported installation types
+    /// DependentStatus is the status for a dependent requirement (to prevent infinite nesting)
     /// </summary>
-    public class InstallMode
+    public class DependentStatus
     {
         /// <summary>
-        ///  flag representing if the CSV supports it
+        /// group 
         /// </summary>
-        public bool Supported {  get; set; }
+        public string Group { get; set; }
 
         /// <summary>
-        /// InstallModeType is a supported type of install mode for CSV installation
+        /// Kind 
         /// </summary>
-        public InstallModeType Type { get; set; }
+        public string Kind { get; set; }
+
+        /// <summary>
+        /// Message
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// StatusReason is a camelcased reason for the status of a RequirementStatus or DependentStatus
+        /// </summary>
+        public string Status { get; set; }
+
+        /// <summary>
+        /// Uuid 
+        /// </summary>
+        public string Uuid { get; set; }
+
+        /// <summary>
+        /// Version 
+        /// </summary>
+        public string Version { get; set; }
+
     }
 }

@@ -45,7 +45,7 @@ namespace TestOperatorLifecycleManager
                         Name = "Some Corp"
                     }
                 ],
-                Maturity = "alpha",                                     // should be an enum
+                Maturity = "alpha",                                     
                 Provider = new Provider()
                 {
                     Name = "Example",
@@ -58,27 +58,27 @@ namespace TestOperatorLifecycleManager
                     new InstallMode()
                     {
                         Supported = true,
-                        Type = "OwnNamespace"                           // type should be an enum
+                        Type = InstallModeType.OwnNamespace                         
                     },
                     new InstallMode()
                     {
                         Supported = true,
-                        Type = "SingleNamespace"                           // type should be an enum
+                        Type = InstallModeType.SingleNamespace                      
                     },
                     new InstallMode()
                     {
                         Supported = false,
-                        Type = "MultiNamespace"                           // type should be an enum
+                        Type = InstallModeType.MultiNamespace                      
                     },
                     new InstallMode()
                     {
                         Supported = true,
-                        Type = "AllNamespaces"                           // type should be an enum
+                        Type = InstallModeType.AllNamespaces                    
                     },
                 ],
                 Install = new NamedInstallStrategy()
                 {
-                    Strategy = "deployment",                              // enum maybe? idk
+                    Strategy = "deployment",                              
                     Spec = new StrategyDetailsDeployment()
                     {
                         Permissions =
@@ -108,7 +108,7 @@ namespace TestOperatorLifecycleManager
                                     {
                                         ApiGroups = [""],
                                         Resources = ["serviceaccounts"],
-                                        Verbs = ["*"]                          // should be flags
+                                        Verbs = ["*"]
                                     }
                                 ]
                             }

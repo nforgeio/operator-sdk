@@ -17,6 +17,8 @@
 
 using System.Collections.Generic;
 
+using k8s.Models;
+
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
     /// <summary>
@@ -68,5 +70,13 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// A brief CamelCase message indicating details about why the ClusterServiceVersion is in this state. e.g. 'RequirementsNotMet'
         /// </summary>
         public string Reason { get; set; }
+
+        /// <summary>
+        /// The status of each requirement for this CSV
+        /// </summary>
+        public List<RequirementStatus> RequirementStatus { get; set; }
+
+
+
     }
 }

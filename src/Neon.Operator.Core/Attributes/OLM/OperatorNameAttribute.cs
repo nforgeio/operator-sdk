@@ -24,6 +24,7 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class OperatorNameAttribute : Attribute
     {
+        public OperatorNameAttribute() { }
         public string Name { get; set; }
         public OperatorNameAttribute(string name)
         {

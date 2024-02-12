@@ -21,6 +21,9 @@ using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
+    /// <summary>
+    /// A list of links related to the operator.
+    /// </summary>
     public class Link
     {
         /// <summary>
@@ -32,5 +35,6 @@ namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
         /// Link URL
         /// </summary>
         public string Url { get; set; }
+        
     }
 }

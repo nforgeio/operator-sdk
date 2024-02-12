@@ -60,6 +60,7 @@
     </Choose>
 
     <ItemGroup>
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
 
@@ -80,6 +81,7 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PKGSystemTextJson_JsonDiffPatch)\lib\netstandard2.0\SystemTextJson.JsonDiffPatch.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGYamlDotNet)\lib\netstandard2.0\YamlDotNet.dll" IncludeRuntimeDependency="false" />
             <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            <None Include="$(OutputPath)\Neon.Kubernetes.Resources.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\Neon.Operator.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGFractions)\lib\netstandard2.0\Fractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

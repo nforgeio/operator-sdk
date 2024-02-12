@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    OperatorDisplayNameAttribute.cs
+// FILE:	    WebhookAdmissionType.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -17,16 +17,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
-    public sealed class OperatorDisplayNameAttribute
+    /// <summary>
+    /// WebhookAdmissionType is the type of admission webhooks supported by OLM
+    /// </summary>
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+    public enum WebhookAdmissionType
     {
-        public string DisplayName { get; set; }
-        public OperatorDisplayNameAttribute(String displayName)
-        {
-            this.DisplayName = displayName;
-        }
+        /// <summary>
+        /// validatingAdmissionWebhook
+        /// </summary>
+        [EnumMember(Value = "ValidatingAdmissionWebhook")]
+        ValidatingAdmissionWebhook,
+
+        /// <summary>
+        /// mutatingAdmissionWebhook
+        /// </summary>
+        [EnumMember(Value = "MutatingAdmissionWebhook")]
+        MutatingAdmissionWebhook,
+
+        /// <summary>
+        /// conversionWebhook
+        /// </summary>
+        [EnumMember(Value = "ConversionWebhook")]
+        ConversionWebhook,
+
     }
 }

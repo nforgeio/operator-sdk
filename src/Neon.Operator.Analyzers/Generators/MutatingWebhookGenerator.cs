@@ -27,6 +27,11 @@ namespace Neon.Operator.Analyzers
     {
         private Dictionary<string, StringBuilder> logs;
 
+        public void Initialize(GeneratorInitializationContext context)
+        {
+            context.RegisterForSyntaxNotifications(() => new MutatingWebhookReceiver());
+        }
+
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
@@ -278,11 +283,6 @@ namespace Neon.Operator.Analyzers
         {
             Log(context, e.Message);
             Log(context, e.StackTrace);
-        }
-
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new MutatingWebhookReceiver());
         }
 
         private string CreateEndpoint(Type entityType, Type webhookImplementation)

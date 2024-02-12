@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    InstallMode.cs
+// FILE:	    OperatorDisplayNameAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -19,23 +19,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using k8s.Models;
-
 namespace Neon.Kubernetes.Resources.OperatorLifecycleManager
 {
-    /// <summary>
-    /// InstallMode specify supported installation types
-    /// </summary>
-    public class InstallMode
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+    public sealed class OperatorDisplayNameAttribute : Attribute
     {
-        /// <summary>
-        ///  flag representing if the CSV supports it
-        /// </summary>
-        public bool Supported {  get; set; }
+        public OperatorDisplayNameAttribute() { }
 
-        /// <summary>
-        /// InstallModeType is a supported type of install mode for CSV installation
-        /// </summary>
-        public InstallModeType Type { get; set; }
+        public string DisplayName { get; set; }
+        public OperatorDisplayNameAttribute(string displayName)
+        {
+            this.DisplayName = displayName;
+        }
     }
 }
