@@ -17,8 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using k8s;
 using k8s.Models;
@@ -27,6 +31,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+
+using Neon.Kubernetes.Core;
 
 using Newtonsoft.Json.Linq;
 
@@ -41,17 +47,6 @@ namespace Neon.Operator.Analyzers.Generators
     {
         private HashSet<string> sources;
         private GeneratorExecutionContext context;
-
-        private static HashSet<string> usings = new HashSet<string>()
-        {
-            "System.Collections.Generic",
-            "System.ComponentModel",
-            "System.ComponentModel.DataAnnotations",
-            "Neon.Operator.Attributes",
-            "Neon.Operator.Resources",
-            "k8s",
-            "k8s.Models",
-        };
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -70,7 +65,7 @@ namespace Neon.Operator.Analyzers.Generators
 
                 try
                 {
-                    crd = KubernetesYaml.Deserialize<V1CustomResourceDefinition>(file.GetText()?.ToString());
+                    crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(file.GetText()?.ToString(), stringTypeDeserialization: false);
                 }
                 catch (Exception e)
                 {
@@ -84,12 +79,10 @@ namespace Neon.Operator.Analyzers.Generators
                     var className = GetClassName(version: version.Name, kind: crd.Spec.Names.Kind);
                     var compilation = CompilationUnit();
 
-                    compilation = compilation.AddUsings(usings.Select(u => UsingDirective(IdentifierName(u))).ToArray());
-
                     var crdClass = ClassDeclaration(className)
-                        .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                        .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
                         .AddBaseListTypes(
-                            SimpleBaseType(ParseTypeName("IKubernetesObject<V1ObjectMeta>")))
+                            SimpleBaseType(ParseTypeName(typeof(IKubernetesObject<V1ObjectMeta>).GetGlobalTypeName())))
                         .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateKubernetesEntityAttribute(crd.Spec.Group, crd.Spec.Names.Kind, version.Name, crd.Spec.Names.Plural)])))
                         .AddMembers(
                             ConstructorDeclaration(GetClassName(version: version.Name, kind: crd.Spec.Names.Kind))
@@ -109,37 +102,43 @@ namespace Neon.Operator.Analyzers.Generators
                                                 SyntaxKind.StringLiteralExpression,
                                                 Literal(crd.Spec.Names.Kind))))))
                                 .AddModifiers(Token(SyntaxKind.PublicKeyword)),
-                            PropertyDeclaration(ParseTypeName("string"), nameof(KubernetesEntityAttribute.ApiVersion))
+                            PropertyDeclaration(
+                                type:       ParseTypeName(typeof(string).GetGlobalTypeName()),
+                                identifier: nameof(KubernetesEntityAttribute.ApiVersion))
                                 .AddModifiers(Token(SyntaxKind.PublicKeyword))
                                 .AddAccessorListAccessors(
                                     AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                         .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                     AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                         .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))),
-                            PropertyDeclaration(ParseTypeName("string"), nameof(KubernetesEntityAttribute.Kind))
-                                .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                .AddAccessorListAccessors(
-                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                    AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))),
-                            PropertyDeclaration(ParseTypeName(nameof(V1ObjectMeta)), "Metadata")
-                                .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                .AddAccessorListAccessors(
-                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                    AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)))
+                            PropertyDeclaration(
+                                type:       ParseTypeName(typeof(string).GetGlobalTypeName()),
+                                identifier: nameof(KubernetesEntityAttribute.Kind))
+                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                        .AddAccessorListAccessors(
+                                            AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                            AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))),
+                            PropertyDeclaration(
+                                type:       ParseTypeName(typeof(V1ObjectMeta).GetGlobalTypeName()),
+                                identifier: "Metadata")
+                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                    .AddAccessorListAccessors(
+                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)))
                             );
 
                     if (version.Schema.OpenAPIV3Schema.Properties.ContainsKey("spec"))
                     {
                         var specClassName = GetSpecClassName(version: version.Name, kind: crd.Spec.Names.Kind);
-                        var refTypeName = $"global::Neon.Operator.Resources.{specClassName}";
+                        var refTypeName = $"global::Neon.Operator.Resources.{className}.{specClassName}";
 
                         crdClass = crdClass
                             .AddBaseListTypes(
-                                SimpleBaseType(ParseTypeName($"ISpec<{refTypeName}>")))
+                                SimpleBaseType(ParseTypeName($"global::{typeof(ISpec<>).Namespace}.ISpec<{refTypeName}>")))
                             .AddMembers(
                                 PropertyDeclaration(ParseTypeName(refTypeName), "Spec")
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
@@ -151,17 +150,18 @@ namespace Neon.Operator.Analyzers.Generators
 
                         AddObject(
                             specClassName,
-                            version.Schema.OpenAPIV3Schema.Properties["spec"]);
+                            version.Schema.OpenAPIV3Schema.Properties["spec"],
+                            className);
                     }
 
                     if (version.Schema.OpenAPIV3Schema.Properties.ContainsKey("status"))
                     {
                         var statusClassName = GetStatusClassName(version: version.Name, kind: crd.Spec.Names.Kind);
-                        var refTypeName = $"global::Neon.Operator.Resources.{statusClassName}";
+                        var refTypeName = $"global::Neon.Operator.Resources.{className}.{statusClassName}";
 
                         crdClass = crdClass
                             .AddBaseListTypes(
-                                SimpleBaseType(ParseTypeName($"IStatus<{refTypeName}>")))
+                                SimpleBaseType(ParseTypeName($"global::{typeof(IStatus<>).Namespace}.IStatus<{refTypeName}>")))
                             .AddMembers(
                                 PropertyDeclaration(ParseTypeName(refTypeName), "Status")
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
@@ -173,7 +173,8 @@ namespace Neon.Operator.Analyzers.Generators
 
                         AddObject(
                             statusClassName,
-                            version.Schema.OpenAPIV3Schema.Properties["status"]);
+                            version.Schema.OpenAPIV3Schema.Properties["status"],
+                            className);
                     }
 
                     compilation = compilation
@@ -195,8 +196,11 @@ namespace Neon.Operator.Analyzers.Generators
         private PropertyDeclarationSyntax AddProperty(
             string name,
             V1JSONSchemaProps properties,
-            bool required)
+            bool required,
+            string baseClassName = null)
         {
+            PropertyDeclarationSyntax propertyDeclaration = null;
+
             switch (properties.Type)
             {
                 case Constants.BooleanTypeString:
@@ -207,13 +211,15 @@ namespace Neon.Operator.Analyzers.Generators
                 case Constants.FloatTypeString:
                 case Constants.DoubleTypeString:
 
-                    return PropertyDeclaration(GetSimpleTypeSyntax(properties.Type, required), FirstLetterToUpper(name))
+                    propertyDeclaration = PropertyDeclaration(GetSimpleTypeSyntax(properties.Type, required), FirstLetterToUpper(name))
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
                                     .AddAccessorListAccessors(
                                         AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                         AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                    break;
 
                 case Constants.StringTypeString:
 
@@ -230,25 +236,34 @@ namespace Neon.Operator.Analyzers.Generators
                             case "date":
                             case "datetime":
 
-                                typeName = nameof(DateTime);
+                                typeName = typeof(DateTime).GetGlobalTypeName();
 
                                 break;
 
                             case "duration":
 
-                                typeName = nameof(TimeSpan);
+                                typeName = typeof(TimeSpan).GetGlobalTypeName();
 
                                 break;
                         }
                     }
 
-                    return PropertyDeclaration(ParseTypeName(typeName), FirstLetterToUpper(name))
+                    if (properties.EnumProperty?.Count > 0)
+                    {
+                        AddEnum(name, properties.EnumProperty, baseClassName);
+
+                        typeName = FirstLetterToUpper(name) + "Type";
+                    }
+
+                    propertyDeclaration = PropertyDeclaration(ParseTypeName(typeName), FirstLetterToUpper(name))
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
                                     .AddAccessorListAccessors(
                                         AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                         AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                    break;
 
                 case Constants.ArrayTypeString:
 
@@ -256,78 +271,106 @@ namespace Neon.Operator.Analyzers.Generators
                     {
                         break;
                     }
+                    V1JSONSchemaProps items = null;
+
                     if (properties.Items.GetType() == typeof(Dictionary<object, object>))
                     {
-                        var items = ((Dictionary<object, object>)properties.Items).ToJsonSchemaProps();
-
-                        switch (items.Type)
-                        {
-                            case Constants.BooleanTypeString:
-                            case Constants.IntegerTypeString:
-                            case Constants.NumberTypeString:
-                            case Constants.Int32TypeString:
-                            case Constants.Int64TypeString:
-                            case Constants.FloatTypeString:
-                            case Constants.DoubleTypeString:
-                            case Constants.StringTypeString:
-
-                                var arrayType = GetSimpleTypeSyntax(items.Type, true);
-                                return PropertyDeclaration(ParseTypeName($"List<{arrayType}>"), FirstLetterToUpper(name))
-                                                .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                                .AddAccessorListAccessors(
-                                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                                    AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
-                            case Constants.ObjectTypeString:
-
-                                var arrayTypeName = FirstLetterToUpper(name).TrimEnd('s');
-                                var arrayReferenceType = $"global::Neon.Operator.Resources.{arrayTypeName}";
-
-                                AddObject(
-                                   arrayTypeName,
-                                   items);
-
-                                return PropertyDeclaration(ParseTypeName($"List<{arrayReferenceType}>"), FirstLetterToUpper(name))
-                                                .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                                .AddAccessorListAccessors(
-                                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                                    AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
-                        }
+                        items = ((Dictionary<object, object>)properties.Items).ToJsonSchemaProps();
                     }
-
-                    break;
-
-                case Constants.ObjectTypeString:
-
-                    if (properties.Properties == null)
+                    else if (properties.Items.GetType() == typeof(V1JSONSchemaProps))
                     {
-                        return PropertyDeclaration(ParseTypeName("Dictionary<string, string>"), FirstLetterToUpper(name))
-                                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                        .AddAccessorListAccessors(
-                                            AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                            AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+                        items = ((V1JSONSchemaProps)properties.Items);
 
                     }
+                    switch (items.Type)
+                    {
+                        case Constants.BooleanTypeString:
+                        case Constants.IntegerTypeString:
+                        case Constants.NumberTypeString:
+                        case Constants.Int32TypeString:
+                        case Constants.Int64TypeString:
+                        case Constants.FloatTypeString:
+                        case Constants.DoubleTypeString:
+                        case Constants.StringTypeString:
 
-                    var objTypeName = FirstLetterToUpper(name);
-                    var objReferenceType = $"global::Neon.Operator.Resources.{objTypeName}";
-
-                    AddObject(name, properties);
-
-                    return PropertyDeclaration(ParseTypeName(objReferenceType), objTypeName)
+                            var arrayType = GetSimpleTypeSyntax(items.Type, true);
+                            propertyDeclaration = PropertyDeclaration(
+                                type:       ParseTypeName($"global::{typeof(List<>).Namespace}.List<{arrayType}>"),
+                                identifier: FirstLetterToUpper(name))
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
                                     .AddAccessorListAccessors(
                                         AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                         AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                            break;
+
+                        case Constants.ObjectTypeString:
+
+                            var arrayTypeName = FirstLetterToUpper(name).TrimEnd('s');
+                            var arrayReferenceType = $"global::Neon.Operator.Resources.{baseClassName}.{arrayTypeName}";
+
+                            AddObject(
+                                arrayTypeName,
+                                items,
+                                baseClassName);
+
+                            propertyDeclaration = PropertyDeclaration(
+                                type:       ParseTypeName($"global::{typeof(List<>).Namespace}.List<{arrayReferenceType}>"),
+                                identifier: FirstLetterToUpper(name))
+                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                    .AddAccessorListAccessors(
+                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                            break;
+
+                        default:
+
+                            break;
+                    }
+                    break;
+
+                case Constants.ObjectTypeString:
+
+                    if (properties.Properties == null)
+                    {
+                        propertyDeclaration = PropertyDeclaration(
+                            type:       ParseTypeName($"global::{typeof(Dictionary<,>).Namespace}.Dictionary<string, string>"),
+                            identifier: FirstLetterToUpper(name))
+                                .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                .AddAccessorListAccessors(
+                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                    AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                        break;
+
+                    }
+
+                    var objTypeName = FirstLetterToUpper(name);
+                    var objReferenceType = $"global::Neon.Operator.Resources.{baseClassName}.{objTypeName}";
+
+                    AddObject(
+                        name,
+                        properties,
+                        baseClassName);
+
+                    propertyDeclaration = PropertyDeclaration(
+                        type:       ParseTypeName(objReferenceType),
+                        identifier: objTypeName)
+                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                    .AddAccessorListAccessors(
+                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                    break;
 
                 default:
 
@@ -336,19 +379,26 @@ namespace Neon.Operator.Analyzers.Generators
                         var anyOfType = properties.AnyOf.First();
 
                         var anyOfTypeName = FirstLetterToUpper(name);
-                        var anyOfReferenceType = $"global::Neon.Operator.Resources.{anyOfTypeName}";
+                        var anyOfReferenceType = $"global::Neon.Operator.Resources.{baseClassName}.{anyOfTypeName}";
 
                         if (anyOfType.Type == Constants.ObjectTypeString)
                         {
-                            AddObject(name, anyOfType);
+                            AddObject(
+                                name,
+                                anyOfType,
+                                baseClassName);
 
-                            return PropertyDeclaration(ParseTypeName(anyOfReferenceType), anyOfTypeName)
-                                            .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                            .AddAccessorListAccessors(
-                                                AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                                AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+                            propertyDeclaration = PropertyDeclaration(
+                                type:       ParseTypeName(anyOfReferenceType),
+                                identifier: anyOfTypeName)
+                                .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                    .AddAccessorListAccessors(
+                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+                            break;
                         }
                         else
                         {
@@ -358,12 +408,106 @@ namespace Neon.Operator.Analyzers.Generators
                     break;
             }
 
-            return null;
+            if (required)
+            {
+                propertyDeclaration = propertyDeclaration?
+                    .AddAttributeLists(
+                        AttributeList(
+                            SeparatedList(nodes:
+                            [
+                                Attribute(name: ParseName(typeof(RequiredAttribute).GetGlobalTypeName()))
+                            ])));
+            }
+            else
+            {
+                propertyDeclaration = propertyDeclaration?
+                        .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateDefaultNullAttribute()])));
+            }
+
+            propertyDeclaration = propertyDeclaration?
+                    .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateJsonPropertyNameAttribute(name)])));
+
+            return propertyDeclaration;
+        }
+
+        private void AddEnum(string name, IList<object> properties, string baseClassName)
+        {
+            name = FirstLetterToUpper(name) + "Type";
+
+            if (this.sources.Contains(name))
+            {
+                return;
+            }
+
+            this.sources.Add(name);
+
+            var stringProperties = properties.Select(s => (string)s).ToList();
+            var stringGroups = stringProperties.GroupBy(s => s.ToLower());
+
+            var compilation = CompilationUnit();
+            
+            var classDeclaration = EnumDeclaration(name)
+                        .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                        .AddAttributeLists(AttributeList(SeparatedList(nodes:
+                        [
+                            Attribute(
+                                name: ParseName(typeof(JsonConverterAttribute).GetGlobalTypeName()),
+                                argumentList: AttributeArgumentList(
+                                    SeparatedList<AttributeArgumentSyntax>(nodes:
+                                    [
+                                        AttributeArgument(
+                                            expression: LiteralExpression(
+                                                kind: SyntaxKind.StringLiteralExpression,
+                                                token: Token(
+                                                    leading: SyntaxTriviaList.Empty,
+                                                    kind: SyntaxKind.StringLiteralToken,
+                                                    text: $@"typeof({typeof(JsonStringEnumMemberConverter).GetGlobalTypeName()})",
+                                                    valueText: nameof(JsonStringEnumMemberConverter),
+                                                    trailing: SyntaxTriviaList.Empty)))
+
+                                        ])
+                                    )
+                                )
+                        ])));
+
+            foreach (var value in properties)
+            {
+                var enumValue = (string)value;
+
+                if (enumValue.ToLower() == enumValue
+                    && stringGroups.Where(g => g.Key == enumValue).First().Count() > 1)
+                {
+                    continue;
+                }
+
+                classDeclaration = classDeclaration
+                    .AddMembers(
+                        EnumMemberDeclaration(FirstLetterToUpper(enumValue))
+                            .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateEnumMemberAttribute(enumValue)]))
+                            )
+                    );
+            }
+
+            compilation = compilation
+                   .WithMembers(SingletonList<MemberDeclarationSyntax>(
+                       NamespaceDeclaration(ParseName($"Neon.Operator.Resources"))
+                       .AddMembers(ClassDeclaration(baseClassName)
+                            .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
+                            .AddMembers(classDeclaration))));
+
+
+            var compilationString = compilation.NormalizeWhitespace().ToString();
+
+            context.AddSource(
+                $"{name}.g.cs",
+                SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256)
+                );
         }
 
         private void AddObject(
             string name,
-            V1JSONSchemaProps properties)
+            V1JSONSchemaProps properties,
+            string baseClassName = null)
         {
             try
             {
@@ -378,15 +522,13 @@ namespace Neon.Operator.Analyzers.Generators
 
                 var compilation = CompilationUnit();
 
-                compilation = compilation.AddUsings(usings.Select(u => UsingDirective(IdentifierName(u))).ToArray());
-
-                var classDeclaration = ClassDeclaration(FirstLetterToUpper(name))
+                var classDeclaration = ClassDeclaration(name)
                         .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
 
                 foreach (var p in properties.Properties)
                 {
                     var required = properties.Required?.Contains(p.Key) ?? false;
-                    var property = AddProperty(p.Key, p.Value, required);
+                    var property = AddProperty(p.Key, p.Value, required, baseClassName);
 
                     if (property != null)
                     {
@@ -396,8 +538,10 @@ namespace Neon.Operator.Analyzers.Generators
 
                 compilation = compilation
                        .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                           NamespaceDeclaration(ParseName("Neon.Operator.Resources"))
-                           .AddMembers(classDeclaration)));
+                           NamespaceDeclaration(ParseName($"Neon.Operator.Resources"))
+                           .AddMembers(ClassDeclaration(baseClassName)
+                                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
+                                .AddMembers(classDeclaration))));
 
 
                 var compilationString = compilation.NormalizeWhitespace().ToString();
@@ -417,14 +561,14 @@ namespace Neon.Operator.Analyzers.Generators
 
         private TypeSyntax GetSimpleTypeSyntax(string type, bool required) => type switch
         {
-            Constants.StringTypeString => ParseTypeName("string"),
-            Constants.BooleanTypeString => ParseTypeName($"bool{(required ? "" : "?")}"),
-            Constants.IntegerTypeString => ParseTypeName($"long{(required ? "" : "?")}"),
-            Constants.NumberTypeString => ParseTypeName($"double{(required ? "" : "?")}"),
-            Constants.Int32TypeString => ParseTypeName($"int{(required ? "" : "?")}"),
-            Constants.Int64TypeString => ParseTypeName($"long{(required ? "" : "?")}"),
-            Constants.FloatTypeString => ParseTypeName($"float{(required ? "" : "?")}"),
-            Constants.DoubleTypeString => ParseTypeName($"double{(required ? "" : "?")}"),
+            Constants.StringTypeString => ParseTypeName(typeof(String).GetGlobalTypeName()),
+            Constants.BooleanTypeString => ParseTypeName($"{typeof(bool).GetGlobalTypeName()}{(required ? "" : "?")}"),
+            Constants.IntegerTypeString => ParseTypeName($"{typeof(long).GetGlobalTypeName()}{(required ? "" : "?")}"),
+            Constants.NumberTypeString => ParseTypeName($"{typeof(double).GetGlobalTypeName()}{(required ? "" : "?")}"),
+            Constants.Int32TypeString => ParseTypeName($"{typeof(int).GetGlobalTypeName()}{(required ? "" : "?")}"),
+            Constants.Int64TypeString => ParseTypeName($"{typeof(long).GetGlobalTypeName()}{(required ? "" : "?")}"),
+            Constants.FloatTypeString => ParseTypeName($"{typeof(float).GetGlobalTypeName()}{(required ? "" : "?")}"),
+            Constants.DoubleTypeString => ParseTypeName($"{typeof(double).GetGlobalTypeName()}{(required ? "" : "?")}"),
             _ => throw new ArgumentException()
         };
 
@@ -461,7 +605,7 @@ namespace Neon.Operator.Analyzers.Generators
             string plural)
         {
             return Attribute(
-                name: ParseName(nameof(KubernetesEntityAttribute)),
+                name: ParseName(typeof(KubernetesEntityAttribute).GetGlobalTypeName()),
                 argumentList: AttributeArgumentList(
                     SeparatedList<AttributeArgumentSyntax>(nodes:
                     [
@@ -509,6 +653,76 @@ namespace Neon.Operator.Analyzers.Generators
                                     text: $@"""{plural}""",
                                     valueText: plural,
                                     trailing: SyntaxTriviaList.Empty))),
+
+                        ])
+                    )
+                );
+        }
+
+        private AttributeSyntax CreateEnumMemberAttribute(
+            string value)
+        {
+            return Attribute(
+                name: ParseName(typeof(EnumMemberAttribute).GetGlobalTypeName()),
+                argumentList: AttributeArgumentList(
+                    SeparatedList<AttributeArgumentSyntax>(nodes:
+                    [
+                        AttributeArgument(
+                            nameEquals: NameEquals(IdentifierName(nameof(EnumMemberAttribute.Value))),
+                            nameColon: null,
+                            expression: LiteralExpression(
+                                kind: SyntaxKind.StringLiteralExpression,
+                                token: Token(
+                                    leading: SyntaxTriviaList.Empty,
+                                    kind: SyntaxKind.StringLiteralToken,
+                                    text: $@"""{value}""",
+                                    valueText: value,
+                                    trailing: SyntaxTriviaList.Empty)))
+
+                        ])
+                    )
+                );
+        }
+
+        private AttributeSyntax CreateDefaultNullAttribute()
+        {
+            return Attribute(
+                name: ParseName(typeof(DefaultValueAttribute).GetGlobalTypeName()),
+                argumentList: AttributeArgumentList(
+                    SeparatedList<AttributeArgumentSyntax>(nodes:
+                    [
+                        AttributeArgument(
+                            expression: LiteralExpression(
+                                kind: SyntaxKind.NullLiteralExpression,
+                                token: Token(
+                                    leading: SyntaxTriviaList.Empty,
+                                    kind: SyntaxKind.NullKeyword,
+                                    text: "null",
+                                    valueText: "null",
+                                    trailing: SyntaxTriviaList.Empty)))
+
+                        ])
+                    )
+                ); ;
+        }
+
+        private AttributeSyntax CreateJsonPropertyNameAttribute(
+            object value)
+        {
+            return Attribute(
+                name: ParseName(typeof(JsonPropertyNameAttribute).GetGlobalTypeName()),
+                argumentList: AttributeArgumentList(
+                    SeparatedList<AttributeArgumentSyntax>(nodes:
+                    [
+                        AttributeArgument(
+                            expression: LiteralExpression(
+                                kind: SyntaxKind.StringLiteralExpression,
+                                token: Token(
+                                    leading: SyntaxTriviaList.Empty,
+                                    kind: SyntaxKind.StringLiteralToken,
+                                    text: $@"""{value}""",
+                                    valueText: (string)value,
+                                    trailing: SyntaxTriviaList.Empty)))
 
                         ])
                     )

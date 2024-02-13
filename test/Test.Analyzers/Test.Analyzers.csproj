@@ -28,6 +28,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="crds\csv.yaml" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
         <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
@@ -76,6 +80,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\neonsdk\Lib\Neon.Roslyn.XUnit\Neon.Roslyn.XUnit.csproj" />
+        <ProjectReference Include="..\..\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" />
         <ProjectReference Include="..\..\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
     </ItemGroup>
 

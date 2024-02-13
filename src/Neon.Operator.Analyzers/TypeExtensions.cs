@@ -108,7 +108,11 @@ namespace Neon.Operator.Analyzers
             //result.DefaultProperty = value["defaultProperty"];
             //result.Definitions = value["definitions"];
             //result.Dependencies = value["dependencies"];
-            //result.EnumProperty = value["enumProperty"];
+
+            if (value.ContainsKey("enum"))
+            {
+                result.EnumProperty = (List<object>)value["enum"];
+            }
             //result.Example = value["example"];
             //result.ExclusiveMaximum = value["exclusiveMaximum"];
             //result.ExclusiveMinimum = value["exclusiveMinimum"];
@@ -145,17 +149,17 @@ namespace Neon.Operator.Analyzers
 
             if (value.ContainsKey("maximum"))
             {
-                result.Maximum = (double?)value["maximum"];
+                result.Maximum = double.Parse((string)value["maximum"]);
             }
 
             if (value.ContainsKey("maxItems"))
             {
-                result.MaxItems = (long?)value["maxItems"];
+                result.MaxItems = long.Parse((string)value["maxItems"]);
             }
 
             if (value.ContainsKey("maxLength"))
             {
-                result.MaxLength = (long?)value["maxLength"];
+                result.MaxLength = long.Parse((string)value["maxLength"]);
             }
 
             if (value.ContainsKey("maxProperties"))
@@ -172,7 +176,7 @@ namespace Neon.Operator.Analyzers
 
             if (value.ContainsKey("minimum"))
             {
-                result.Minimum = (double?)value["minimum"];
+                result.Minimum = double.Parse((string)value["minimum"]);
             }
 
             if (value.ContainsKey("minItems"))
@@ -201,17 +205,17 @@ namespace Neon.Operator.Analyzers
 
             if (value.ContainsKey("minProperties"))
             {
-                result.MinProperties = (long?)value["minProperties"];
+                result.MinProperties = long.Parse((string)value["minProperties"]);
             }
 
             if (value.ContainsKey("multipleOf"))
             {
-                result.MultipleOf = (double?)value["multipleOf"];
+                result.MultipleOf = double.Parse((string)value["multipleOf"]);
             }
 
             if (value.ContainsKey("nullable"))
             {
-                result.Nullable = (bool?)value["nullable"];
+                result.Nullable = bool.Parse((string)value["nullable"]);
             }
 
             if (value.ContainsKey("pattern"))
@@ -236,7 +240,7 @@ namespace Neon.Operator.Analyzers
 
             if (value.ContainsKey("uniqueItems"))
             {
-                result.UniqueItems = (bool?)value["uniqueItems"];
+                result.UniqueItems = bool.Parse((string)value["uniqueItems"]);
             }
 
             if (value.ContainsKey("properties"))
@@ -290,6 +294,34 @@ namespace Neon.Operator.Analyzers
             }
 
             return result;
+        }
+
+        public static string GetGlobalTypeName(this Type t)
+        {
+            var sb = new StringBuilder();
+            sb.Append("global::");
+
+            if (!t.IsGenericType)
+            {
+                sb.Append(t.FullName);
+                return sb.ToString();
+            }
+
+            sb.Append(t.FullName.Substring(0, t.FullName.IndexOf('`')));
+            sb.Append('<');
+            bool appendComma = false;
+            foreach (Type arg in t.GetGenericArguments())
+            {
+                if (appendComma)
+                {
+                    sb.Append(", ");
+                }
+
+                sb.Append(GetGlobalTypeName(arg));
+                appendComma = true;
+            }
+            sb.Append('>');
+            return sb.ToString();
         }
     }
 }

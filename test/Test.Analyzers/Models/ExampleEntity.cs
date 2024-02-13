@@ -88,6 +88,11 @@ namespace Test_Analyzers
             /// The <see cref="V1ExampleEntity.Person"/>
             /// </summary>
             public Person Person { get; set; }
+
+            /// <summary>
+            /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
+            /// </summary>
+            public bool Enabled { get; set; } = false;
         }
 
         /// <summary>

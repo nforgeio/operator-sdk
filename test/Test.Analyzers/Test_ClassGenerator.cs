@@ -17,27 +17,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using FluentAssertions;
-
-using k8s.Models;
-using Neon.IO;
-
-using Neon.Operator.Analyzers;
-using Neon.Operator.Analyzers.Generators;
-using Neon.Operator.Attributes;
-using Neon.Operator.Webhooks;
-using Neon.Roslyn.Xunit;
-using Neon.K8s.Resources;
-using k8s;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+
+using FluentAssertions;
+
+using k8s;
+using k8s.Models;
+
+using Neon.Kubernetes.Core;
+using Neon.Operator.Analyzers.Generators;
+using Neon.Operator.Webhooks;
+using Neon.Roslyn.Xunit;
 
 namespace Test.Analyzers
 {
@@ -53,18 +47,10 @@ namespace Test.Analyzers
 
             var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
 
-            testCompilation.HasOutputSyntax($@"using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using Neon.Operator.Attributes;
-using Neon.Operator.Resources;
-using k8s;
-using k8s.Models;
-
-namespace Neon.Operator.Resources
+            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
 {{
-    [KubernetesEntityAttribute(Group = ""stable.example.com"", Kind = ""CronTab"", ApiVersion = ""v1"", PluralName = ""crontabs"")]
-    public class V1CronTab : IKubernetesObject<V1ObjectMeta>, ISpec<global::Neon.Operator.Resources.V1CronTabSpec>
+    [global::k8s.Models.KubernetesEntityAttribute(Group = ""stable.example.com"", Kind = ""CronTab"", ApiVersion = ""v1"", PluralName = ""crontabs"")]
+    public partial class V1CronTab : global::k8s.IKubernetesObject<global::k8s.Models.V1ObjectMeta>, global::k8s.ISpec<global::Neon.Operator.Resources.V1CronTab.V1CronTabSpec>
     {{
         public V1CronTab()
         {{
@@ -72,28 +58,31 @@ namespace Neon.Operator.Resources
             Kind = ""CronTab"";
         }}
 
-        public string ApiVersion {{ get; set; }}
-        public string Kind {{ get; set; }}
-        public V1ObjectMeta Metadata {{ get; set; }}
-        public global::Neon.Operator.Resources.V1CronTabSpec Spec {{ get; set; }}
+        public global::System.String ApiVersion {{ get; set; }}
+        public global::System.String Kind {{ get; set; }}
+        public global::k8s.Models.V1ObjectMeta Metadata {{ get; set; }}
+        public global::Neon.Operator.Resources.V1CronTab.V1CronTabSpec Spec {{ get; set; }}
     }}
 }}").Should().BeTrue();
 
-            testCompilation.HasOutputSyntax($@"using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using Neon.Operator.Attributes;
-using Neon.Operator.Resources;
-using k8s;
-using k8s.Models;
-
-namespace Neon.Operator.Resources
+            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
 {{
-    public class V1CronTabSpec
+    public partial class V1CronTab
     {{
-        public string CronSpec {{ get; set; }}
-        public string Image {{ get; set; }}
-        public long? Replicas {{ get; set; }}
+        public class V1CronTabSpec
+        {{
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""cronSpec"")]
+            public string CronSpec {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""image"")]
+            public string Image {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""replicas"")]
+            public global::System.Int64? Replicas {{ get; set; }}
+        }}
     }}
 }}").Should().BeTrue();
 
@@ -104,25 +93,21 @@ namespace Neon.Operator.Resources
         [Fact]
         public void TestV1ServiceMonitor()
         {
+            var crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(File.ReadAllText("CRDs/servicemonitor.yaml"), strict: false, stringTypeDeserialization: false);
+
+
             var testCompilation = new TestCompilationBuilder()
                 .AddSourceGenerator<CrdClassGenerator>()
                 .AddAdditionalFilePath("CRDs/servicemonitor.yaml")
                 .Build();
 
             var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
+            var syntax = string.Join(Environment.NewLine, syntaxStrings);
 
-            testCompilation.HasOutputSyntax($@"using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using Neon.Operator.Attributes;
-using Neon.Operator.Resources;
-using k8s;
-using k8s.Models;
-
-namespace Neon.Operator.Resources
+            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
 {{
-    [KubernetesEntityAttribute(Group = ""monitoring.coreos.com"", Kind = ""ServiceMonitor"", ApiVersion = ""v1"", PluralName = ""servicemonitors"")]
-    public class V1ServiceMonitor : IKubernetesObject<V1ObjectMeta>, ISpec<global::Neon.Operator.Resources.V1ServiceMonitorSpec>
+    [global::k8s.Models.KubernetesEntityAttribute(Group = ""monitoring.coreos.com"", Kind = ""ServiceMonitor"", ApiVersion = ""v1"", PluralName = ""servicemonitors"")]
+    public partial class V1ServiceMonitor : global::k8s.IKubernetesObject<global::k8s.Models.V1ObjectMeta>, global::k8s.ISpec<global::Neon.Operator.Resources.V1ServiceMonitor.V1ServiceMonitorSpec>
     {{
         public V1ServiceMonitor()
         {{
@@ -130,42 +115,145 @@ namespace Neon.Operator.Resources
             Kind = ""ServiceMonitor"";
         }}
 
-        public string ApiVersion {{ get; set; }}
-        public string Kind {{ get; set; }}
-        public V1ObjectMeta Metadata {{ get; set; }}
-        public global::Neon.Operator.Resources.V1ServiceMonitorSpec Spec {{ get; set; }}
+        public global::System.String ApiVersion {{ get; set; }}
+        public global::System.String Kind {{ get; set; }}
+        public global::k8s.Models.V1ObjectMeta Metadata {{ get; set; }}
+        public global::Neon.Operator.Resources.V1ServiceMonitor.V1ServiceMonitorSpec Spec {{ get; set; }}
     }}
 }}").Should().BeTrue();
 
-            testCompilation.HasOutputSyntax($@"using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using Neon.Operator.Attributes;
-using Neon.Operator.Resources;
-using k8s;
-using k8s.Models;
-
-namespace Neon.Operator.Resources
+            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
 {{
-    public class V1ServiceMonitorSpec
+    public partial class V1ServiceMonitor
     {{
-        public global::Neon.Operator.Resources.AttachMetadata AttachMetadata {{ get; set; }}
-        public List<global::Neon.Operator.Resources.Endpoint> Endpoints {{ get; set; }}
-        public string JobLabel {{ get; set; }}
-        public long? KeepDroppedTargets {{ get; set; }}
-        public long? LabelLimit {{ get; set; }}
-        public long? LabelNameLengthLimit {{ get; set; }}
-        public long? LabelValueLengthLimit {{ get; set; }}
-        public global::Neon.Operator.Resources.NamespaceSelector NamespaceSelector {{ get; set; }}
-        public List<string> PodTargetLabels {{ get; set; }}
-        public long? SampleLimit {{ get; set; }}
-        public global::Neon.Operator.Resources.Selector Selector {{ get; set; }}
-        public List<string> TargetLabels {{ get; set; }}
-        public long? TargetLimit {{ get; set; }}
+        public class V1ServiceMonitorSpec
+        {{
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""attachMetadata"")]
+            public global::Neon.Operator.Resources.V1ServiceMonitor.AttachMetadata AttachMetadata {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""endpoints"")]
+            public global::System.Collections.Generic.List<global::Neon.Operator.Resources.V1ServiceMonitor.Endpoint> Endpoints {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""jobLabel"")]
+            public string JobLabel {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""keepDroppedTargets"")]
+            public global::System.Int64? KeepDroppedTargets {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""labelLimit"")]
+            public global::System.Int64? LabelLimit {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""labelNameLengthLimit"")]
+            public global::System.Int64? LabelNameLengthLimit {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""labelValueLengthLimit"")]
+            public global::System.Int64? LabelValueLengthLimit {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""namespaceSelector"")]
+            public global::Neon.Operator.Resources.V1ServiceMonitor.NamespaceSelector NamespaceSelector {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""podTargetLabels"")]
+            public global::System.Collections.Generic.List<global::System.String> PodTargetLabels {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""sampleLimit"")]
+            public global::System.Int64? SampleLimit {{ get; set; }}
+
+            [global::System.ComponentModel.DataAnnotations.RequiredAttribute]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""selector"")]
+            public global::Neon.Operator.Resources.V1ServiceMonitor.Selector Selector {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""targetLabels"")]
+            public global::System.Collections.Generic.List<global::System.String> TargetLabels {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""targetLimit"")]
+            public global::System.Int64? TargetLimit {{ get; set; }}
+        }}
     }}
 }}").Should().BeTrue();
 
-            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(23);
+            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+{{
+    public partial class V1ServiceMonitor
+    {{
+        [global::System.Text.Json.Serialization.JsonConverterAttribute(typeof(global::System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
+        public enum ActionType
+        {{
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""Replace"")]
+            Replace,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""Keep"")]
+            Keep,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""Drop"")]
+            Drop,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""HashMod"")]
+            HashMod,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""LabelMap"")]
+            LabelMap,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""LabelDrop"")]
+            LabelDrop,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""LabelKeep"")]
+            LabelKeep,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""Lowercase"")]
+            Lowercase,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""Uppercase"")]
+            Uppercase,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""KeepEqual"")]
+            KeepEqual,
+            [global::System.Runtime.Serialization.EnumMemberAttribute(Value = ""DropEqual"")]
+            DropEqual
+        }}
+    }}
+}}").Should().BeTrue();
+
+            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+{{
+    public partial class V1ServiceMonitor
+    {{
+        public class MetricRelabeling
+        {{
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""action"")]
+            public ActionType Action {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""modulus"")]
+            public global::System.Int64? Modulus {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""regex"")]
+            public string Regex {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""replacement"")]
+            public string Replacement {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""separator"")]
+            public string Separator {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""sourceLabels"")]
+            public global::System.Collections.Generic.List<global::System.String> SourceLabels {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""targetLabel"")]
+            public string TargetLabel {{ get; set; }}
+        }}
+    }}
+}}").Should().BeTrue();
+
+            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(27);
         }
 
         [Fact]
@@ -209,18 +297,17 @@ namespace Neon.Operator.Resources
             };
 
             // create servicemonitor with same values using roslyn generated classes.
-
             var sm1 = new Neon.Operator.Resources.V1ServiceMonitor().Initialize();
-            sm1.Spec = new Neon.Operator.Resources.V1ServiceMonitorSpec()
+            sm1.Spec = new Neon.Operator.Resources.V1ServiceMonitor.V1ServiceMonitorSpec()
             {
                 Endpoints = [
-                    new Neon.Operator.Resources.Endpoint(){
+                    new Neon.Operator.Resources.V1ServiceMonitor.Endpoint(){
                         Interval = "1m",
                         HonorLabels = true,
                         TargetPort = 999,
                         Path = "/metrics",
                         Port = "http-metrics",
-                        Scheme = "https"
+                        Scheme = Neon.Operator.Resources.V1ServiceMonitor.SchemeType.Https
                     }
                 ],
                 JobLabel = "job-label",
@@ -228,7 +315,7 @@ namespace Neon.Operator.Resources
                 LabelNameLengthLimit = 10,
                 SampleLimit = 10,
                 LabelValueLengthLimit = 10,
-                NamespaceSelector = new Neon.Operator.Resources.NamespaceSelector()
+                NamespaceSelector = new Neon.Operator.Resources.V1ServiceMonitor.NamespaceSelector()
                 {
                     MatchNames = ["foo", "bar"],
                     Any = false
@@ -236,10 +323,10 @@ namespace Neon.Operator.Resources
                 TargetLabels = ["foo", "123"],
                 PodTargetLabels = ["foo"],
                 TargetLimit = null,
-                Selector = new Neon.Operator.Resources.Selector()
+                Selector = new Neon.Operator.Resources.V1ServiceMonitor.Selector()
                 {
                     MatchExpressions = [
-                        new Neon.Operator.Resources.MatchExpression() {
+                        new Neon.Operator.Resources.V1ServiceMonitor.MatchExpression() {
                             Key = "foo",
                             Operator = "bar"
                         }
@@ -255,13 +342,28 @@ namespace Neon.Operator.Resources
                 },
                 WriteIndented          = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                PropertyNamingPolicy   = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy   = JsonNamingPolicy.CamelCase,
             };
 
             var sm0String = KubernetesJson.Serialize(sm0, options);
             var sm1String = KubernetesJson.Serialize(sm1, options);
 
             sm0String.Should().Be(sm1String);
+        }
+
+        [Fact]
+        public void TestCsv()
+        {
+            var crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(File.ReadAllText("CRDs/csv.yaml"), strict: false, stringTypeDeserialization: false);
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CrdClassGenerator>()
+                .AddAdditionalFilePath("CRDs/csv.yaml")
+                .Build();
+
+            var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
+
+            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(34);
         }
     }
 

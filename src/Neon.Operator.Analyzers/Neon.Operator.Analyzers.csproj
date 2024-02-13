@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <PackageReference Include="Fractions" Version="7.2.1" GeneratePathProperty="true" />
+        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" GeneratePathProperty="true" />
         <PackageReference Include="Microsoft.CodeAnalysis" Version="4.8.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />
@@ -61,6 +62,7 @@
     </Choose>
 
     <ItemGroup>
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
 
@@ -73,6 +75,7 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PKGFractions)\lib\netstandard2.0\Fractions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGKubernetesClient_Basic)\lib\netstandard2.0\KubernetesClient.Basic.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGKubernetesClient_Models)\lib\netstandard2.0\KubernetesClient.Models.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PKGMacross_Json_Extensions)\lib\netstandard2.0\Macross.Json.Extensions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Rest_ClientRuntime)\lib\netstandard2.0\Microsoft.Rest.ClientRuntime.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" IncludeRuntimeDependency="false" />
@@ -82,11 +85,13 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PKGSystemTextJson_JsonDiffPatch)\lib\netstandard2.0\SystemTextJson.JsonDiffPatch.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGYamlDotNet)\lib\netstandard2.0\YamlDotNet.dll" IncludeRuntimeDependency="false" />
             <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            <None Include="$(OutputPath)\Neon.Kubernetes.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\Neon.Operator.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGFractions)\lib\netstandard2.0\Fractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGKubernetesClient_Basic)\lib\netstandard2.0\KubernetesClient.Basic.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGKubernetesClient_Models)\lib\netstandard2.0\KubernetesClient.Models.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            <None Include="$(PKGMacross_Json_Extensions)\lib\netstandard2.0\Macross.Json.Extensions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGMicrosoft_Rest_ClientRuntime)\lib\netstandard2.0\Microsoft.Rest.ClientRuntime.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

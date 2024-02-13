@@ -93,5 +93,11 @@ namespace Test.Analyzers
             var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
             output.Should().BeEquivalentTo(expectedCrd.TrimEnd());
         }
+
+        [Fact]
+        public void TestNeonClusterJob()
+        {
+
+        }
     }
 }
