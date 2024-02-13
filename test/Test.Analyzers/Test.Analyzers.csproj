@@ -79,7 +79,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\neonsdk\Lib\Neon.Roslyn.XUnit\Neon.Roslyn.XUnit.csproj" />
+        <ProjectReference Include="..\..\..\neonsdk\Lib\Neon.Roslyn.XUnit\Neon.Roslyn.Xunit.csproj" />
         <ProjectReference Include="..\..\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" />
         <ProjectReference Include="..\..\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
     </ItemGroup>
