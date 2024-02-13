@@ -147,6 +147,7 @@ try
         Write-Info "NeonSdkVersion: $neonSdkVersion"
 
         Publish -project Neon.Kubernetes                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Kubernetes.Core           -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
         Publish -project Neon.Kubernetes.Resources      -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
         Publish -project Neon.Operator                  -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
         Publish -project Neon.Operator.Analyzers        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
