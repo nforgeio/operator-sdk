@@ -16,7 +16,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -29,7 +28,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.K8s.Core;
-using Neon.Operator.Analyzers.Generators;
+using Neon.Operator.Analyzers;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn.Xunit;
 

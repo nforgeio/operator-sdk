@@ -34,13 +34,9 @@ using Microsoft.CodeAnalysis.Text;
 
 using Neon.K8s.Core;
 
-using Newtonsoft.Json.Linq;
-
-using YamlDotNet.Core;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace Neon.Operator.Analyzers.Generators
+namespace Neon.Operator.Analyzers
 {
     [Generator]
     public class CrdClassGenerator : ISourceGenerator
