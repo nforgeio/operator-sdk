@@ -32,7 +32,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-using Neon.Kubernetes.Core;
+using Neon.K8s.Core;
 
 using Newtonsoft.Json.Linq;
 

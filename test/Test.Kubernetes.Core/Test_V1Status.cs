@@ -19,7 +19,7 @@ using FluentAssertions;
 
 using k8s.Models;
 
-using Neon.Kubernetes.Core;
+using Neon.K8s.Core;
 
 namespace TestKubernetesCore
 {
@@ -30,10 +30,9 @@ namespace TestKubernetesCore
         {
             var v1Status = new V1Status { Message = "test message", Status = "test status" };
 
-            var yaml = KubernetesHelper.YamlSerialize(v1Status);
             var json = KubernetesHelper.JsonSerialize(v1Status);
 
-            yaml.Should().NotBeNull();
+            json.Should().Be($@"""test message""");
         }
 
         [Fact]
@@ -45,10 +44,9 @@ namespace TestKubernetesCore
                 Status = new V1NamespaceStatus() { Phase = "test termating" },
             };
 
-            var yaml = KubernetesHelper.YamlSerialize(corev1Namespace);
             var json = KubernetesHelper.JsonSerialize(corev1Namespace);
 
-            yaml.Should().NotBeNull();
+            json.Should().Be($@"{{""metadata"":{{""name"":""test name""}},""status"":{{""phase"":""test termating""}}}}");
         }
     }
 }

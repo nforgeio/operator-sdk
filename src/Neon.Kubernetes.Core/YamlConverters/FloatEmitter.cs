@@ -24,7 +24,7 @@ using YamlDotNet.Serialization.EventEmitters;
 using YamlDotNet.Serialization;
 using YamlDotNet.Core.Events;
 
-namespace Neon.Kubernetes.Core.YamlConverters
+namespace Neon.K8s.Core.YamlConverters
 {
     internal class FloatEmitter : ChainedEventEmitter
     {

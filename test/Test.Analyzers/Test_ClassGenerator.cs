@@ -28,7 +28,7 @@ using FluentAssertions;
 using k8s;
 using k8s.Models;
 
-using Neon.Kubernetes.Core;
+using Neon.K8s.Core;
 using Neon.Operator.Analyzers.Generators;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn.Xunit;

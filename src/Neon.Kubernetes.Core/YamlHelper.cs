@@ -27,14 +27,14 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 
-using Neon.Kubernetes.Core.YamlConverters;
+using Neon.K8s.Core.YamlConverters;
 
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Neon.Kubernetes.Core
+namespace Neon.K8s.Core
 {
     public static partial class KubernetesHelper
     {

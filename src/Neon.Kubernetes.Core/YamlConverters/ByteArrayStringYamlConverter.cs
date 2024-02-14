@@ -23,7 +23,7 @@ using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
-namespace Neon.Kubernetes.Core.YamlConverters
+namespace Neon.K8s.Core.YamlConverters
 {
     internal class ByteArrayStringYamlConverter : IYamlTypeConverter
     {

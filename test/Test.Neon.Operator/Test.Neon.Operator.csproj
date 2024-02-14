@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <RootNamespace>TestKubeOperator</RootNamespace>
         <IsPackable>false</IsPackable>
-        <AssemblyName>Test.Neon.Kube</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
