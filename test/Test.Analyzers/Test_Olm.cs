@@ -15,20 +15,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using k8s.Models;
-using Neon.IO;
-using Neon.Kubernetes.Resources.OperatorLifecycleManager;
-using Neon.Operator.Analyzers;
-using Neon.Operator.Analyzers.Generators;
-using Neon.Operator.Attributes;
 using System.IO;
+
 using FluentAssertions;
+
+using k8s.Models;
+
+using Neon.IO;
+using Neon.Operator.Analyzers.Generators;
 
 namespace Test.Analyzers
 {
@@ -38,9 +33,9 @@ namespace Test.Analyzers
         public void Test_OlmAttributes()
         {
             var source = $@"
-[assembly: OperatorName(Name = ""foo"")]
-[assembly: OperatorDisplayName(""Example Operator"")]
-";
+using Neon.Operator.OperatorLifecycleManager;
+using Test.Analyzers;
+[assembly: OwnedEntity<V1TestResource>]";
             using var temp = new TempFolder();
 
             var optionsProvider = new OperatorAnalyzerConfigOptionsProvider();
@@ -55,8 +50,8 @@ namespace Test.Analyzers
             var generatedCode = CompilationHelper.GetGeneratedOutput<OlmGenerator>(
                 source: source,
                 additionalAssemblies: [
-                    typeof(OperatorNameAttribute).Assembly,
-                    typeof(V1ClusterServiceVersion).Assembly,
+                    typeof(KubernetesEntityAttribute).Assembly,
+                    typeof(V1TestResource).Assembly,
                 ],
                 optionsProvider: optionsProvider);
 

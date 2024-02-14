@@ -35,6 +35,7 @@
         <ProjectReference Include="..\..\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
         <ProjectReference Include="..\..\src\Neon.Kubernetes\Neon.Kubernetes.csproj" />
         <ProjectReference Include="..\..\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+        <ProjectReference Include="..\..\src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj" />
     </ItemGroup>
 
 </Project>

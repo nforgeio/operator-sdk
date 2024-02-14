@@ -21,12 +21,13 @@ using System.IO;
 using System.Linq;
 
 using k8s;
+using k8s.Models;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using Neon.Kubernetes.Resources.OperatorLifecycleManager;
 using Neon.Operator.Analyzers.Receivers;
+using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
@@ -36,6 +37,10 @@ namespace Neon.Operator.Analyzers.Generators
     [Generator]
     public class OlmGenerator : ISourceGenerator
     {
+        private GeneratorExecutionContext context;
+        private MetadataLoadContext metadataLoadContext;
+        private List<AttributeSyntax> attributes;
+
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new OlmReceiver());
@@ -48,14 +53,14 @@ namespace Neon.Operator.Analyzers.Generators
                 return;
             }
 
+            this.context = context;
+            metadataLoadContext = new MetadataLoadContext(context.Compilation);
+            attributes = ((OlmReceiver)context.SyntaxReceiver)?.Attributes;
 
-            var attrs = context.Compilation.Assembly.GetAttributes();
-            var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
-            var olmAttributes             = ((OlmReceiver)context.SyntaxReceiver)?.Attributes;
-            var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
+            var operatorName = GetAttribute<OperatorNameAttribute>();
+            var displayName  = GetAttribute<OperatorDisplayNameAttribute>();
+            var ownedEntities  = GetOwnedEntities();
 
-            var operatorName = olmAttributes.GetAttribute<OperatorNameAttribute>();
-            var displayName  = olmAttributes.GetAttribute<OperatorDisplayNameAttribute>();
 
             var csv = new V1ClusterServiceVersion().Initialize();
 
@@ -68,12 +73,59 @@ namespace Neon.Operator.Analyzers.Generators
             var outputPath = Path.Combine(targetDir, "clusterserviceversion.yaml");
             File.WriteAllText(outputPath, outputString);
         }
+
+        public List<IOwnedEntity> GetOwnedEntities()
+        {
+            var results = new List<IOwnedEntity>();
+
+            var ownedEntities = context.Compilation.Assembly.GetAttributes()
+                .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith("OwnedEntity"));
+
+            foreach (var entity in ownedEntities)
+            {
+                var args       = entity.NamedArguments;
+                var etype      = (INamedTypeSymbol)entity.AttributeClass.TypeArguments.FirstOrDefault();
+                var entityType = metadataLoadContext.ResolveType(etype);
+                var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
+
+                results.Add(new OwnedEntityAttribute(
+                    name: $"{metadata.PluralName}.{metadata.Group}",
+                    version: metadata.ApiVersion,
+                    kind: metadata.Kind));
+            }
+
+            return results;
+        }
+
+        public T GetAttribute<T>()
+        {
+            AttributeSyntax syntax = null;
+
+            syntax = attributes
+                .Where(a => a.Name.ToFullString() == typeof(T).Name)
+                .FirstOrDefault();
+
+            if (syntax == null)
+            {
+                var name = typeof(T).Name.Replace("Attribute", "");
+
+                syntax = attributes
+                    .Where(a => a.Name.ToFullString() == name)
+                    .FirstOrDefault();
+            }
+
+            if (syntax == null)
+            {
+                return default(T);
+            }
+
+            return syntax.GetCustomAttribute<T>();
+        }
     }
 
     public static class OlmExtensions
     {
         public static T GetCustomAttribute<T>(this AttributeSyntax attributeData)
-            where T : class, new()
         {
             if (attributeData == null)
             {
@@ -81,7 +133,6 @@ namespace Neon.Operator.Analyzers.Generators
             }
 
             T attribute;
-            attribute = (T)Activator.CreateInstance(typeof(T));
 
             // Check for constructor arguments
             if (attributeData.ArgumentList.Arguments.Any(a => a.NameEquals == null)
@@ -124,28 +175,6 @@ namespace Neon.Operator.Analyzers.Generators
             return attribute;
         }
 
-        public static T GetAttribute<T>(this List<AttributeSyntax> attributes)
-            where T : Attribute, new()
-        {
-            var syntax = attributes
-                .Where(a => a.Name.ToFullString() == typeof(T).Name)
-                .FirstOrDefault();
-
-            if (syntax == null)
-            {
-                var name = typeof(T).Name.Replace("Attribute", "");
-
-                syntax = attributes
-                    .Where(a => a.Name.ToFullString() == name)
-                    .FirstOrDefault();
-            }
-
-            if (syntax == null)
-            {
-                return null;
-            }
-
-            return syntax.GetCustomAttribute<T>();
-        }
+        
     }
 }

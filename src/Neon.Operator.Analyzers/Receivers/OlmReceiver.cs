@@ -21,18 +21,25 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using Neon.Kubernetes.Resources.OperatorLifecycleManager;
+using Neon.Operator.OperatorLifecycleManager;
+using Neon.Operator.OperatorLifecycleManager;
 
 namespace Neon.Operator.Analyzers.Receivers
 {
     public class OlmReceiver : ISyntaxReceiver
     {
         private List<string> attributeNames = [
-            "OperatorName",
-            nameof(OperatorNameAttribute),
-            "OperatorDisplayName",
+            nameof(AnnotationAttribute),
+            nameof(DescriptionAttribute),
+            nameof(InstallModeAttribute),
+            nameof(MaintainerAttribute),
+            nameof(MaturityAttribute),
+            nameof(MinKubeVersionAttribute),
             nameof(OperatorDisplayNameAttribute),
-            "OperatorDescription",
+            nameof(OperatorKeywordAttribute),
+            nameof(OperatorNameAttribute),
+            nameof(OperatorVersionAttribute),
+            nameof(ProviderAttribute),
             ];
 
         public List<AttributeSyntax> Attributes { get; } = new List<AttributeSyntax>();

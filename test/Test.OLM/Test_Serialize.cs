@@ -20,7 +20,7 @@ using FluentAssertions;
 using k8s;
 using k8s.Models;
 
-using Neon.Kubernetes.Resources.OperatorLifecycleManager;
+using Neon.Operator.OperatorLifecycleManager;
 
 namespace TestOperatorLifecycleManager
 {

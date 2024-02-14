@@ -54,7 +54,8 @@
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes\Neon.Kubernetes.csproj" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
-        <ProjectReference Include="..\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj" />
     </ItemGroup>
 
     <ItemGroup>
