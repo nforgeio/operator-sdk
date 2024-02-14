@@ -60,7 +60,13 @@ namespace Neon.Operator.Analyzers
 
             var metadataLoadContext = new MetadataLoadContext(context.Compilation);
             var ValidatingWebhooks = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
-            var namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
+
+            if (ValidatingWebhooks.Count == 0)
+            {
+                return;
+            }
+
+            var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
             bool certManagerDisabled      = false;
             bool autoRegisterWebhooks     = false;
             string operatorName           = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
