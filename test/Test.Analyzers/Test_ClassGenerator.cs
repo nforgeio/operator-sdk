@@ -90,6 +90,60 @@ namespace Test.Analyzers
         }
 
         [Fact]
+        public void TestChangeNamespace()
+        {
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CrdClassGenerator>()
+                .AddOption("build_property.CrdTargetNamespace", "Test.Namespace")
+                .AddAdditionalFilePath("CRDs/crontab.yaml")
+                .Build();
+
+            var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
+
+            testCompilation.HasOutputSyntax($@"namespace Test.Namespace
+{{
+    [global::k8s.Models.KubernetesEntityAttribute(Group = ""stable.example.com"", Kind = ""CronTab"", ApiVersion = ""v1"", PluralName = ""crontabs"")]
+    public partial class V1CronTab : global::k8s.IKubernetesObject<global::k8s.Models.V1ObjectMeta>, global::k8s.ISpec<global::Test.Namespace.V1CronTab.V1CronTabSpec>
+    {{
+        public V1CronTab()
+        {{
+            ApiVersion = ""stable.example.com/v1"";
+            Kind = ""CronTab"";
+        }}
+
+        public global::System.String ApiVersion {{ get; set; }}
+        public global::System.String Kind {{ get; set; }}
+        public global::k8s.Models.V1ObjectMeta Metadata {{ get; set; }}
+        public global::Test.Namespace.V1CronTab.V1CronTabSpec Spec {{ get; set; }}
+    }}
+}}").Should().BeTrue();
+
+            testCompilation.HasOutputSyntax($@"namespace Test.Namespace
+{{
+    public partial class V1CronTab
+    {{
+        public class V1CronTabSpec
+        {{
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""cronSpec"")]
+            public string CronSpec {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""image"")]
+            public string Image {{ get; set; }}
+
+            [global::System.ComponentModel.DefaultValueAttribute(null)]
+            [global::System.Text.Json.Serialization.JsonPropertyNameAttribute(""replicas"")]
+            public global::System.Int64? Replicas {{ get; set; }}
+        }}
+    }}
+}}").Should().BeTrue();
+
+            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(3);
+
+        }
+
+        [Fact]
         public void TestV1ServiceMonitor()
         {
             var crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(File.ReadAllText("CRDs/servicemonitor.yaml"), strict: false, stringTypeDeserialization: false);

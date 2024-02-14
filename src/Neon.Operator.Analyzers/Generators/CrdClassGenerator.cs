@@ -41,9 +41,6 @@ namespace Neon.Operator.Analyzers
     [Generator]
     public class CrdClassGenerator : ISourceGenerator
     {
-        private HashSet<string> sources;
-        private GeneratorExecutionContext context;
-
         public void Initialize(GeneratorInitializationContext context)
         {
         }
@@ -52,8 +49,10 @@ namespace Neon.Operator.Analyzers
         {
             //System.Diagnostics.Debugger.Launch();
 
-            this.sources = new HashSet<string>();
-            this.context = context;
+            var sources = new HashSet<string>();
+
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CrdTargetNamespace", out var targetNamespace);
+            targetNamespace ??= "Neon.Operator.Resources";
 
             foreach (var file in context.AdditionalFiles)
             {
@@ -130,7 +129,7 @@ namespace Neon.Operator.Analyzers
                     if (version.Schema.OpenAPIV3Schema.Properties.ContainsKey("spec"))
                     {
                         var specClassName = GetSpecClassName(version: version.Name, kind: crd.Spec.Names.Kind);
-                        var refTypeName = $"global::Neon.Operator.Resources.{className}.{specClassName}";
+                        var refTypeName = $"global::{targetNamespace}.{className}.{specClassName}";
 
                         crdClass = crdClass
                             .AddBaseListTypes(
@@ -145,15 +144,18 @@ namespace Neon.Operator.Analyzers
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))));
 
                         AddObject(
-                            specClassName,
-                            version.Schema.OpenAPIV3Schema.Properties["spec"],
-                            className);
+                            name:            specClassName,
+                            properties:      version.Schema.OpenAPIV3Schema.Properties["spec"],
+                            targetNamespace: targetNamespace,
+                            context:         context,
+                            sources:         sources,
+                            baseClassName:   className);
                     }
 
                     if (version.Schema.OpenAPIV3Schema.Properties.ContainsKey("status"))
                     {
                         var statusClassName = GetStatusClassName(version: version.Name, kind: crd.Spec.Names.Kind);
-                        var refTypeName = $"global::Neon.Operator.Resources.{className}.{statusClassName}";
+                        var refTypeName = $"global::{targetNamespace}.{className}.{statusClassName}";
 
                         crdClass = crdClass
                             .AddBaseListTypes(
@@ -168,14 +170,17 @@ namespace Neon.Operator.Analyzers
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))));
 
                         AddObject(
-                            statusClassName,
-                            version.Schema.OpenAPIV3Schema.Properties["status"],
-                            className);
+                            name:            statusClassName,
+                            properties:      version.Schema.OpenAPIV3Schema.Properties["status"],
+                            targetNamespace: targetNamespace,
+                            context:         context,
+                            sources:         sources,
+                            baseClassName:   className);
                     }
 
                     compilation = compilation
                         .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                            NamespaceDeclaration(ParseName("Neon.Operator.Resources"))
+                            NamespaceDeclaration(ParseName(targetNamespace))
                             .AddMembers(crdClass)));
 
                     var compilationString = compilation.NormalizeWhitespace().ToString();
@@ -190,10 +195,13 @@ namespace Neon.Operator.Analyzers
         }
 
         private PropertyDeclarationSyntax AddProperty(
-            string name,
-            V1JSONSchemaProps properties,
-            bool required,
-            string baseClassName = null)
+            string                    name,
+            V1JSONSchemaProps         properties,
+            bool                      required,
+            string                    targetNamespace,
+            GeneratorExecutionContext context,
+            HashSet<string>           sources,
+            string                    baseClassName = null)
         {
             PropertyDeclarationSyntax propertyDeclaration = null;
 
@@ -246,7 +254,13 @@ namespace Neon.Operator.Analyzers
 
                     if (properties.EnumProperty?.Count > 0)
                     {
-                        AddEnum(name, properties.EnumProperty, baseClassName);
+                        AddEnum(
+                            name:            name,
+                            properties:      properties.EnumProperty,
+                            targetNamespace: targetNamespace,
+                            context:         context,
+                            sources:         sources,
+                            baseClassName:   baseClassName);
 
                         typeName = FirstLetterToUpper(name) + "Type";
                     }
@@ -305,12 +319,15 @@ namespace Neon.Operator.Analyzers
                         case Constants.ObjectTypeString:
 
                             var arrayTypeName = FirstLetterToUpper(name).TrimEnd('s');
-                            var arrayReferenceType = $"global::Neon.Operator.Resources.{baseClassName}.{arrayTypeName}";
+                            var arrayReferenceType = $"global::{targetNamespace}.{baseClassName}.{arrayTypeName}";
 
                             AddObject(
-                                arrayTypeName,
-                                items,
-                                baseClassName);
+                                name:            arrayTypeName,
+                                properties:      items,
+                                targetNamespace: targetNamespace,
+                                context:         context,
+                                sources:         sources,
+                                baseClassName:   baseClassName);
 
                             propertyDeclaration = PropertyDeclaration(
                                 type:       ParseTypeName($"global::{typeof(List<>).Namespace}.List<{arrayReferenceType}>"),
@@ -349,12 +366,15 @@ namespace Neon.Operator.Analyzers
                     }
 
                     var objTypeName = FirstLetterToUpper(name);
-                    var objReferenceType = $"global::Neon.Operator.Resources.{baseClassName}.{objTypeName}";
+                    var objReferenceType = $"global::{targetNamespace}.{baseClassName}.{objTypeName}";
 
                     AddObject(
-                        name,
-                        properties,
-                        baseClassName);
+                        name:            name,
+                        properties:      properties,
+                        targetNamespace: targetNamespace,
+                        context:         context,
+                        sources:         sources,
+                        baseClassName:   baseClassName);
 
                     propertyDeclaration = PropertyDeclaration(
                         type:       ParseTypeName(objReferenceType),
@@ -375,14 +395,17 @@ namespace Neon.Operator.Analyzers
                         var anyOfType = properties.AnyOf.First();
 
                         var anyOfTypeName = FirstLetterToUpper(name);
-                        var anyOfReferenceType = $"global::Neon.Operator.Resources.{baseClassName}.{anyOfTypeName}";
+                        var anyOfReferenceType = $"global::{targetNamespace}.{baseClassName}.{anyOfTypeName}";
 
                         if (anyOfType.Type == Constants.ObjectTypeString)
                         {
                             AddObject(
-                                name,
-                                anyOfType,
-                                baseClassName);
+                                name:            name,
+                                properties:      anyOfType,
+                                targetNamespace: targetNamespace,
+                                context:         context,
+                                sources:         sources,
+                                baseClassName:   baseClassName);
 
                             propertyDeclaration = PropertyDeclaration(
                                 type:       ParseTypeName(anyOfReferenceType),
@@ -398,7 +421,13 @@ namespace Neon.Operator.Analyzers
                         }
                         else
                         {
-                            return AddProperty(name, anyOfType, required);
+                            return AddProperty(
+                                name:            name,
+                                properties:      anyOfType,
+                                required:        required,
+                                targetNamespace: targetNamespace,
+                                context:         context,
+                                sources:         sources);
                         }
                     }
                     break;
@@ -426,16 +455,22 @@ namespace Neon.Operator.Analyzers
             return propertyDeclaration;
         }
 
-        private void AddEnum(string name, IList<object> properties, string baseClassName)
+        private void AddEnum(
+            string                    name,
+            IList<object>             properties,
+            string                    targetNamespace,
+            GeneratorExecutionContext context,
+            HashSet<string>           sources,
+            string                    baseClassName)
         {
             name = FirstLetterToUpper(name) + "Type";
 
-            if (this.sources.Contains(name))
+            if (sources.Contains(name))
             {
                 return;
             }
 
-            this.sources.Add(name);
+            sources.Add(name);
 
             var stringProperties = properties.Select(s => (string)s).ToList();
             var stringGroups = stringProperties.GroupBy(s => s.ToLower());
@@ -486,7 +521,7 @@ namespace Neon.Operator.Analyzers
 
             compilation = compilation
                    .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                       NamespaceDeclaration(ParseName($"Neon.Operator.Resources"))
+                       NamespaceDeclaration(ParseName(targetNamespace))
                        .AddMembers(ClassDeclaration(baseClassName)
                             .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
                             .AddMembers(classDeclaration))));
@@ -503,18 +538,21 @@ namespace Neon.Operator.Analyzers
         private void AddObject(
             string name,
             V1JSONSchemaProps properties,
+            string targetNamespace,
+            GeneratorExecutionContext context,
+            HashSet<string> sources,
             string baseClassName = null)
         {
             try
             {
                 name = FirstLetterToUpper(name);
 
-                if (this.sources.Contains(name))
+                if (sources.Contains(name))
                 {
                     return;
                 }
 
-                this.sources.Add(name);
+                sources.Add(name);
 
                 var compilation = CompilationUnit();
 
@@ -524,7 +562,14 @@ namespace Neon.Operator.Analyzers
                 foreach (var p in properties.Properties)
                 {
                     var required = properties.Required?.Contains(p.Key) ?? false;
-                    var property = AddProperty(p.Key, p.Value, required, baseClassName);
+                    var property = AddProperty(
+                        name:            p.Key,
+                        properties:      p.Value,
+                        required:        required,
+                        targetNamespace: targetNamespace,
+                        context:         context,
+                        sources:         sources,
+                        baseClassName:   baseClassName);
 
                     if (property != null)
                     {
@@ -534,7 +579,7 @@ namespace Neon.Operator.Analyzers
 
                 compilation = compilation
                        .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                           NamespaceDeclaration(ParseName($"Neon.Operator.Resources"))
+                           NamespaceDeclaration(ParseName(targetNamespace))
                            .AddMembers(ClassDeclaration(baseClassName)
                                 .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
                                 .AddMembers(classDeclaration))));
