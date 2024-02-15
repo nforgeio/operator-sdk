@@ -22,6 +22,7 @@ using FluentAssertions;
 
 using k8s.Models;
 
+using Neon.Common;
 using Neon.IO;
 using Neon.Operator.Analyzers.Generators;
 
@@ -35,7 +36,40 @@ namespace Test.Analyzers
             var source = $@"
 using Neon.Operator.OperatorLifecycleManager;
 using Test.Analyzers;
-[assembly: OwnedEntity<V1TestResource>]";
+using TestNamespace;
+using Neon.Common;
+
+[assembly: Name(""test-operator"")]
+[assembly: DisplayName(""testaroo operator"")]
+[assembly: OwnedEntity<V1TestResource>(Description = ""This is the description"", DisplayName = TestConstants.DisplayName)]
+[assembly: Description(FullDescription = MoreTestConstants.Description, ShortDescription = ""This is a short description."")]
+[assembly: Provider(Name = ""Example"", Url = ""www.example.com"")]
+[assembly: Maintainer(Name = NeonHelper.NeonMetricsPrefix, Email = ""foo@bar.com"")]
+[assembly: Version(""1.2.3"")]
+[assembly: Maturity(""alpha"")]
+[assembly: MinKubeVersion(""1.16.0"")]
+[assembly: Keyword(""foo"", ""bar"", ""baz"")]
+[assembly: InstallMode(Supported = true, InstallMode = InstallModeType.OwnNamespace)]
+
+namespace TestNamespace
+{{
+    public static class TestConstants
+    {{
+        public const string DisplayName = ""This is the display name"";
+    }}
+
+    public static class MoreTestConstants
+    {{
+        public const string Description = $@""## This is a heading
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+culpa qui officia deserunt mollit anim id est laborum."";
+    }}
+}}
+";
             using var temp = new TempFolder();
 
             var optionsProvider = new OperatorAnalyzerConfigOptionsProvider();
@@ -52,12 +86,15 @@ using Test.Analyzers;
                 additionalAssemblies: [
                     typeof(KubernetesEntityAttribute).Assembly,
                     typeof(V1TestResource).Assembly,
+                    typeof(NeonHelper).Assembly,
                 ],
                 optionsProvider: optionsProvider);
 
             var outFile = Path.Combine(temp.Path, "clusterserviceversion.yaml");
 
             File.Exists(outFile).Should().BeTrue();
+
+            var output = File.ReadAllText(outFile);
         }
     }
 }

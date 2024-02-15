@@ -35,10 +35,10 @@ namespace Neon.Operator.Analyzers.Receivers
             nameof(MaintainerAttribute),
             nameof(MaturityAttribute),
             nameof(MinKubeVersionAttribute),
-            nameof(OperatorDisplayNameAttribute),
-            nameof(OperatorKeywordAttribute),
-            nameof(OperatorNameAttribute),
-            nameof(OperatorVersionAttribute),
+            nameof(DisplayNameAttribute),
+            nameof(KeywordAttribute),
+            nameof(NameAttribute),
+            nameof(VersionAttribute),
             nameof(ProviderAttribute),
             ];
 
@@ -61,7 +61,10 @@ namespace Neon.Operator.Analyzers.Receivers
                             var name = attr.Name;
                             var nameString = name.ToFullString();
 
-                            if (attributeNames.Contains(nameString))
+                            if (attributeNames.Contains(nameString)
+                                || attributeNames.Contains(nameString + "Attribute")
+                                || nameString.StartsWith("OwnedEntity")
+                                || nameString.StartsWith("RequiredEntity"))
                             {
                                 Attributes.Add(attr);
                             }

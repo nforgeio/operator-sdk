@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    OperatorDisplayNameAttribute.cs
+// FILE:	    Constants.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,19 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Neon.Operator.OperatorLifecycleManager
+namespace TestOperator
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
-    public sealed class OperatorDisplayNameAttribute : Attribute
+    public static class Constants
     {
-        public OperatorDisplayNameAttribute() { }
+        public const string FullDescription =  $@"## This is a heading
+some information about the operator.
 
-        public string DisplayName { get; set; }
-        public OperatorDisplayNameAttribute(string displayName)
-        {
-            this.DisplayName = displayName;
-        }
+## Another heading
+Some more information about the operator.";
     }
 }

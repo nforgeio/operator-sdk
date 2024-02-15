@@ -16,5 +16,20 @@
 // limitations under the License.
 
 
+using Neon.Operator.OperatorLifecycleManager;
+
+using TestOperator;
+
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
 
+[assembly: Name("test-operator")]
+[assembly: DisplayName("testaroo operator")]
+[assembly: OwnedEntity<V1ExampleEntity>(Description = "This is the description", DisplayName = "Example Operator")]
+[assembly: Description(ShortDescription = "this is the short description", FullDescription = Constants.FullDescription)]
+[assembly: Provider(Name = "Example", Url = "www.example.com")]
+[assembly: Maintainer(Name = "Some Corp", Email = "foo@bar.com")]
+[assembly: Version("1.2.3")]
+[assembly: Maturity("alpha")]
+[assembly: MinKubeVersion("1.16.0")]
+[assembly: Keyword("test", "app")]
+[assembly: InstallMode(Supported = true, InstallMode = InstallModeType.OwnNamespace)]

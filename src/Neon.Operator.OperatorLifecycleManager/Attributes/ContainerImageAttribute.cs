@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    OperatorKeywordAttribute.cs
+// FILE:	    ContainerImageAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -21,14 +21,26 @@ using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
-    public sealed class OperatorKeywordAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+    public sealed class ContainerImageAttribute : Attribute
     {
-        public OperatorKeywordAttribute() { }
-        public string Keyword { get; set; }
-        public OperatorKeywordAttribute(string keyword)
+        public ContainerImageAttribute() { }
+
+        /// <summary>
+        /// Repository 
+        /// </summary>
+        public string Repository { get; set; }
+
+        /// <summary>
+        /// tag
+        /// </summary>
+        public string Tag { get; set; }
+
+        public ContainerImageAttribute(string repositor, string tag)
         {
-            this.Keyword = keyword;
+            this.Repository = repositor;
+            this.Tag = tag;
         }
     }
+    
 }

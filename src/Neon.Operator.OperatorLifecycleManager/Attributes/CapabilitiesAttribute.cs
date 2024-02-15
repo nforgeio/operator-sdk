@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    CustomResourceDefinitions.cs
+// FILE:	    CapabilitiesAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,24 +15,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
+using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    /// <summary>
-    /// CustomResourceDefinitions declares all of the CRDs managed or required
-    /// by an operator being ran by ClusterServiceVersion. If the CRD is present in the Owned list, it is implicitly required.
-    /// </summary>
-    public class CustomResourceDefinitions
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+    public sealed class CapabilitiesAttribute : Attribute
     {
-        /// <summary>
-        /// CrdDescription provides details to OLM about the CRDs
-        /// </summary>
-        public List<CrdDescription> Owned {  get; set; }
+        public CapabilitiesAttribute() { }
 
         /// <summary>
-        /// CrdDescription provides details to OLM about the CRDs
+        /// Capability of the operator. 
         /// </summary>
-        public List<CrdDescription> Required {  get; set; }
+        public CapabilityLevel Capability { get; set; }
+
+        public CapabilitiesAttribute(CapabilityLevel capability)
+        {
+            this.Capability = capability;
+        }
     }
+    
 }

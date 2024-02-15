@@ -23,10 +23,22 @@ namespace Neon.Operator.OperatorLifecycleManager
     public sealed class DescriptionAttribute : Attribute
     {
         public DescriptionAttribute() { }
-        public string Description { get; set; }
-        public DescriptionAttribute(string description)
+
+        /// <summary>
+        /// Short description of the operator.
+        /// </summary>
+        public string ShortDescription { get; set; }
+
+        /// <summary>
+        /// Full description of the operator.
+        /// </summary>
+        public string FullDescription { get; set; }
+
+
+        public DescriptionAttribute(string shortDescription, string fullDescription)
         {
-            this.Description = description;
+            this.ShortDescription = shortDescription;
+            this.FullDescription = fullDescription;
         }
     }
 }

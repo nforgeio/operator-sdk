@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    CustomResourceDefinitions.cs
+// FILE:	    CapabilityLevel.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,24 +15,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    /// <summary>
-    /// CustomResourceDefinitions declares all of the CRDs managed or required
-    /// by an operator being ran by ClusterServiceVersion. If the CRD is present in the Owned list, it is implicitly required.
-    /// </summary>
-    public class CustomResourceDefinitions
+    public enum CapabilityLevel
     {
         /// <summary>
-        /// CrdDescription provides details to OLM about the CRDs
+        /// basic install level
         /// </summary>
-        public List<CrdDescription> Owned {  get; set; }
+        [EnumMember(Value = "Basic Install")]
+        BasicInstall = 0,
 
         /// <summary>
-        /// CrdDescription provides details to OLM about the CRDs
+        /// Seamless Upgrade level
         /// </summary>
-        public List<CrdDescription> Required {  get; set; }
+        [EnumMember(Value = "Seamless Upgrade")]
+        SeamlessUpgrade = 1,
+
+        /// <summary>
+        /// full lifecycle level
+        /// </summary>
+        [EnumMember(Value = "Full Lifecycle")]
+        FullLifecycle = 2,
+
+        /// <summary>
+        /// deep insights level
+        /// </summary>
+        [EnumMember(Value = "Deep Insights")]
+        DeepInsights = 3,
+
+        /// <summary>
+        /// auto pilot level
+        /// </summary>
+        [EnumMember(Value = "Auto Pilot")]
+        AutoPilot = 4
+
+
+
+
+
+
+
     }
 }

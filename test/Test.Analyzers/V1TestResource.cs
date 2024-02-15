@@ -29,6 +29,8 @@ namespace Test.Analyzers
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, ApiVersion = KubeApiVersion, Kind = KubeKind, PluralName = KubePlural)]
     [EntityScope(EntityScope.Cluster)]
+    [DependentResource<V1Deployment>]
+    [DependentResource<V1Service>()]
     public class V1TestResource : IKubernetesObject<V1ObjectMeta>, ISpec<TestSpec>, IValidate
     {
         /// <summary>

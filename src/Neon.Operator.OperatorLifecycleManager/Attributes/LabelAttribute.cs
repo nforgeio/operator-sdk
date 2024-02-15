@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    OperatorVersionAttribute.cs
+// FILE:	    LabelAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,17 +16,21 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
-    public sealed class OperatorVersionAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
+    public sealed class LabelAttribute : Attribute
     {
-        public OperatorVersionAttribute() { }
-        public string Version { get; set; }
-        public OperatorVersionAttribute(string version)
+        public LabelAttribute() { }
+        public string Key { get; set; }
+        public string Value { get; set; }
+        public LabelAttribute(string key, string value)
         {
-            this.Version = version;
+            this.Key = key;
+            this.Value = value;
         }
     }
 }

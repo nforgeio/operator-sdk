@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+using Neon.Roslyn;
+
+using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 
 namespace Neon.Operator.Analyzers
 {
@@ -228,6 +230,65 @@ namespace Neon.Operator.Analyzers
 
     internal static class RoslynExtensions
     {
+        public static T GetExpressionValue<T>(this ExpressionSyntax syntax, MetadataLoadContext metadataLoadContext)
+        {
+            if (syntax is LiteralExpressionSyntax)
+            {
+                return (T)((LiteralExpressionSyntax)syntax).Token.Value;
+            }
+            if (syntax is InvocationExpressionSyntax)
+            {
+                var expression = ((InvocationExpressionSyntax)syntax).Expression;
+
+                if (expression is IdentifierNameSyntax)
+                {
+                    if (((IdentifierNameSyntax)expression).Identifier.ValueText == "nameof")
+                    {
+                        var arg = ((InvocationExpressionSyntax)syntax).ArgumentList.Arguments.First();
+                        return (T)arg.GetLastToken().Value;
+                    }
+                }
+                return default;
+            }
+            if (syntax is MemberAccessExpressionSyntax)
+            {
+                var s = (MemberAccessExpressionSyntax)syntax;
+                var ns = s.GetNamespace();
+                var fullName = s.ToFullString();
+                var className = fullName.Substring(0, fullName.LastIndexOf('.'));
+                var propName = s.Name.Identifier.ValueText;
+
+                var c = metadataLoadContext.ResolveType($"{className}");
+
+                if (c == null)
+                {
+                    var usings = s
+                        .Ancestors()
+                        .OfType<CompilationUnitSyntax>()
+                        .FirstOrDefault()?
+                        .DescendantNodes()
+                        .OfType<UsingDirectiveSyntax>()
+                        .ToList();
+
+                    foreach (var u in usings)
+                    {
+                        var usingNs = ((UsingDirectiveSyntax)u).NamespaceOrType.ToFullString();
+                        c = metadataLoadContext.ResolveType($"{usingNs}.{className}");
+
+                        if (c != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                var member = c.GetMembers().Where(m => m.Name == propName).FirstOrDefault();
+                return (T)((RoslynFieldInfo)member).FieldSymbol.ConstantValue;
+            }
+
+            return default;
+        }
+
         public static string GetFullMetadataName(this ISymbol s)
         {
             if (s == null || IsRootNamespace(s))

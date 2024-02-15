@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    OperatorNameAttribute.cs
+// FILE:	    KeywordAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -21,14 +21,19 @@ using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
-    public sealed class OperatorNameAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
+    public sealed class KeywordAttribute : Attribute
     {
-        public OperatorNameAttribute() { }
-        public string Name { get; set; }
-        public OperatorNameAttribute(string name)
+        public KeywordAttribute() { }
+        public string Keyword { get; set; }
+        public IEnumerable<string> Keywords { get; set; }
+        public KeywordAttribute(string keyword)
         {
-            this.Name = name;
+            this.Keyword = keyword;
+        }
+        public KeywordAttribute(params string[] keywords)
+        {
+            this.Keywords = keywords;
         }
     }
 }

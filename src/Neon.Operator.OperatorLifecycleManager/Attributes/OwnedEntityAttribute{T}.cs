@@ -16,9 +16,12 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
 
 using k8s;
 using k8s.Models;
+
+using Neon.Operator.OperatorLifecycleManager;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
@@ -50,6 +53,18 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// Kind is the CamelCased singular value defined in spec.names.kind of the CRD.
         /// </summary>
         public string Kind => GetKubernetesEntityAttribute().Kind;
+
+        /// <summary>
+        /// Description of the CRD
+        /// </summary>
+        public string Description {  get; set; }
+
+        /// <summary>
+        /// DisplayName of the CRD
+        /// </summary>
+        public string DisplayName { get; set; }
+
+
 
         /// <inheritdoc/>
         public Type GetEntityType()

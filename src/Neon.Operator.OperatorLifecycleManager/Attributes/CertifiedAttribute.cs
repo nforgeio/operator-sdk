@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    CustomResourceDefinitions.cs
+// FILE:	    CertifiedAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,24 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    /// <summary>
-    /// CustomResourceDefinitions declares all of the CRDs managed or required
-    /// by an operator being ran by ClusterServiceVersion. If the CRD is present in the Owned list, it is implicitly required.
-    /// </summary>
-    public class CustomResourceDefinitions
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+    public sealed class CertifiedAttribute : Attribute
     {
-        /// <summary>
-        /// CrdDescription provides details to OLM about the CRDs
-        /// </summary>
-        public List<CrdDescription> Owned {  get; set; }
+        public CertifiedAttribute() { }
 
         /// <summary>
-        /// CrdDescription provides details to OLM about the CRDs
+        /// Certified 
         /// </summary>
-        public List<CrdDescription> Required {  get; set; }
+        public bool Certified { get; set; } = true;
+
+        public CertifiedAttribute(bool certified = true)
+        {
+            this.Certified = certified;
+        }
     }
+    
 }

@@ -37,7 +37,6 @@ namespace Neon.Operator.OperatorLifecycleManager
             this.Name    = name;
             this.Version = version;
             this.Kind    = kind;
-
         }
 
         /// <summary>
@@ -55,5 +54,15 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// Kind is the CamelCased singular value defined in spec.names.kind of the CRD.
         /// </summary>
         public string Kind { get; set; }
+
+        /// <summary>
+        /// Description of the CRD
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// DisplayName of the CRD
+        /// </summary>
+        public string DisplayName { get; set; }
     }
 }
