@@ -14,7 +14,6 @@ namespace TestOperator
         public Startup(IConfiguration configuration)
         {
             this.Configuration = configuration;
-            var x = new global::Neon.Operator.Resources.V1ServiceMonitor.Endpoint();
         }
 
         public void ConfigureServices(IServiceCollection services)
