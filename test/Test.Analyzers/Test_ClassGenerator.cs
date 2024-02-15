@@ -16,7 +16,6 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -27,13 +26,13 @@ using FluentAssertions;
 using k8s;
 using k8s.Models;
 
-using Neon.K8s.Core;
 using Neon.Operator.Analyzers;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn.Xunit;
 
 namespace Test.Analyzers
 {
+    [Collection("Analyzers")]
     public class Test_ClassGenerator
     {
         [Fact]
@@ -44,9 +43,7 @@ namespace Test.Analyzers
                 .AddAdditionalFilePath("CRDs/crontab.yaml")
                 .Build();
 
-            var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
-
-            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+            testCompilation.Should().ContainSource($@"namespace Neon.Operator.Resources
 {{
     [global::k8s.Models.KubernetesEntityAttribute(Group = ""stable.example.com"", Kind = ""CronTab"", ApiVersion = ""v1"", PluralName = ""crontabs"")]
     public partial class V1CronTab : global::k8s.IKubernetesObject<global::k8s.Models.V1ObjectMeta>, global::k8s.ISpec<global::Neon.Operator.Resources.V1CronTab.V1CronTabSpec>
@@ -62,9 +59,9 @@ namespace Test.Analyzers
         public global::k8s.Models.V1ObjectMeta Metadata {{ get; set; }}
         public global::Neon.Operator.Resources.V1CronTab.V1CronTabSpec Spec {{ get; set; }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+            testCompilation.Should().ContainSource($@"namespace Neon.Operator.Resources
 {{
     public partial class V1CronTab
     {{
@@ -83,10 +80,9 @@ namespace Test.Analyzers
             public global::System.Int64? Replicas {{ get; set; }}
         }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(3);
-
+            testCompilation.Should().HaveCount(2);
         }
 
         [Fact]
@@ -98,9 +94,7 @@ namespace Test.Analyzers
                 .AddAdditionalFilePath("CRDs/crontab.yaml")
                 .Build();
 
-            var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
-
-            testCompilation.HasOutputSyntax($@"namespace Test.Namespace
+            testCompilation.Should().ContainSource($@"namespace Test.Namespace
 {{
     [global::k8s.Models.KubernetesEntityAttribute(Group = ""stable.example.com"", Kind = ""CronTab"", ApiVersion = ""v1"", PluralName = ""crontabs"")]
     public partial class V1CronTab : global::k8s.IKubernetesObject<global::k8s.Models.V1ObjectMeta>, global::k8s.ISpec<global::Test.Namespace.V1CronTab.V1CronTabSpec>
@@ -116,9 +110,9 @@ namespace Test.Analyzers
         public global::k8s.Models.V1ObjectMeta Metadata {{ get; set; }}
         public global::Test.Namespace.V1CronTab.V1CronTabSpec Spec {{ get; set; }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.HasOutputSyntax($@"namespace Test.Namespace
+            testCompilation.Should().ContainSource($@"namespace Test.Namespace
 {{
     public partial class V1CronTab
     {{
@@ -137,27 +131,20 @@ namespace Test.Analyzers
             public global::System.Int64? Replicas {{ get; set; }}
         }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(3);
-
+            testCompilation.Should().HaveCount(2);
         }
 
         [Fact]
         public void TestV1ServiceMonitor()
         {
-            var crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(File.ReadAllText("CRDs/servicemonitor.yaml"), strict: false, stringTypeDeserialization: false);
-
-
             var testCompilation = new TestCompilationBuilder()
                 .AddSourceGenerator<CrdClassGenerator>()
                 .AddAdditionalFilePath("CRDs/servicemonitor.yaml")
                 .Build();
 
-            var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
-            var syntax = string.Join(Environment.NewLine, syntaxStrings);
-
-            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+            testCompilation.Should().ContainSource($@"namespace Neon.Operator.Resources
 {{
     [global::k8s.Models.KubernetesEntityAttribute(Group = ""monitoring.coreos.com"", Kind = ""ServiceMonitor"", ApiVersion = ""v1"", PluralName = ""servicemonitors"")]
     public partial class V1ServiceMonitor : global::k8s.IKubernetesObject<global::k8s.Models.V1ObjectMeta>, global::k8s.ISpec<global::Neon.Operator.Resources.V1ServiceMonitor.V1ServiceMonitorSpec>
@@ -173,9 +160,9 @@ namespace Test.Analyzers
         public global::k8s.Models.V1ObjectMeta Metadata {{ get; set; }}
         public global::Neon.Operator.Resources.V1ServiceMonitor.V1ServiceMonitorSpec Spec {{ get; set; }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+            testCompilation.Should().ContainSource($@"namespace Neon.Operator.Resources
 {{
     public partial class V1ServiceMonitor
     {{
@@ -234,9 +221,9 @@ namespace Test.Analyzers
             public global::System.Int64? TargetLimit {{ get; set; }}
         }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+            testCompilation.Should().ContainSource($@"namespace Neon.Operator.Resources
 {{
     public partial class V1ServiceMonitor
     {{
@@ -267,9 +254,9 @@ namespace Test.Analyzers
             DropEqual
         }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.HasOutputSyntax($@"namespace Neon.Operator.Resources
+            testCompilation.Should().ContainSource($@"namespace Neon.Operator.Resources
 {{
     public partial class V1ServiceMonitor
     {{
@@ -304,9 +291,9 @@ namespace Test.Analyzers
             public string TargetLabel {{ get; set; }}
         }}
     }}
-}}").Should().BeTrue();
+}}");
 
-            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(27);
+            testCompilation.Should().HaveCount(26);
         }
 
         [Fact]
@@ -407,8 +394,6 @@ namespace Test.Analyzers
         [Fact]
         public void TestCsv()
         {
-            var crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(File.ReadAllText("CRDs/csv.yaml"), strict: false, stringTypeDeserialization: false);
-
             var testCompilation = new TestCompilationBuilder()
                 .AddSourceGenerator<CrdClassGenerator>()
                 .AddAdditionalFilePath("CRDs/csv.yaml")
@@ -416,7 +401,7 @@ namespace Test.Analyzers
 
             var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
 
-            testCompilation.Compilation.SyntaxTrees.Should().HaveCount(34);
+            testCompilation.Should().HaveCount(33);
         }
     }
 
