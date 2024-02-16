@@ -291,7 +291,7 @@ namespace Neon.Operator.Analyzers
 
                 foreach (var rbacClass in classesWithRbac)
                 {
-                    var classTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.MetadataName == rbacClass.Identifier.ValueText);
+                    var classTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.GetFullMetadataName() == rbacClass.GetFullMetadataName());
                     var crSystemType         = metadataLoadContext.ResolveType(classTypeIdentifiers.FirstOrDefault());
                     var crFullyQualifiedName = classTypeIdentifiers.FirstOrDefault().ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
                     var rbacRuleAttr         = new List<RbacRuleAttribute>();

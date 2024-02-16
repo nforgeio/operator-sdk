@@ -12,12 +12,12 @@ namespace TestOperator
 {
     /// <summary>
     /// This is an example description. A <see cref="V1ExampleEntity"/> is a <see cref="IKubernetesObject{V1ObjectMeta}"/>
-    /// with a <see cref="V1ExampleEntity.V1ExampleSpec"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
+    /// with a <see cref="V1ExampleEntity.V1ExampleSpec{T}"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [EntityVersion(Served = true, Storage = false)]
     [ShortName("ex")]
-    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
+    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec<string>>, IStatus<V1ExampleEntity.V1ExampleStatus>
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
@@ -60,15 +60,16 @@ namespace TestOperator
         /// <summary>
         /// This is the description for the spec.
         /// </summary>
-        public V1ExampleSpec Spec { get; set; }
+        public V1ExampleSpec<string> Spec { get; set; }
 
         /// <inheritdoc/>
         public V1ExampleStatus Status { get; set; }
 
         /// <summary>
-        /// An example spec.
+        /// 
         /// </summary>
-        public class V1ExampleSpec
+        /// <typeparam name="T"></typeparam>
+        public class V1ExampleSpec<T>
         {
             /// <summary>
             /// The message

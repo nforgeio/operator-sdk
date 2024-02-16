@@ -35,8 +35,10 @@ namespace Neon.Operator.Xunit
     /// </summary>
     public class TestOperatorFixture : TestFixture
     {
+        /// <summary>
+        /// The services collection.
+        /// </summary>
         public IServiceCollection    Services => Operator.Services;
-        private TestApiServerBuilder serverBuilder;
         private ITestApiServerHost   testApiServerHost;
         private bool                 started;
 

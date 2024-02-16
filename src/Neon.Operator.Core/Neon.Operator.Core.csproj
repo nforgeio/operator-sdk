@@ -19,6 +19,7 @@
     <ItemGroup>
         <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" />
         <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
+        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
         <PackageReference Include="NJsonSchema" Version="10.9.0" />
