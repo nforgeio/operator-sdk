@@ -36,6 +36,9 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Neon.K8s.Core
 {
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public static partial class KubernetesHelper
     {
         private static DeserializerBuilder CommonDeserializerBuilder =>
@@ -92,18 +95,39 @@ namespace Neon.K8s.Core
                 },
                 t => t);
 
+        /// <summary>
+        /// Deserialize a YAML string into a Kubernetes object.
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="yaml"></param>
+        /// <param name="strict"></param>
+        /// <param name="stringTypeDeserialization"></param>
+        /// <returns></returns>
         public static TValue YamlDeserialize<TValue>(string yaml, bool strict = false, bool stringTypeDeserialization = true)
         {
             using var reader = new StringReader(yaml);
             return GetDeserializer(strict, stringTypeDeserialization).Deserialize<TValue>(new MergingParser(new Parser(reader)));
         }
 
+        /// <summary>
+        /// Deserialize a YAML stream into a Kubernetes object.
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="yaml"></param>
+        /// <param name="strict"></param>
+        /// <param name="stringTypeDeserialization"></param>
+        /// <returns></returns>
         public static TValue YamlDeserialize<TValue>(Stream yaml, bool strict = false, bool stringTypeDeserialization = true)
         {
             using var reader = new StreamReader(yaml);
             return GetDeserializer(strict, stringTypeDeserialization).Deserialize<TValue>(new MergingParser(new Parser(reader)));
         }
 
+        /// <summary>
+        /// Serialize a Kubernetes object into a YAML string.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string YamlSerialize(object value)
         {
             if (value == null)

@@ -62,7 +62,7 @@ namespace Neon.Operator.Analyzers
                 {
                     crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(file.GetText()?.ToString(), stringTypeDeserialization: false);
                 }
-                catch (Exception e)
+                catch
                 {
                     // not a valid CRD.
                     continue;
@@ -592,7 +592,7 @@ namespace Neon.Operator.Analyzers
                     SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256)
                     );
             }
-            catch (Exception e)
+            catch
             {
                 return;
                 // ignore for now.

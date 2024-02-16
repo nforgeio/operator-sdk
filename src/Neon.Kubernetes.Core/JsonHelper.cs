@@ -16,30 +16,21 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 
 using k8s;
 using k8s.Models;
 
-using Neon.K8s.Core.YamlConverters;
-
-using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-
 namespace Neon.K8s.Core
 {
+    /// <summary>
+    /// Helper for working with Kubernetes.
+    /// </summary>
     public static partial class KubernetesHelper
     {
         private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions();
@@ -105,6 +96,9 @@ namespace Neon.K8s.Core
             }
         }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         static KubernetesHelper()
         {
             JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -132,16 +126,36 @@ namespace Neon.K8s.Core
             configure(JsonSerializerOptions);
         }
 
+        /// <summary>
+        /// Deserializes a JSON string to a value of type <typeparamref name="TValue"/>.
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="json"></param>
+        /// <param name="jsonSerializerOptions"></param>
+        /// <returns></returns>
         public static TValue JsonDeserialize<TValue>(string json, JsonSerializerOptions jsonSerializerOptions = null)
         {
             return JsonSerializer.Deserialize<TValue>(json, jsonSerializerOptions ?? JsonSerializerOptions);
         }
 
+        /// <summary>
+        /// Deserializes a JSON stream to a value of type <typeparamref name="TValue"/>.
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="json"></param>
+        /// <param name="jsonSerializerOptions"></param>
+        /// <returns></returns>
         public static TValue JsonDeserialize<TValue>(Stream json, JsonSerializerOptions jsonSerializerOptions = null)
         {
             return JsonSerializer.Deserialize<TValue>(json, jsonSerializerOptions ?? JsonSerializerOptions);
         }
 
+        /// <summary>
+        /// Serializes an object.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="jsonSerializerOptions"></param>
+        /// <returns></returns>
         public static string JsonSerialize(object value, JsonSerializerOptions jsonSerializerOptions = null)
         {
             return JsonSerializer.Serialize(value, jsonSerializerOptions ?? JsonSerializerOptions);
