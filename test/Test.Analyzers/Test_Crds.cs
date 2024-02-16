@@ -6,6 +6,8 @@ using FluentAssertions;
 
 using k8s.Models;
 
+using Microsoft.CodeAnalysis;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.Operator.Analyzers;
@@ -33,7 +35,7 @@ namespace Test.Analyzers
                 .AddSourceGenerator<CustomResourceDefinitionGenerator>()
                 .AddOption("build_property.NeonOperatorGenerateCrds", true)
                 .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
-                .AddSourceFile("Models/ExampleEntity.cs")
+                .AddSourceFile("Models/V1ExampleEntity.cs")
                 .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
                 .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
                 .AddAssembly(typeof(V1Condition).Assembly)
@@ -45,7 +47,9 @@ namespace Test.Analyzers
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
 
             var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+
             output.Should().Be(expectedCrd);
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
 
         [Fact]
@@ -69,7 +73,35 @@ namespace Test.Analyzers
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
 
             var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+
             output.Should().Be(expectedCrd);
+            testCompilation.Diagnostics.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void TestStorageDiagnostic()
+        {
+            using var tempFile = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CustomResourceDefinitionGenerator>()
+                .AddOption("build_property.NeonOperatorGenerateCrds", true)
+                .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
+                .AddSourceFile("Models/V1ExampleEntity.cs")
+                .AddSourceFile("Models/V2ExampleEntity.cs")
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
+                .AddAssembly(typeof(V1Condition).Assembly)
+                .AddAssembly(typeof(RequiredAttribute).Assembly)
+                .Build();
+
+            testCompilation.Sources.Should().BeEmpty();
+            testCompilation.Diagnostics.Should().HaveCount(1);
+            testCompilation.Should().HaveDiagnostic(
+                diagnostic: Diagnostic.Create(
+                    descriptor:  CustomResourceDefinitionGenerator.TooManyStorageVersionsError,
+                    location:    Location.None,
+                    messageArgs: ["examples.example.neonkube.io", 2]));
         }
 
         [Fact]
@@ -104,6 +136,7 @@ namespace TestNamespace
                 .Build();
 
             testCompilation.Should().NotBeNull();
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
     }
 }

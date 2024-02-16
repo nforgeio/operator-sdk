@@ -15,7 +15,7 @@ namespace Test_Analyzers
     /// with a <see cref="V1ExampleEntity.V1ExampleSpec"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
     /// </summary>
     [KubernetesEntity(Group = "example.neonkube.io", Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    [EntityVersion(Served = true, Storage = false)]
+    [EntityVersion(Served = true, Storage = true)]
     [ShortName("ex")]
     public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
     {

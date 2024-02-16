@@ -82,7 +82,8 @@ namespace Test.Analyzers
     }}
 }}");
 
-            testCompilation.Should().HaveCount(2);
+            testCompilation.Sources.Should().HaveCount(2);
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
 
         [Fact]
@@ -133,7 +134,8 @@ namespace Test.Analyzers
     }}
 }}");
 
-            testCompilation.Should().HaveCount(2);
+            testCompilation.Sources.Should().HaveCount(2);
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
 
         [Fact]
@@ -293,7 +295,8 @@ namespace Test.Analyzers
     }}
 }}");
 
-            testCompilation.Should().HaveCount(26);
+            testCompilation.Sources.Should().HaveCount(26);
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
 
         [Fact]
@@ -401,7 +404,8 @@ namespace Test.Analyzers
 
             var syntaxStrings = testCompilation.Compilation.SyntaxTrees.Select(t => t.ToString()).ToList();
 
-            testCompilation.Should().HaveCount(33);
+            testCompilation.Sources.Should().HaveCount(33);
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
     }
 

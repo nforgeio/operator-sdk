@@ -21,8 +21,8 @@
 
     <ItemGroup>
         <AdditionalFiles Include="CRDs\servicemonitor.yaml" />
-        <Compile Remove="Models\*" />
-        <EmbeddedResource Include="Models\*;Outputs\*;CRDs\*" CopyToOutputDirectory="Always" />
+        <Compile Remove="Models\*;Controllers\*" />
+        <EmbeddedResource Include="Models\*;Outputs\*;CRDs\*;Controllers\*" CopyToOutputDirectory="Always" />
     </ItemGroup>
 
     <ItemGroup>

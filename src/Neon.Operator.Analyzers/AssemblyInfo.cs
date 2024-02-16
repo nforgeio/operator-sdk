@@ -16,7 +16,9 @@
 // limitations under the License.
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 [assembly: global::System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName = ".NET Standard 2.0")]
 [assembly: AssemblyVersion("0.10.0.5")]
 [assembly: AssemblyFileVersion("0.10.0.5")]
+[assembly: InternalsVisibleTo("Test.Analyzers")]
