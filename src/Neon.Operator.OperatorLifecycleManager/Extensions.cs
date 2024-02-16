@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    KeywordAttribute.cs
+// FILE:	    Extensions.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -20,32 +20,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Neon.BuildInfo;
+using Neon.Common;
+using Neon.Operator.Rbac;
+
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
-    public sealed class KeywordAttribute : Attribute
+    public static class Extensions
     {
-        public KeywordAttribute() { }
-        public string Keyword { get; set; }
-        public List<string> Keywords { get; set; } = new List<string>();
+        public static List<string> ToStrings(this Category category)
+        {
+            var result = new List<string>();
 
-        public KeywordAttribute(string keyword)
-        {
-            this.Keyword = keyword;
-        }
-        public KeywordAttribute(params string[] keywords)
-        {
-            this.Keywords = keywords.ToList();
-        }
+            var enumValues = Enum.GetValues(typeof(Category));
 
-        public List<string> GetKeywords()
-        {
-            if (!string.IsNullOrEmpty(Keyword))
+            for (int i = 0; i < enumValues.Length; i++)
             {
-                Keywords.Add(Keyword);
+                var categoryValue = (Category)enumValues.GetValue(i);
+
+                if (category.HasFlag(categoryValue))
+                {
+                    result.Add(categoryValue.ToMemberString());
+                }
             }
 
-            return Keywords;
+            return result.OrderBy(value => value).ToList();
         }
     }
 }

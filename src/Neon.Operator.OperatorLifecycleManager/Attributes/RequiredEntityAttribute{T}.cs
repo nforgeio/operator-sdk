@@ -52,6 +52,16 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// </summary>
         public string Kind => GetKubernetesEntityAttribute().Kind;
 
+        /// <summary>
+        /// Description of the CRD
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// DisplayName of the CRD
+        /// </summary>
+        public string DisplayName { get; set; }
+
         /// <inheritdoc/>
         public Type GetEntityType()
         {

@@ -39,5 +39,16 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// </summary>
         [YamlMember(Alias = "mediatype", ApplyNamingConventions = false)]
         public string MediaType { get; set; }
+
+        public static Icon FromAttribute(IconAttribute attribute)
+        {
+            byte[] imageArray = System.IO.File.ReadAllBytes(attribute.Path); // read the bytes
+            string base64ImageRepresentation = Convert.ToBase64String(imageArray);
+            return new Icon()
+            {
+                Base64Data = base64ImageRepresentation,
+                MediaType = attribute.MediaType
+            };
+        }
     }
 }

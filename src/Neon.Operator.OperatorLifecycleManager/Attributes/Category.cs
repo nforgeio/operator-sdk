@@ -27,101 +27,101 @@ namespace Neon.Operator.OperatorLifecycleManager
     public enum Category
     {
 
-        /// <summarys
+        /// <summary>
         /// AI/Machine Learning
         /// </summary>
         [EnumMember(Value = "AI/Machine Learning")]
-        AiMachineLearning = 0,
+        AiMachineLearning = 1,
 
         /// <summary>
         /// Application Runtime
         /// </summary>
         [EnumMember(Value = "Application Runtime")]
-        ApplicationRuntime = 1,
+        ApplicationRuntime = 2,
 
         /// <summary>
         /// Big Data
         /// </summary>
         [EnumMember(Value = "Big Data")]
-        BigData = 2,
+        BigData = 4,
 
         /// <summary>
         /// Cloud Provider
         /// </summary>
         [EnumMember(Value = "Cloud Provider")]
-        CloudProvider = 4,
+        CloudProvider = 8,
 
         /// <summary>
         /// Database
         /// </summary>
         [EnumMember(Value = "Database")]
-        Database = 8,
+        Database = 16,
 
         /// <summary>
         /// Developer Tools
         /// </summary>
         [EnumMember(Value = "Developer Tools")]
-        DeveloperTools = 16,
+        DeveloperTools = 32,
 
         /// <summary>
         /// Drivers and plugins
         /// </summary>
         [EnumMember(Value = "Drivers and plugins")]
-        DriversAndPlugins = 32,
+        DriversAndPlugins = 64,
 
         /// <summary>
         /// Integration & Delivery
         /// </summary>
         [EnumMember(Value = "Integration & Delivery")]
-        IntegrationAndDelivery = 64,
+        IntegrationAndDelivery = 128,
 
         /// <summary>
         /// Logging & Tracing
         /// </summary>
         [EnumMember(Value = "Logging & Tracing")]
-        LoggingAndTracing = 128,
+        LoggingAndTracing = 256,
 
         /// <summary>
         /// Modernization & Migration
         /// </summary>
         [EnumMember(Value ="Modernization & Migration")]
-        ModernizationMigration = 256,
+        ModernizationMigration = 512,
 
         /// <summary>
         /// Monitoring
         /// </summary>
         [EnumMember(Value ="Monitoring")]
-        Monitoring = 512,
+        Monitoring = 1024,
 
         /// <summary>
         /// Networking
         /// </summary>
         [EnumMember(Value ="Networking")]
-        Networking = 1024,
+        Networking = 2048,
 
         /// <summary>
         /// OpenShift Optional
         /// </summary>
         [EnumMember(Value ="OpenShift Optional")]
-        OpenShiftOptional = 2048,
+        OpenShiftOptional = 4096,
 
         /// <summary>
         /// Security
         /// </summary>
         [EnumMember(Value ="Security")]
-        Security = 4096,
+        Security = 8192,
 
         /// <summary>
         /// Storage
         /// </summary>
         [EnumMember(Value ="Storage")]
-        Storage = 8192,
+        Storage = 16384,
 
         /// <summary>
         /// Streaming & Messaging
         /// </summary>
         [EnumMember(Value ="Streaming & Messaging")]
-        StreamingMessaging = 16384,
+        StreamingMessaging = 32768,
 
 
 

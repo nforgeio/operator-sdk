@@ -16,7 +16,9 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 
 using FluentAssertions;
 
@@ -25,6 +27,7 @@ using k8s.Models;
 using Neon.Common;
 using Neon.IO;
 using Neon.Operator.Analyzers.Generators;
+using Neon.Operator.OperatorLifecycleManager;
 
 namespace Test.Analyzers
 {
@@ -42,14 +45,22 @@ using Neon.Common;
 [assembly: Name(""test-operator"")]
 [assembly: DisplayName(""testaroo operator"")]
 [assembly: OwnedEntity<V1TestResource>(Description = ""This is the description"", DisplayName = TestConstants.DisplayName)]
+[assembly: RequiredEntity<V1TestResource>(Description = ""This is the required description"", DisplayName = TestConstants.DisplayName)]
 [assembly: Description(FullDescription = MoreTestConstants.Description, ShortDescription = ""This is a short description."")]
 [assembly: Provider(Name = ""Example"", Url = ""www.example.com"")]
 [assembly: Maintainer(Name = NeonHelper.NeonMetricsPrefix, Email = ""foo@bar.com"")]
 [assembly: Version(""1.2.3"")]
 [assembly: Maturity(""alpha"")]
 [assembly: MinKubeVersion(""1.16.0"")]
+[assembly: Icon(Path = ""icon.png"", MediaType = ""image/png"")]
 [assembly: Keyword(""foo"", ""bar"", ""baz"")]
 [assembly: InstallMode(Supported = true, InstallMode = InstallModeType.OwnNamespace)]
+[assembly: Category(Category = Category.DeveloperTools)]
+[assembly: Category(Category = Category.ApplicationRuntime)]
+[assembly: Capabilities(Capability = CapabilityLevel.DeepInsights)]
+[assembly: ContainerImage(Repository = ""github.com/test-operator/cluster-operator"", Tag =""1.2.3"")]
+[assembly: Repository(Repository = ""https://github.com/test-operator/cluster-operator"")]
+
 
 namespace TestNamespace
 {{
@@ -87,6 +98,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
                     typeof(KubernetesEntityAttribute).Assembly,
                     typeof(V1TestResource).Assembly,
                     typeof(NeonHelper).Assembly,
+                    typeof(AnnotationAttribute).Assembly,
                 ],
                 optionsProvider: optionsProvider);
 
@@ -95,6 +107,27 @@ culpa qui officia deserunt mollit anim id est laborum."";
             File.Exists(outFile).Should().BeTrue();
 
             var output = File.ReadAllText(outFile);
+        }
+
+        [Fact]
+        public void TestCategoryFlags()
+        {
+            var category = Category.Database | Category.BigData;
+
+            category.ToStrings().Should().BeEquivalentTo(new[] { Category.Database.ToMemberString(), Category.BigData.ToMemberString() });
+        }
+
+        [Fact]
+        public void TestCategoryFlagsWithDuplicate()
+        {
+            var categories = new List<Category>()
+            {
+                Category.Database | Category.BigData,
+                Category.BigData
+            };
+
+            var result = string.Join(", ", categories.SelectMany(c => c.ToStrings()).ToImmutableHashSet());
+            result.Should().Be($"{Category.BigData.ToMemberString}, {Category.Database.ToMemberString()}");
         }
     }
 }

@@ -26,7 +26,7 @@ using Neon.Operator.OperatorLifecycleManager;
 
 namespace Neon.Operator.Analyzers.Receivers
 {
-    public class OlmReceiver : ISyntaxReceiver
+    public class OlmReceiver : RbacRuleReceiver
     {
         private List<string> attributeNames = [
             nameof(AnnotationAttribute),
@@ -40,12 +40,18 @@ namespace Neon.Operator.Analyzers.Receivers
             nameof(NameAttribute),
             nameof(VersionAttribute),
             nameof(ProviderAttribute),
+            nameof(ContainerImageAttribute),
+            nameof(IconAttribute),
+            nameof(CapabilitiesAttribute),
+            nameof(CategoryAttribute),
+            nameof(RepositoryAttribute),
             ];
 
         public List<AttributeSyntax> Attributes { get; } = new List<AttributeSyntax>();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
+            base.OnVisitSyntaxNode(syntaxNode);
             if (syntaxNode is CompilationUnitSyntax)
             {
                 try

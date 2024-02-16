@@ -27,7 +27,7 @@ using Neon.Operator.Webhooks;
 
 namespace Neon.Operator.Analyzers
 {
-    internal class RbacRuleReceiver : ISyntaxReceiver
+    public class RbacRuleReceiver : ISyntaxReceiver
     {
         public List<AttributeSyntax> AttributesToRegister { get; } = new List<AttributeSyntax>();
         public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();

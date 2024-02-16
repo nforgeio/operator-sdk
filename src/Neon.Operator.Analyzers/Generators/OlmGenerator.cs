@@ -17,6 +17,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -31,6 +33,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
+using Neon.Operator.Rbac;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
@@ -57,26 +60,42 @@ namespace Neon.Operator.Analyzers.Generators
             }
 
             this.context = context;
-            metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            attributes = ((OlmReceiver)context.SyntaxReceiver)?.Attributes;
-            var namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
+            metadataLoadContext    = new MetadataLoadContext(context.Compilation);
+            attributes             = ((OlmReceiver)context.SyntaxReceiver)?.Attributes;
+            var namedTypeSymbols   = context.Compilation.GetNamedTypeSymbols();
+            var ownedEntities      = GetOwnedEntities();
+            var requiredEntities   = GetRequiredEntities();
 
-            var ownedEntities  = GetOwnedEntities();
-            //var requiredEntities = GetRequiredEntities();
+            var AssemblyAttributes = new List<IRbacRule>();
+            var controllers           = ((RbacRuleReceiver)context.SyntaxReceiver)?.ControllersToRegister;
+            var hasMutatingWebhooks   = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasMutatingWebhooks ?? false;
+            var hasValidatingWebhooks = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasValidatingWebhooks ?? false;
+            var classesWithRbac       = ((RbacRuleReceiver)context.SyntaxReceiver)?.ClassesToRegister;
 
-            var operatorName = GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation);
-            var displayName  = GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation);
-            var description  = GetAttribute<DescriptionAttribute>(metadataLoadContext, context.Compilation);
-            var certified    = GetAttribute<CertifiedAttribute>(metadataLoadContext, context.Compilation)?.Certified ?? false;
-            var createdData  = "";
-            var containerImage = GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation);
-            var capabilities = GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation);
-            var categories = GetAttribute<CategoryAttribute>(metadataLoadContext, context.Compilation);
-            var icon = GetAttribute<IconAttribute>(metadataLoadContext, context.Compilation);
-            var keywords = GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation);
-            var maintainers = GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation);
-            var provider = GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation);
-            var version      = GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation);
+
+            bool manageCustomResourceDefinitions = false;
+            bool leaderElectionDisabled          = false;
+            bool autoRegisterWebhooks            = false;
+            bool certManagerDisabled             = false;
+
+
+
+
+
+            var operatorName     = GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation);
+            var displayName      = GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation);
+            var description      = GetAttribute<DescriptionAttribute>(metadataLoadContext, context.Compilation);
+            var certified        = GetAttribute<CertifiedAttribute>(metadataLoadContext, context.Compilation)?.Certified ?? false;
+            var createdData      = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddThh:mm:ss%K");
+            var containerImage   = GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation);
+            var categories       = GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation);
+            var capabilities     = GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation);
+            var repository       = GetAttribute<RepositoryAttribute>(metadataLoadContext, context.Compilation);
+            var icons            = GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation);
+            var keywords         = GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation);
+            var maintainers      = GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation);
+            var provider         = GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation);
+            var version          = GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation);
 
 
             //if (operatorName == null
@@ -89,10 +108,21 @@ namespace Neon.Operator.Analyzers.Generators
 
             csv.Metadata = new k8s.Models.V1ObjectMeta();
             csv.Metadata.Name = $"{operatorName.Name}.v{version.Version}";
-            csv.Metadata.Annotations = new Dictionary<string, string>();
-            csv.Metadata.Annotations.Add("description", description.ShortDescription);
-            csv.Metadata.Annotations.Add("certified", certified.ToString().ToLower());
+            csv.Metadata.Annotations = new Dictionary<string, string>
+            {
+                { "description", description.ShortDescription },
+                { "certified", certified.ToString().ToLower() },
+                { "createdAt", createdData },
+                { "capabilities", capabilities.Capability.ToString()},
+                { "containerImage", $"{containerImage.Repository}:{containerImage.Tag}" },
+                { "repository", repository.Repository },
+                { "categories", string.Join(", ", categories.SelectMany(c => c.Category.ToStrings()).ToImmutableHashSet()) },
+            };
+
+
             csv.Spec = new V1ClusterServiceVersionSpec();
+            //csv.Spec.Icon = icons?.Select(i => i.ToIcon()).ToList();
+            csv.Spec.Keywords = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
             csv.Spec.DisplayName = displayName.DisplayName;
             csv.Spec.Description = description.FullDescription;
             csv.Spec.Version = version.Version;
@@ -101,11 +131,173 @@ namespace Neon.Operator.Analyzers.Generators
                 Name = provider.Name,
                 Url = provider.Url
             };
-            csv.Spec.Maintainers = maintainers.Select(m => new Maintainer()
+            csv.Spec.Maintainers = maintainers?.Select(m => new Maintainer()
             {
                 Name = m.Name,
                 Email = m.Email
             }).ToList();
+            csv.Spec.CustomResourceDefinitions = new CustomResourceDefinitions()
+            {
+                Owned = ownedEntities,
+                Required = requiredEntities
+            };
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorLeaderElectionDisabled", out var leaderElectionString))
+            {
+                if (bool.TryParse(leaderElectionString, out var leaderElectionBool))
+                {
+                    leaderElectionDisabled = leaderElectionBool;
+                }
+            }
+
+            foreach (var controller in controllers)
+            {
+                try
+                {
+                    if (manageCustomResourceDefinitions)
+                    {
+                        continue;
+                    }
+
+                    var controllerTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == controller.Identifier.ValueText).SingleOrDefault();
+                    var controllerFullyQualifiedName = controllerTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
+                    var controllerSystemType         = metadataLoadContext.ResolveType(controllerTypeIdentifier);
+                    var controllerAttr               = controllerSystemType.GetCustomAttribute<ResourceControllerAttribute>();
+
+                    if (controllerAttr.ManageCustomResourceDefinitions)
+                    {
+                        manageCustomResourceDefinitions = true;
+                    }
+                }
+                catch
+                {
+                    // attribute doesn't exist
+                }
+            }
+
+            if (manageCustomResourceDefinitions)
+            {
+                AssemblyAttributes.Add(
+                    new RbacRule<V1CustomResourceDefinition>(
+                        verbs: RbacVerb.All,
+                        scope: EntityScope.Cluster));
+            }
+            else
+            {
+                AssemblyAttributes.Add(
+                    new RbacRule<V1CustomResourceDefinition>(
+                        verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
+                        scope: EntityScope.Cluster));
+            }
+
+            if (!leaderElectionDisabled)
+            {
+                AssemblyAttributes.Add(
+                    new RbacRule<V1Lease>(
+                        verbs: RbacVerb.All,
+                        scope: EntityScope.Cluster));
+            }
+
+            if (hasMutatingWebhooks && autoRegisterWebhooks)
+            {
+                AssemblyAttributes.Add(
+                    new RbacRule<V1MutatingWebhookConfiguration>(
+                        verbs: RbacVerb.All,
+                        scope: EntityScope.Cluster));
+            }
+
+            if (hasValidatingWebhooks && autoRegisterWebhooks)
+            {
+                AssemblyAttributes.Add(
+                    new RbacRule<V1ValidatingWebhookConfiguration>(
+                        verbs: RbacVerb.All,
+                        scope: EntityScope.Cluster));
+            }
+
+            if (!certManagerDisabled)
+            {
+                AssemblyAttributes.Add(
+                    new RbacRule(
+                        apiGroup: "cert-manager.io",
+                        resource: "certificates",
+                        verbs: RbacVerb.All,
+                        scope: EntityScope.Namespaced));
+
+                AssemblyAttributes.Add(
+                    new RbacRule<V1Secret>(
+                        verbs: RbacVerb.Watch,
+                        scope: EntityScope.Namespaced,
+                        resourceNames: $"{operatorName}-webhook-tls"));
+            }
+
+            foreach (var rbacClass in classesWithRbac)
+            {
+                var classTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.MetadataName == rbacClass.Identifier.ValueText);
+                var crSystemType         = metadataLoadContext.ResolveType(classTypeIdentifiers.FirstOrDefault());
+                var crFullyQualifiedName = classTypeIdentifiers.FirstOrDefault().ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
+                var rbacRuleAttr         = new List<RbacRuleAttribute>();
+
+                foreach (var classTypeIdentifier in classTypeIdentifiers)
+                {
+                    try
+                    {
+                        rbacRuleAttr.AddRange(crSystemType.GetCustomAttributes<RbacRuleAttribute>());
+                    }
+                    catch
+                    {
+                        // no attributes
+                    }
+                }
+
+                foreach (var attribute in rbacRuleAttr)
+                {
+                    AssemblyAttributes.Add(
+                        new RbacRule(
+                            apiGroup: attribute.ApiGroup,
+                            resource: attribute.Resource,
+                            verbs: attribute.Verbs,
+                            scope: attribute.Scope,
+                            @namespace: attribute.Namespace,
+                            resourceNames: attribute.ResourceNames,
+                            subResources: attribute.SubResources));
+                }
+
+                var rbacGenericAttr = crSystemType.CustomAttributes?
+                        .Where(ca=>ca.AttributeType.IsGenericType)?
+                        .Where(ca=>ca.AttributeType.GetGenericTypeDefinition().Equals(typeof(RbacRuleAttribute<>)));
+
+                foreach (var r in rbacGenericAttr)
+                {
+                    var args       = r.NamedArguments;
+                    var etype      = r.AttributeType.GenericTypeArguments.FirstOrDefault();
+                    var entityType = metadataLoadContext.ResolveType(etype.FullName);
+                    var k8sAttr    = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
+                    var apiGroup   = k8sAttr.Group;
+                    var resource   = k8sAttr.PluralName;
+
+                    var rule = new RbacRule(apiGroup, resource);
+                    foreach (var p in r.NamedArguments)
+                    {
+                        var propertyInfo = typeof(RbacRule).GetProperty(p.MemberInfo.Name);
+                        if (propertyInfo != null)
+                        {
+                            propertyInfo.SetValue(rule, p.TypedValue.Value);
+                            continue;
+                        }
+
+                        var fieldInfo = typeof(RbacRule).GetField(p.MemberInfo.Name);
+                        if (fieldInfo != null)
+                        {
+                            fieldInfo.SetValue(rule, p.TypedValue.Value);
+                            continue;
+                        }
+
+                        throw new Exception($"No field or property {p}");
+                    }
+
+                    AssemblyAttributes.Add(rule);
+                }
+            }
 
             var outputString = KubernetesYaml.Serialize(csv);
             var outputPath = Path.Combine(targetDir, "clusterserviceversion.yaml");
@@ -116,8 +308,9 @@ namespace Neon.Operator.Analyzers.Generators
         {
             var results = new List<CrdDescription>();
 
-            var ownedEntities = context.Compilation.Assembly.GetAttributes()
-                .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith("OwnedEntity"));
+            var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+            var ownedEntities = assemblyAttributes
+                .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(OwnedEntityAttribute).Namespace}.OwnedEntity"));
 
             var a = attributes.First();
             var ns = a.GetNamespace();
@@ -177,31 +370,57 @@ namespace Neon.Operator.Analyzers.Generators
         {
             var results = new List<CrdDescription>();
 
-            var ownedEntities = context.Compilation.Assembly.GetAttributes()
-                .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith("RequiredEntity"));
+            var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+            var requiredEntities = assemblyAttributes
+                .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(RequiredEntityAttribute).Namespace}.RequiredEntity"));
 
-            foreach (var entity in ownedEntities)
+
+            var a = attributes.First();
+            var ns = a.GetNamespace();
+            var name = a.Name.ToFullString();
+            var aType = metadataLoadContext.ResolveType(name);
+            var tName = a.TryGetInferredMemberName();
+
+            foreach (var entity in requiredEntities)
             {
                 var etype      = (INamedTypeSymbol)entity.AttributeClass.TypeArguments.FirstOrDefault();
                 var entityType = metadataLoadContext.ResolveType(etype);
                 var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
-                var dependents = entityType.GetCustomAttributes(false)
-                    .Where(a => a.GetType() == typeof(DependentResource<>))
-                    .Select(a => a.GetType().GenericTypeArguments.First());
+
+                var requiredAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
+                    .Where(a => ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+
+                var description = requiredAttribute
+                    .First().ArgumentList.Arguments
+                    .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.Description))
+                    .FirstOrDefault()
+                    ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+
+                var displayName = requiredAttribute
+                    .First().ArgumentList.Arguments
+                    .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.DisplayName))
+                    .FirstOrDefault()
+                    ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+
+                var dependents = entityType.CustomAttributes
+                    .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
+                    .Select(a => a.AttributeType.GenericTypeArguments.First())
+                    .ToList();
 
                 var crdDescription = new CrdDescription()
                 {
-                    Name = $"{metadata.PluralName}.{metadata.Group}",
-                    Version = metadata.ApiVersion,
-                    Kind = metadata.Kind,
-                    
+                    Name        = $"{metadata.PluralName}.{metadata.Group}",
+                    Version     = metadata.ApiVersion,
+                    Kind        = metadata.Kind,
+                    DisplayName = displayName,
+                    Description = description
                 };
 
                 crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
                 {
-                    Kind = d.GetKubernetesTypeMetadata().Kind,
-                    Version = d.GetKubernetesTypeMetadata().ApiVersion,
-                    Name = d.GetKubernetesTypeMetadata().PluralName
+                    Kind = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
+                    Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
+                    Name = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
                 }).ToList();
 
                 results.Add(crdDescription);
@@ -256,7 +475,7 @@ namespace Neon.Operator.Analyzers.Generators
 
             if (syntax == null || syntax.Count() == 0)
             {
-                return [default(T)];
+                return null;
             }
 
             return syntax.Select(s => s.GetCustomAttribute<T>(metadataLoadContext, compilation));
@@ -297,7 +516,7 @@ namespace Neon.Operator.Analyzers.Generators
             foreach (var p in attributeData.ArgumentList.Arguments.Where(a => a.NameEquals != null))
             {
                 var propertyName = p.NameEquals.Name.Identifier.ValueText;
-                var value        = p.Expression.GetExpressionValue<string>(metadataLoadContext);
+                var value        = p.Expression.GetExpressionValue<object>(metadataLoadContext);
 
                 var propertyInfo = typeof(T).GetProperty(propertyName);
                 if (propertyInfo != null)

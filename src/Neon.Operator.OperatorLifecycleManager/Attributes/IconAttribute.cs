@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class IconAttribute : Attribute
     {
         public IconAttribute() { }
@@ -41,6 +41,17 @@ namespace Neon.Operator.OperatorLifecycleManager
         {
             this.Path = path;
             this.MediaType = mediaType;
+        }
+
+        public Icon ToIcon()
+        {
+            byte[] imageArray = System.IO.File.ReadAllBytes(Path); // read the bytes
+            string base64ImageRepresentation = Convert.ToBase64String(imageArray);
+            return new Icon()
+            {
+                Base64Data = base64ImageRepresentation,
+                MediaType = MediaType
+            };
         }
 
     }
