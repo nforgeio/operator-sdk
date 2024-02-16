@@ -7,14 +7,28 @@
         <AssemblyName>Test.Analyzers</AssemblyName>
         <Configurations>Debug;Release</Configurations>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <NeonOperatorGenerateRbac>False</NeonOperatorGenerateRbac>
+        <NeonOperatorGenerateCrds>False</NeonOperatorGenerateCrds>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <NeonOperatorCrdOutputDir>Generated/CRDs</NeonOperatorCrdOutputDir>
+        <NeonOperatorRbacOutputDir>Generated/RBAC</NeonOperatorRbacOutputDir>
+        <NeonOperatorWebhookOutputDir>Generated/Manifests</NeonOperatorWebhookOutputDir>
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Remove="Models\*" />
+        <AdditionalFiles Include="CRDs\servicemonitor.yaml" />
+        <Compile Remove="Models\*" />
+        <EmbeddedResource Include="Models\*;Outputs\*;CRDs\*" CopyToOutputDirectory="Always" />
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Models\*;Outputs\*" CopyToOutputDirectory="Always" />
+      <Content Include="xunit.runner.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -41,21 +55,32 @@
 
     <!-- NEONFORGE package or project references -->
 
+    <Import Project="$(NO_ROOT)\src\Neon.Operator\build\Neon.Operator.targets" />
+
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Roslyn" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Roslyn.Xunit" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn.Xunit\Neon.Roslyn.Xunit.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
             </ItemGroup>
         </Otherwise>
     </Choose>
 
     <ItemGroup>
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+        <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
+
 
 </Project>

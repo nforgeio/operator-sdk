@@ -14,7 +14,7 @@ namespace Test_Analyzers
     /// This is an example description. A <see cref="V1ExampleEntity"/> is a <see cref="IKubernetesObject{V1ObjectMeta}"/>
     /// with a <see cref="V1ExampleEntity.V1ExampleSpec"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
     /// </summary>
-    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [KubernetesEntity(Group = "example.neonkube.io", Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [EntityVersion(Served = true, Storage = false)]
     [ShortName("ex")]
     public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
@@ -88,6 +88,11 @@ namespace Test_Analyzers
             /// The <see cref="V1ExampleEntity.Person"/>
             /// </summary>
             public Person Person { get; set; }
+
+            /// <summary>
+            /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
+            /// </summary>
+            public bool Enabled { get; set; } = false;
         }
 
         /// <summary>

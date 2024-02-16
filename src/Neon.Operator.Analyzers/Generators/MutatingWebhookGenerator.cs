@@ -59,6 +59,12 @@ namespace Neon.Operator.Analyzers
 
             var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
             var mutatingWebhooks          = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.MutatingWebhooks;
+
+            if (mutatingWebhooks.Count == 0)
+            {
+                return;
+            }
+
             var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
 
             bool certManagerDisabled      = false;

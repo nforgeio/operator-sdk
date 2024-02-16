@@ -1,18 +1,18 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
-using System.Collections.Generic;
 
 using FluentAssertions;
 
 using k8s.Models;
 
+using Neon.Common;
 using Neon.IO;
 using Neon.Operator.Analyzers;
 using Neon.Operator.Attributes;
+using Neon.Roslyn.Xunit;
 
 using Xunit.Abstractions;
-using System.ComponentModel.DataAnnotations;
-using k8s;
 
 namespace Test.Analyzers
 {
@@ -27,71 +27,83 @@ namespace Test.Analyzers
         [Fact]
         public void TestGenerateCrd()
         {
-            var entityDefinition = File.ReadAllText("Models/ExampleEntity.cs");
+            using var tempFile = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CustomResourceDefinitionGenerator>()
+                .AddOption("build_property.NeonOperatorGenerateCrds", true)
+                .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
+                .AddSourceFile("Models/ExampleEntity.cs")
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
+                .AddAssembly(typeof(V1Condition).Assembly)
+                .AddAssembly(typeof(RequiredAttribute).Assembly)
+                .Build();
 
             var outFile = "examples.example.neonkube.io.yaml";
 
-            using var tempFile = new TempFolder();
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
 
-            var optionsProvider = new OperatorAnalyzerConfigOptionsProvider();
-            optionsProvider.SetOptions(new OperatorAnalyzerConfigOptions()
-            {
-                Options = new Dictionary<string, string>()
-                {
-                    {"build_property.NeonOperatorGenerateCrds", "true" },
-                    {"build_property.NeonOperatorCrdOutputDir", tempFile.Path }
-                }
-            });
-
-            var generatedCode = CompilationHelper.GetGeneratedOutput<CustomResourceDefinitionGenerator>(
-                source: entityDefinition,
-                additionalAssemblies: [
-                    typeof(KubernetesEntityAttribute).Assembly,
-                    typeof(AdditionalPrinterColumnAttribute).Assembly,
-                    typeof(V1Pod).Assembly,
-                    typeof(RequiredAttribute).Assembly,
-                ],
-                optionsProvider: optionsProvider);
-
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
-
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
-            output.Should().BeEquivalentTo(expectedCrd.TrimEnd());
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+            output.Should().Be(expectedCrd);
         }
 
         [Fact]
         public void TestGenericCrd()
         {
-            var entityDefinition = File.ReadAllText("Models/GenericEntity.cs");
+            using var tempFile = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CustomResourceDefinitionGenerator>()
+                .AddOption("build_property.NeonOperatorGenerateCrds", true)
+                .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
+                .AddSourceFile("Models/GenericEntity.cs")
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
+                .AddAssembly(typeof(V1Condition).Assembly)
+                .AddAssembly(typeof(RequiredAttribute).Assembly)
+                .Build();
 
             var outFile = "generics.example.neonkube.io.yaml";
 
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
+
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+            output.Should().Be(expectedCrd);
+        }
+
+        [Fact]
+        public void TestRoslynReflection()
+        {
+            var source = $@"
+using System.Collections.Generic;
+using k8s.Models;
+
+namespace TestNamespace
+{{
+    /// <summary>
+    /// The status.
+    /// </summary>
+    [KubernetesEntity(Group = ""example.neonkube.io"", Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    public class V1Example
+    {{
+        /// <summary>
+        /// Status conditions.
+        /// </summary>
+        public List<V1Condition> Conditions {{ get; set; }}
+    }}
+}}";
             using var tempFile = new TempFolder();
 
-            var optionsProvider = new OperatorAnalyzerConfigOptionsProvider();
-            optionsProvider.SetOptions(new OperatorAnalyzerConfigOptions()
-            {
-                Options = new Dictionary<string, string>()
-                {
-                    {"build_property.NeonOperatorGenerateCrds", "true" },
-                    {"build_property.NeonOperatorCrdOutputDir", tempFile.Path }
-                }
-            });
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CustomResourceDefinitionGenerator>()
+                .AddSource(source)
+                .AddAssembly($@"C:\src\operator-sdk\test\Test.Analyzers\bin\Debug\net8.0\KubernetesClient.Models.dll")
+                .AddOption("build_property.NeonOperatorGenerateCrds", true)
+                .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
+                .Build();
 
-            var generatedCode = CompilationHelper.GetGeneratedOutput<CustomResourceDefinitionGenerator>(
-                source: entityDefinition,
-                additionalAssemblies: [
-                    typeof(KubernetesEntityAttribute).Assembly,
-                    typeof(AdditionalPrinterColumnAttribute).Assembly,
-                    typeof(V1Pod).Assembly,
-                    typeof(RequiredAttribute).Assembly,
-                ],
-                optionsProvider: optionsProvider);
-
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
-
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
-            output.Should().BeEquivalentTo(expectedCrd.TrimEnd());
+            testCompilation.Should().NotBeNull();
         }
     }
 }

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <RootNamespace>TestKubeOperator</RootNamespace>
+        <RootNamespace>TestKubernetesCore</RootNamespace>
         <IsPackable>false</IsPackable>
         <Configurations>Debug;Release</Configurations>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -17,10 +17,12 @@
     <!-- Non-NEONFORGE package references -->
 
     <ItemGroup>
+        <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" />
+        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
         <PackageReference Include="FluentAssertions.Analyzers" Version="0.27.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
         <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
@@ -35,29 +37,8 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
-
-    <!-- NEONFORGE package or project references -->
-
-    <Choose>
-        <When Condition="'$(NeonBuildUseNugets)' == 'true'">
-            <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
-            </ItemGroup>
-        </When>
-        <Otherwise>
-            <ItemGroup>
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
-            </ItemGroup>
-        </Otherwise>
-    </Choose>
-
     <ItemGroup>
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+      <ProjectReference Include="..\..\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" />
     </ItemGroup>
 
 </Project>
