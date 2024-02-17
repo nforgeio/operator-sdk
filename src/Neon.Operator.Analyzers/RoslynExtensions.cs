@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Roslyn;
@@ -32,11 +33,11 @@ namespace Neon.Operator.Analyzers
 {
     internal static class RoslynExtensions
     {
-        public static T GetExpressionValue<T>(this ExpressionSyntax syntax, MetadataLoadContext metadataLoadContext)
+        public static object GetExpressionValue(this ExpressionSyntax syntax, MetadataLoadContext metadataLoadContext)
         {
             if (syntax is LiteralExpressionSyntax)
             {
-                return (T)((LiteralExpressionSyntax)syntax).Token.Value;
+                return ((LiteralExpressionSyntax)syntax).Token.Value;
             }
             if (syntax is InvocationExpressionSyntax)
             {
@@ -47,7 +48,7 @@ namespace Neon.Operator.Analyzers
                     if (((IdentifierNameSyntax)expression).Identifier.ValueText == "nameof")
                     {
                         var arg = ((InvocationExpressionSyntax)syntax).ArgumentList.Arguments.First();
-                        return (T)arg.GetLastToken().Value;
+                        return arg.GetLastToken().Value;
                     }
                 }
                 return default;
@@ -55,41 +56,24 @@ namespace Neon.Operator.Analyzers
             if (syntax is MemberAccessExpressionSyntax)
             {
                 var s = (MemberAccessExpressionSyntax)syntax;
-                var ns = s.GetNamespace();
-                var fullName = s.ToFullString();
-                var className = fullName.Substring(0, fullName.LastIndexOf('.'));
-                var propName = s.Name.Identifier.ValueText;
 
-                var c = metadataLoadContext.ResolveType($"{className}");
+                var c = metadataLoadContext.ResolveType((IdentifierNameSyntax)s.Expression);
 
-                if (c == null)
-                {
-                    var usings = s
-                        .Ancestors()
-                        .OfType<CompilationUnitSyntax>()
-                        .FirstOrDefault()?
-                        .DescendantNodes()
-                        .OfType<UsingDirectiveSyntax>()
-                        .ToList();
+                var member = c.GetMembers().Where(m => m.Name == s.Name.Identifier.ValueText).FirstOrDefault();
 
-                    foreach (var u in usings)
-                    {
-                        var usingNs = ((UsingDirectiveSyntax)u).NamespaceOrType.ToFullString();
-                        c = metadataLoadContext.ResolveType($"{usingNs}.{className}");
-
-                        if (c != null)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                var member = c.GetMembers().Where(m => m.Name == propName).FirstOrDefault();
-
-                return (T)((RoslynFieldInfo)member).FieldSymbol.ConstantValue;
+                return ((RoslynFieldInfo)member).FieldSymbol.ConstantValue;
             }
-
+            if (syntax is BinaryExpressionSyntax
+                    && ((BinaryExpressionSyntax)syntax).Kind() == SyntaxKind.BitwiseOrExpression)
+            {
+                return ((BinaryExpressionSyntax)syntax).GetEnumValue(metadataLoadContext);
+            }
             return default;
+        }
+
+        public static T GetExpressionValue<T>(this ExpressionSyntax syntax, MetadataLoadContext metadataLoadContext)
+        {
+            return (T)syntax.GetExpressionValue(metadataLoadContext);
         }
 
         public static int GetEnumValue(this BinaryExpressionSyntax s, MetadataLoadContext metadataLoadContext)

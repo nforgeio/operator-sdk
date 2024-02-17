@@ -207,7 +207,7 @@ namespace Neon.Operator.Analyzers.Generators
                 { "capabilities", capabilities.Capability.ToString()},
                 { "containerImage", $"{containerImage.Repository}:{containerImage.Tag}" },
                 { "repository", repository.Repository },
-                { "categories", string.Join(", ", categories.SelectMany(c => c.Category.ToStrings()).ToImmutableHashSet()) },
+                { "categories", string.Join(", ", categories.SelectMany(c => c.Category.ToStrings()).ToImmutableHashSet().OrderBy(x=>x)) },
             };
 
 
@@ -551,7 +551,7 @@ namespace Neon.Operator.Analyzers.Generators
                 // create instance with constructor args
                 var actualArgs = attributeData.ArgumentList.Arguments
                     .Where(a => a.NameEquals == null)
-                    .Select(a => a.Expression.GetExpressionValue<object>(metadataLoadContext)).ToArray();
+                    .Select(a => a.Expression.GetExpressionValue(metadataLoadContext)).ToArray();
 
                 attribute = (T)Activator.CreateInstance(typeof(T), actualArgs);
             }
@@ -566,15 +566,15 @@ namespace Neon.Operator.Analyzers.Generators
                 var propertyName = p.NameEquals.Name.Identifier.ValueText;
 
                 object value = null;
-                if (p.Expression is BinaryExpressionSyntax
-                    && ((BinaryExpressionSyntax)p.Expression).Kind() == SyntaxKind.BitwiseOrExpression)
-                {
-                    value = ((BinaryExpressionSyntax)p.Expression).GetEnumValue(metadataLoadContext);
-                }
-                else
-                {
-                    value = p.Expression.GetExpressionValue<object>(metadataLoadContext);
-                }
+                //if (p.Expression is BinaryExpressionSyntax
+                //    && ((BinaryExpressionSyntax)p.Expression).Kind() == SyntaxKind.BitwiseOrExpression)
+                //{
+                //    value = ((BinaryExpressionSyntax)p.Expression).GetEnumValue(metadataLoadContext);
+                //}
+                //else
+                //{
+                //}
+                value = p.Expression.GetExpressionValue(metadataLoadContext);
 
                 var propertyInfo = typeof(T).GetProperty(propertyName);
                 if (propertyInfo != null)
