@@ -32,12 +32,14 @@ using TestOperator;
 [assembly: Maturity("alpha")]
 [assembly: MinKubeVersion("1.16.0")]
 [assembly: Keyword("test", "app")]
-[assembly: InstallMode(Supported = true, InstallMode = InstallModeType.OwnNamespace)]
+[assembly: InstallMode(Supported = true, Type = InstallModeType.OwnNamespace)]
 [assembly: Icon(Path = "icon.png", MediaType = "image/png")]
 [assembly: Repository(Repository = "https://github.com/test-operator/cluster-operator")]
 [assembly: Category(Category = Category.DeveloperTools)]
 [assembly: Category(Category = Category.ApplicationRuntime)]
 [assembly: Capabilities(Capability = CapabilityLevel.DeepInsights)]
 [assembly: ContainerImage(Repository = "github.com/test-operator/cluster-operator", Tag ="1.2.3")]
-
+[assembly: InstallMode(Type = InstallModeType.OwnNamespace)]
+[assembly: InstallMode(Type = InstallModeType.MultiNamespace | InstallModeType.SingleNamespace)]
+[assembly: InstallMode(Type = InstallModeType.AllNamespaces, Supported = false)]
 

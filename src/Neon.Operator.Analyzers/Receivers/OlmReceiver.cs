@@ -26,7 +26,7 @@ using Neon.Operator.OperatorLifecycleManager;
 
 namespace Neon.Operator.Analyzers.Receivers
 {
-    public class OlmReceiver : RbacRuleReceiver
+    public class OlmReceiver : ISyntaxReceiver
     {
         private List<string> attributeNames = [
             nameof(AnnotationAttribute),
@@ -46,12 +46,39 @@ namespace Neon.Operator.Analyzers.Receivers
             nameof(CategoryAttribute),
             nameof(RepositoryAttribute),
             ];
+        public List<AttributeSyntax> AttributesToRegister { get; } = new List<AttributeSyntax>();
+        public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> ControllersToRegister { get; } = new List<ClassDeclarationSyntax>();
+        public bool HasMutatingWebhooks { get; set; } = false;
+        public bool HasValidatingWebhooks { get; set; } = false;
+
+        private static string[] attributes = new string[]
+        {
+            "RbacRule"
+        };
+
+        private List<string> baseNames = new List<string>()
+        {
+            "IResourceController",
+            "ResourceControllerBase",
+        };
+
+        private List<string> mutatingWebhookBaseNames = new List<string>()
+        {
+            "IMutatingWebhook",
+            "MutatingWebhookBase",
+        };
+
+        private List<string> validatingWebhookBaseNames = new List<string>()
+        {
+            "IValidatingWebhook",
+            "ValidatingWebhookBase",
+        };
 
         public List<AttributeSyntax> Attributes { get; } = new List<AttributeSyntax>();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            base.OnVisitSyntaxNode(syntaxNode);
             if (syntaxNode is CompilationUnitSyntax)
             {
                 try
@@ -78,6 +105,86 @@ namespace Neon.Operator.Analyzers.Receivers
                     }
                 }
                 catch { }
+            }
+
+            if (syntaxNode is ClassDeclarationSyntax)
+            {
+                try
+                {
+                    var bases = syntaxNode
+                        .DescendantNodes()
+                        .OfType<AttributeSyntax>()?
+                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                                .Any(gns => attributes.Contains(gns.Identifier.ValueText))
+                                || attributes.Contains(@base.Name.ToString()));
+
+
+                    if (bases.Count() > 0)
+                    {
+                        ClassesToRegister.Add((ClassDeclarationSyntax)syntaxNode);
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    var bases = syntaxNode
+                        .DescendantNodes()
+                        .OfType<BaseListSyntax>()?
+                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                                .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
+
+
+                    if (bases.Count() > 0)
+                    {
+                        ControllersToRegister.Add((ClassDeclarationSyntax)syntaxNode);
+                    }
+                }
+                catch { }
+            }
+
+            if (!HasMutatingWebhooks)
+            {
+                if (syntaxNode is ClassDeclarationSyntax)
+                {
+                    try
+                    {
+                        var bases = syntaxNode
+                        .DescendantNodes()
+                        .OfType<BaseListSyntax>()?
+                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                                .Any(gns => mutatingWebhookBaseNames.Contains(gns.Identifier.ValueText)));
+
+
+                        if (bases.Count() > 0)
+                        {
+                            HasMutatingWebhooks = true;
+                        }
+                    }
+                    catch { }
+                }
+            }
+
+            if (!HasValidatingWebhooks)
+            {
+                if (syntaxNode is ClassDeclarationSyntax)
+                {
+                    try
+                    {
+                        var bases = syntaxNode
+                        .DescendantNodes()
+                        .OfType<BaseListSyntax>()?
+                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                                .Any(gns => validatingWebhookBaseNames.Contains(gns.Identifier.ValueText)));
+
+
+                        if (bases.Count() > 0)
+                        {
+                            HasValidatingWebhooks = true;
+                        }
+                    }
+                    catch { }
+                }
             }
         }
     }

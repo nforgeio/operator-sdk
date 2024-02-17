@@ -17,6 +17,7 @@
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 
@@ -26,8 +27,11 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Operator.Analyzers;
 using Neon.Operator.Analyzers.Generators;
+using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
+using Neon.Roslyn.Xunit;
 
 namespace Test.Analyzers
 {
@@ -52,14 +56,16 @@ using Neon.Common;
 [assembly: Version(""1.2.3"")]
 [assembly: Maturity(""alpha"")]
 [assembly: MinKubeVersion(""1.16.0"")]
-[assembly: Icon(Path = ""icon.png"", MediaType = ""image/png"")]
+[assembly: Icon(Path = ""nuget-icon.png"", MediaType = ""image/png"")]
 [assembly: Keyword(""foo"", ""bar"", ""baz"")]
-[assembly: InstallMode(Supported = true, InstallMode = InstallModeType.OwnNamespace)]
-[assembly: Category(Category = Category.DeveloperTools)]
-[assembly: Category(Category = Category.ApplicationRuntime)]
+[assembly: Type(Supported = true, Type = InstallModeType.OwnNamespace)]
+[assembly: Category(Category = Category.ApplicationRuntime | Category.DeveloperTools | Category.BigData | Category.BigData)]
 [assembly: Capabilities(Capability = CapabilityLevel.DeepInsights)]
 [assembly: ContainerImage(Repository = ""github.com/test-operator/cluster-operator"", Tag =""1.2.3"")]
 [assembly: Repository(Repository = ""https://github.com/test-operator/cluster-operator"")]
+[assembly: InstallMode(Type = InstallModeType.OwnNamespace)]
+[assembly: InstallMode(Type = InstallModeType.MultiNamespace | InstallModeType.SingleNamespace)]
+[assembly: InstallMode(Type = InstallModeType.AllNamespaces, Supported = false)]
 
 
 namespace TestNamespace
@@ -83,24 +89,20 @@ culpa qui officia deserunt mollit anim id est laborum."";
 ";
             using var temp = new TempFolder();
 
-            var optionsProvider = new OperatorAnalyzerConfigOptionsProvider();
-            optionsProvider.SetOptions(new OperatorAnalyzerConfigOptions()
-            {
-                Options = new Dictionary<string, string>()
-                {
-                    {"build_property.TargetDir", temp.Path },
-                }
-            });
-
-            var generatedCode = CompilationHelper.GetGeneratedOutput<OlmGenerator>(
-                source: source,
-                additionalAssemblies: [
-                    typeof(KubernetesEntityAttribute).Assembly,
-                    typeof(V1TestResource).Assembly,
-                    typeof(NeonHelper).Assembly,
-                    typeof(AnnotationAttribute).Assembly,
-                ],
-                optionsProvider: optionsProvider);
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddSourceFile("Models/V1ExampleEntity.cs")
+                .AddSourceFile("Models/V2ExampleEntity.cs")
+                .AddSourceFile("Controllers/ExampleController.cs")
+                .AddAdditionalFilePath("nuget-icon.png")
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(NeonHelper).Assembly)
+                .AddAssembly(typeof(V1TestResource).Assembly)
+                .AddAssembly(typeof(CapabilitiesAttribute).Assembly)
+                .AddAssembly(typeof(ResourceControllerAttribute).Assembly)
+                .Build();
 
             var outFile = Path.Combine(temp.Path, "clusterserviceversion.yaml");
 

@@ -17,13 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Xml;
 
 using Microsoft.CodeAnalysis;
-
-using Neon.Roslyn;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Roslyn;
 
@@ -86,13 +85,56 @@ namespace Neon.Operator.Analyzers
                 }
 
                 var member = c.GetMembers().Where(m => m.Name == propName).FirstOrDefault();
+
                 return (T)((RoslynFieldInfo)member).FieldSymbol.ConstantValue;
             }
 
             return default;
         }
 
-        public static string GetFullMetadataName(this ISymbol s)
+        public static int GetEnumValue(this BinaryExpressionSyntax s, MetadataLoadContext metadataLoadContext)
+        {
+            var ns = s.GetNamespace();
+            var fullName = s.ToFullString();
+
+            var result = new HashSet<int>();
+            foreach (var val in fullName.Split(['|'], options: StringSplitOptions.RemoveEmptyEntries))
+            {
+                var enumName = val.Substring(0, val.LastIndexOf('.')).Trim();
+                var propName = val.Split('.').Last().Trim();
+                var enumValue = metadataLoadContext.ResolveType($"{enumName}");
+
+                if (enumValue == null)
+                {
+                    var usings = s
+                            .Ancestors()
+                            .OfType<CompilationUnitSyntax>()
+                            .FirstOrDefault()?
+                            .DescendantNodes()
+                            .OfType<UsingDirectiveSyntax>()
+                            .ToList();
+
+                    foreach (var u in usings)
+                    {
+                        var usingNs = ((UsingDirectiveSyntax)u).NamespaceOrType.ToFullString();
+                        enumValue = metadataLoadContext.ResolveType($"{usingNs}.{enumName}");
+
+                        if (enumValue != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                var member = enumValue.GetMembers().Where(m => m.Name == propName).FirstOrDefault();
+
+                result.Add((int)((RoslynFieldInfo)member).FieldSymbol.ConstantValue);
+            }
+
+            return result.Sum();
+        }
+
+            public static string GetFullMetadataName(this ISymbol s)
         {
             if (s == null || IsRootNamespace(s))
             {

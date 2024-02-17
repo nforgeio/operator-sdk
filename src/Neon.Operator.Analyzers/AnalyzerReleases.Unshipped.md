@@ -6,3 +6,4 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 NO10001 | NeonOperatorSdk | Error | CustomResourceDefinitionGenerator
+NO11001 | NeonOperatorSdk | Error | OlmGenerator

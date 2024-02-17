@@ -26,9 +26,19 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="nuget-icon.png" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Content Include="xunit.runner.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="nuget-icon.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>

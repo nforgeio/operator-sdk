@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    InstallMode.cs
+// FILE:	    Type.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -24,7 +24,7 @@ using k8s.Models;
 namespace Neon.Operator.OperatorLifecycleManager
 {
     /// <summary>
-    /// InstallMode specify supported installation types
+    /// Type specify supported installation types
     /// </summary>
     public class InstallMode
     {

@@ -25,6 +25,7 @@ namespace Neon.Operator.OperatorLifecycleManager
     /// <summary>
     /// InstallModeType is a supported type of install mode for CSV installation
     /// </summary>
+    [Flags]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
     public enum InstallModeType
     {
@@ -33,28 +34,28 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// of an OperatorGroup that selects its own namespace
         /// </summary>
         [EnumMember(Value = "OwnNamespace")]
-        OwnNamespace,
+        OwnNamespace = 1,
 
         /// <summary>
         /// If supported, the operator can be a member
         /// of an OperatorGroup that selects one namespace
         /// </summary>
         [EnumMember(Value = "SingleNamespace")]
-        SingleNamespace,
+        SingleNamespace = 2,
 
         /// <summary>
         /// If supported, the operator can be a member
         /// of an OperatorGroup that selects more than one namespace
         /// </summary>
         [EnumMember(Value = "MultiNamespace")]
-        MultiNamespace,
+        MultiNamespace = 4,
 
         /// <summary>
         /// If supported, the operator can be a member of an OperatorGroup
         /// that selects all namespaces (target namespace set is the empty string “”)
         /// </summary>
         [EnumMember(Value = "AllNamespaces")]
-        AllNamespaces,
+        AllNamespaces = 8,
 
 
 

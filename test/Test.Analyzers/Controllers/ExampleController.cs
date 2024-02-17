@@ -10,7 +10,7 @@ using Neon.Operator.Controllers;
 using Neon.Operator.Finalizers;
 using Neon.Tasks;
 
-namespace TestOperator
+namespace Test_Analyzers
 {
     [RbacRule<V1ExampleEntity>(Verbs = Neon.Operator.Rbac.RbacVerb.All)]
     [RbacRule<V2ExampleEntity>(Verbs = Neon.Operator.Rbac.RbacVerb.Watch)]

@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
@@ -24,13 +25,8 @@ namespace Neon.Operator.OperatorLifecycleManager
     {
         public InstallModeAttribute() { }
 
-        public InstallModeType InstallMode { get; set; }
-        public bool Supported { get; set; }
+        public InstallModeType Type { get; set; }
 
-        public InstallModeAttribute(InstallModeType installMode, bool supported = true)
-        {
-            InstallMode = installMode;
-            Supported = supported;
-        }
+        public bool Supported { get; set; } = true;
     }
 }

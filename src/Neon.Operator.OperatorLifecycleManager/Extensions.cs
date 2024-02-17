@@ -46,5 +46,24 @@ namespace Neon.Operator.OperatorLifecycleManager
 
             return result.OrderBy(value => value).ToList();
         }
+
+        public static List<InstallModeType> GetTypes(this InstallModeType installMode)
+        {
+            var result = new List<InstallModeType>();
+
+            var enumValues = Enum.GetValues(typeof(InstallModeType));
+
+            for (int i = 0; i < enumValues.Length; i++)
+            {
+                var installModeValue = (InstallModeType)enumValues.GetValue(i);
+
+                if (installMode.HasFlag(installModeValue))
+                {
+                    result.Add(installModeValue);
+                }
+            }
+
+            return result.OrderBy(value => value).ToList();
+        }
     }
 }
