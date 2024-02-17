@@ -82,8 +82,10 @@ namespace Neon.Operator.Analyzers.Generators
             var containerImage   = GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation, attributes);
             var capabilities     = GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation, attributes);
             var repository       = GetAttribute<RepositoryAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var maturity         = GetAttribute<MaturityAttribute>(metadataLoadContext, context.Compilation, attributes);
             var provider         = GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation, attributes);
             var version          = GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var minKubeVersion   = GetAttribute<MinKubeVersionAttribute>(metadataLoadContext, context.Compilation, attributes);
             var categories       = GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation, attributes);
             var keywords         = GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation, attributes);
             var maintainers      = GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
@@ -98,8 +100,10 @@ namespace Neon.Operator.Analyzers.Generators
                 || capabilities   == null
                 || icons          == null
                 || keywords       == null
+                || maturity       == null
                 || maintainers    == null
                 || provider       == null
+                || minKubeVersion == null
                 || version        == null)
             {
                 return;
@@ -211,13 +215,15 @@ namespace Neon.Operator.Analyzers.Generators
             };
 
 
-            csv.Spec             = new V1ClusterServiceVersionSpec();
-            csv.Spec.Icon        = icons?.Select(i => i.ToIcon()).ToList();
-            csv.Spec.Keywords    = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
-            csv.Spec.DisplayName = displayName.DisplayName;
-            csv.Spec.Description = description.FullDescription;
-            csv.Spec.Version     = version.Version;
-            csv.Spec.Provider    = new Provider()
+            csv.Spec                = new V1ClusterServiceVersionSpec();
+            csv.Spec.Icon           = icons?.Select(i => i.ToIcon()).ToList();
+            csv.Spec.Keywords       = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
+            csv.Spec.DisplayName    = displayName.DisplayName;
+            csv.Spec.Description    = description.FullDescription;
+            csv.Spec.Version        = version.Version;
+            csv.Spec.Maturity       = maturity.Maturity;
+            csv.Spec.MinKubeVersion = minKubeVersion.MinKubeVersion;
+            csv.Spec.Provider       = new Provider()
             {
                 Name = provider.Name,
                 Url = provider.Url
@@ -351,7 +357,8 @@ namespace Neon.Operator.Analyzers.Generators
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
                     var ownedAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                    .Where(a => ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+                    .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "OwnedEntity"
+                      && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
 
                     var description = ownedAttribute
                     .First().ArgumentList.Arguments
@@ -415,7 +422,8 @@ namespace Neon.Operator.Analyzers.Generators
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
                     var requiredAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                    .Where(a => ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+                    .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "RequiredEntity"
+                      && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
 
                     var description = requiredAttribute
                     .First().ArgumentList.Arguments

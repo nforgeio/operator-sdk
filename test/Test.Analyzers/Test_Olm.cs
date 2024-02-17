@@ -17,7 +17,6 @@
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 
@@ -27,7 +26,7 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Operator.Analyzers;
+using Neon.K8s.Core;
 using Neon.Operator.Analyzers.Generators;
 using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
@@ -40,22 +39,34 @@ namespace Test.Analyzers
         [Fact]
         public void Test_OlmAttributes()
         {
+            var name = "test-operator";
+            var displayName = "Testaroo Operator";
+            var ownedEntityDesc = $"I'm owned by {name}";
+            var requiredEntityDesc = $"Required by {name}";
+            var providerName = "NeonSDK";
+            var providerUrl = "foo.com";
+            var maintainerName = "Bob Testaroni";
+            var maintainerEmail = "foo@bar.com";
+            var version = "1.2.3";
+            var maturity = "alpha";
+            var minKubeVersion = "1.16.0";
+
             var source = $@"
 using Neon.Operator.OperatorLifecycleManager;
 using Test.Analyzers;
 using TestNamespace;
 using Neon.Common;
 
-[assembly: Name(""test-operator"")]
-[assembly: DisplayName(""testaroo operator"")]
-[assembly: OwnedEntity<V1TestResource>(Description = ""This is the description"", DisplayName = TestConstants.DisplayName)]
-[assembly: RequiredEntity<V1TestResource>(Description = ""This is the required description"", DisplayName = TestConstants.DisplayName)]
+[assembly: Name(""{name}"")]
+[assembly: DisplayName(""{displayName}"")]
+[assembly: OwnedEntity<V1TestResource>(Description = ""{ownedEntityDesc}"", DisplayName = TestConstants.DisplayName)]
+[assembly: RequiredEntity<V1TestResource>(Description = ""{requiredEntityDesc}"", DisplayName = TestConstants.DisplayName)]
 [assembly: Description(FullDescription = MoreTestConstants.Description, ShortDescription = ""This is a short description."")]
-[assembly: Provider(Name = ""Example"", Url = ""www.example.com"")]
-[assembly: Maintainer(Name = NeonHelper.NeonMetricsPrefix, Email = ""foo@bar.com"")]
-[assembly: Version(""1.2.3"")]
-[assembly: Maturity(""alpha"")]
-[assembly: MinKubeVersion(""1.16.0"")]
+[assembly: Provider(Name = ""{providerName}"", Url = ""{providerUrl}"")]
+[assembly: Maintainer(Name = ""{maintainerName}"", Email = ""{maintainerEmail}"")]
+[assembly: Version(""{version}"")]
+[assembly: Maturity(""{maturity}"")]
+[assembly: MinKubeVersion(""{minKubeVersion}"")]
 [assembly: Icon(Path = ""nuget-icon.png"", MediaType = ""image/png"")]
 [assembly: Keyword(""foo"", ""bar"", ""baz"")]
 [assembly: Type(Supported = true, Type = InstallModeType.OwnNamespace)]
@@ -109,6 +120,36 @@ culpa qui officia deserunt mollit anim id est laborum."";
             File.Exists(outFile).Should().BeTrue();
 
             var output = File.ReadAllText(outFile);
+
+            var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
+
+            //var name = "test-operator";
+            //var displayName = "Testaroo Operator";
+            //var ownedEntityDesc = $"I'm owned by {name}";
+            //var requiredEntityDesc = $"Required by {name}";
+            //var providerName = "NeonSDK";
+            //var providerUrl = "foo.com";
+            //var maintainerName = "Bob Testaroni";
+            //var maintainerEmail = "foo@bar.com";
+            //var version = "1.2.3";
+            //var maturity = "alpha";
+            //var minKubeVersion = "1.16.0";
+
+            outCsv.Metadata.Name.Should().Be($"{name}.v{version}");
+            outCsv.Spec.DisplayName.Should().Be(displayName);
+            outCsv.Spec.CustomResourceDefinitions.Owned.Should().HaveCount(1);
+            outCsv.Spec.CustomResourceDefinitions.Owned.First().Description.Should().Be(ownedEntityDesc);
+            outCsv.Spec.CustomResourceDefinitions.Required.Should().HaveCount(1);
+            outCsv.Spec.CustomResourceDefinitions.Required.First().Description.Should().Be(requiredEntityDesc);
+            outCsv.Spec.Provider.Name.Should().Be(providerName);
+            outCsv.Spec.Provider.Url.Should().Be(providerUrl);
+            outCsv.Spec.Maintainers.Should().HaveCount(1);
+            outCsv.Spec.Maintainers.First().Name.Should().Be(maintainerName);
+            outCsv.Spec.Maintainers.First().Email.Should().Be(maintainerEmail);
+            outCsv.Spec.Version.Should().Be(version);
+            outCsv.Spec.Maturity.Should().Be(maturity);
+            outCsv.Spec.MinKubeVersion.Should().Be(minKubeVersion);
+            outCsv.Metadata.Annotations["categories"].Should().Be($"{Category.ApplicationRuntime.ToMemberString()}, {Category.BigData.ToMemberString()}, {Category.DeveloperTools.ToMemberString()}");
         }
 
         [Fact]
@@ -128,7 +169,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
                 Category.BigData
             };
 
-            var result = string.Join(", ", categories.SelectMany(c => c.ToStrings()).ToImmutableHashSet());
+            var result = string.Join(", ", categories.SelectMany(c => c.ToStrings()).ToImmutableHashSet().Order());
             result.Should().Be($"{Category.BigData.ToMemberString()}, {Category.Database.ToMemberString()}");
         }
     }
