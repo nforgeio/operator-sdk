@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -34,9 +35,9 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Operator.Rbac;
 using Neon.K8s;
 using Neon.K8s.Resources.CertManager;
+using Neon.Operator.Rbac;
 using Neon.Tasks;
 
 namespace Neon.Operator
@@ -117,6 +118,10 @@ namespace Neon.Operator
                 {
                     CheckCertificateAsync().RunSynchronously();
                 }
+                else
+                {
+                    CheckOlmCertificateAsync().RunSynchronously();
+                }
 
                 Host.Start();
 
@@ -155,6 +160,10 @@ namespace Neon.Operator
                 {
                     await CheckCertificateAsync();
                 }
+                else
+                {
+                    await CheckOlmCertificateAsync();
+                }
 
                 await Host.RunAsync();
 
@@ -162,6 +171,21 @@ namespace Neon.Operator
             }
 
             return;
+        }
+
+        private async Task CheckOlmCertificateAsync()
+        {
+            using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            if (File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.cert")
+                && File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.key"))
+            {
+                logger?.LogInformationEx(() => "Loading OLM Certificate.");
+
+                Certificate = X509Certificate2.CreateFromPem(
+                    await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.cert"),
+                    await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.key"));
+            }
         }
 
         private async Task CheckCertificateAsync()
