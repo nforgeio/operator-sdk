@@ -23,9 +23,11 @@ using System.Linq;
 using System.Reflection;
 
 using k8s;
+using k8s.KubeConfigModels;
 using k8s.Models;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Operator.Analyzers.Receivers;
@@ -532,8 +534,8 @@ namespace Neon.Operator.Analyzers.Generators
     {
         public static T GetCustomAttribute<T>(
             this AttributeSyntax attributeData,
-            MetadataLoadContext metadataLoadContext,
-            Compilation compilation)
+            MetadataLoadContext  metadataLoadContext,
+            Compilation          compilation)
         {
             if (attributeData == null)
             {
@@ -565,7 +567,7 @@ namespace Neon.Operator.Analyzers.Generators
 
                 object value = null;
                 if (p.Expression is BinaryExpressionSyntax
-                    && ((BinaryExpressionSyntax)p.Expression).Kind() == Microsoft.CodeAnalysis.CSharp.SyntaxKind.BitwiseOrExpression)
+                    && ((BinaryExpressionSyntax)p.Expression).Kind() == SyntaxKind.BitwiseOrExpression)
                 {
                     value = ((BinaryExpressionSyntax)p.Expression).GetEnumValue(metadataLoadContext);
                 }

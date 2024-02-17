@@ -129,7 +129,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
             };
 
             var result = string.Join(", ", categories.SelectMany(c => c.ToStrings()).ToImmutableHashSet());
-            result.Should().Be($"{Category.BigData.ToMemberString}, {Category.Database.ToMemberString()}");
+            result.Should().Be($"{Category.BigData.ToMemberString()}, {Category.Database.ToMemberString()}");
         }
     }
 }

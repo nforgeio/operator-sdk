@@ -94,44 +94,26 @@ namespace Neon.Operator.Analyzers
 
         public static int GetEnumValue(this BinaryExpressionSyntax s, MetadataLoadContext metadataLoadContext)
         {
-            var ns = s.GetNamespace();
-            var fullName = s.ToFullString();
-
-            var result = new HashSet<int>();
-            foreach (var val in fullName.Split(['|'], options: StringSplitOptions.RemoveEmptyEntries))
+            int left;
+            int right;
+            if (s.Left is BinaryExpressionSyntax)
             {
-                var enumName = val.Substring(0, val.LastIndexOf('.')).Trim();
-                var propName = val.Split('.').Last().Trim();
-                var enumValue = metadataLoadContext.ResolveType($"{enumName}");
-
-                if (enumValue == null)
-                {
-                    var usings = s
-                            .Ancestors()
-                            .OfType<CompilationUnitSyntax>()
-                            .FirstOrDefault()?
-                            .DescendantNodes()
-                            .OfType<UsingDirectiveSyntax>()
-                            .ToList();
-
-                    foreach (var u in usings)
-                    {
-                        var usingNs = ((UsingDirectiveSyntax)u).NamespaceOrType.ToFullString();
-                        enumValue = metadataLoadContext.ResolveType($"{usingNs}.{enumName}");
-
-                        if (enumValue != null)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                var member = enumValue.GetMembers().Where(m => m.Name == propName).FirstOrDefault();
-
-                result.Add((int)((RoslynFieldInfo)member).FieldSymbol.ConstantValue);
+                left = ((BinaryExpressionSyntax)s.Left).GetEnumValue(metadataLoadContext);
+            }
+            else
+            {
+                left = s.Left.GetExpressionValue<int>(metadataLoadContext);
+            }
+            if (s.Right is BinaryExpressionSyntax)
+            {
+                right = ((BinaryExpressionSyntax)s.Right).GetEnumValue(metadataLoadContext);
+            }
+            else
+            {
+                right = s.Right.GetExpressionValue<int>(metadataLoadContext);
             }
 
-            return result.Sum();
+            return left | right;
         }
 
             public static string GetFullMetadataName(this ISymbol s)

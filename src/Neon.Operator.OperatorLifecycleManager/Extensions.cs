@@ -63,7 +63,7 @@ namespace Neon.Operator.OperatorLifecycleManager
                 }
             }
 
-            return result.OrderBy(value => value).ToList();
+            return result.OrderBy(value => value.ToMemberString()).ToList();
         }
     }
 }
