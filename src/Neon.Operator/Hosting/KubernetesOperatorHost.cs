@@ -182,9 +182,10 @@ namespace Neon.Operator
             {
                 logger?.LogInformationEx(() => "Loading OLM Certificate.");
 
-                Certificate = X509Certificate2.CreateFromPem(
-                    await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.cert"),
-                    await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.key"));
+                var cert = await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.cert");
+                var key  = await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.key");
+
+                Certificate = X509Certificate2.CreateFromPem(certPem: cert, keyPem: key);
             }
         }
 
