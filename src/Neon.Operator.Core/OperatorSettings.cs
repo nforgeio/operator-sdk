@@ -74,7 +74,7 @@ namespace Neon.Operator
         /// <summary>
         /// The namespace where the operator is deployed.
         /// </summary>
-        public string DeployedNamespace { get; set; } = "";
+        public string PodNamespace { get; set; } = "";
 
         /// <summary>
         /// The IP address to listen on.
@@ -92,7 +92,7 @@ namespace Neon.Operator
         /// be scanned and added automatically. Defaults to true.
         /// </para>
         /// </summary>
-        public bool AssemblyScanningEnabled { get; set; } = true;
+        public bool AssemblyScanningEnabled { get; set; } = false;
 
         /// <summary>
         /// The size of the pool to use for async locks.

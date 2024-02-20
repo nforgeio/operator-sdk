@@ -60,7 +60,7 @@ namespace Neon.Operator.Webhooks
                 Service = new Admissionregistrationv1ServiceReference()
                 {
                     Name              = operatorSettings.Name,
-                    NamespaceProperty = operatorSettings.DeployedNamespace,
+                    NamespaceProperty = operatorSettings.PodNamespace,
                     Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutating)
                 }
             };
@@ -83,7 +83,7 @@ namespace Neon.Operator.Webhooks
 
                 webhookConfig.Metadata.Annotations = webhookConfig.Metadata.EnsureAnnotations();
 
-                webhookConfig.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorSettings.DeployedNamespace}/{operatorSettings.Name}");
+                webhookConfig.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorSettings.PodNamespace}/{operatorSettings.Name}");
             }
 
             webhookConfig.Webhooks = new List<V1ValidatingWebhook>()
