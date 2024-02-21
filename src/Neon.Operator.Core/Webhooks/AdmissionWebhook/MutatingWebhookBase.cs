@@ -150,13 +150,13 @@ namespace Neon.Operator.Webhooks
                     Rules                   = new List<V1RuleWithOperations>(),
                     ClientConfig            = clientConfig,
                     AdmissionReviewVersions = hook.AdmissionReviewVersions,
-                    FailurePolicy           = hook.FailurePolicy,
-                    SideEffects             = hook.SideEffects,
+                    FailurePolicy           = hook.FailurePolicy.ToMemberString(),
+                    SideEffects             = hook.SideEffects.ToMemberString(),
                     TimeoutSeconds          = useTunnel ? DevTimeoutSeconds : hook.TimeoutSeconds,
                     NamespaceSelector       = NamespaceSelector,
-                    MatchPolicy             = hook.MatchPolicy,
+                    MatchPolicy             = hook.MatchPolicy.ToMemberString(),
                     ObjectSelector          = ObjectSelector,
-                    ReinvocationPolicy      = hook.ReinvocationPolicy
+                    ReinvocationPolicy      = hook.ReinvocationPolicy.ToMemberString()
                 }
             };
 
