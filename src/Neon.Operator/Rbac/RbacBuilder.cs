@@ -70,7 +70,7 @@ namespace Neon.Operator.Rbac
         {
             Covenant.Requires<ArgumentNullException>(assemblyPath != null, nameof(assemblyPath));
 
-            this.@namespace            = operatorSettings.DeployedNamespace;
+            this.@namespace            = operatorSettings.PodNamespace;
             this.operatorSettings      = operatorSettings;
             this.ServiceAccounts       = new List<V1ServiceAccount>();
             this.ClusterRoles          = new List<V1ClusterRole>();

@@ -23,7 +23,7 @@ namespace TestOperator
                .ConfigureOperator(configure =>
                {
                    configure.AssemblyScanningEnabled = false;
-                   configure.DeployedNamespace       = "default";
+                   configure.PodNamespace            = "default";
                })
                .ConfigureNeonKube()
                .UseStartup<Startup>().Build();

@@ -95,17 +95,27 @@ namespace Neon.Operator.Builder
         {
             operatorSettings = (OperatorSettings)Services.Where(s => s.ServiceType == typeof(OperatorSettings)).Single().ImplementationInstance;
 
-            if (string.IsNullOrEmpty(operatorSettings.DeployedNamespace))
+            if (string.IsNullOrEmpty(operatorSettings.PodNamespace))
             {
                 var nsFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
                 if (File.Exists(nsFile))
                 {
-                    operatorSettings.DeployedNamespace = File.ReadAllText(nsFile).Trim();
+                    operatorSettings.PodNamespace = File.ReadAllText(nsFile).Trim();
+                }
+                else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POD_NAMESPACE")))
+                {
+                    operatorSettings.PodNamespace = Environment.GetEnvironmentVariable("POD_NAMESPACE");
                 }
                 else
                 {
-                    operatorSettings.DeployedNamespace = "default";
+                    operatorSettings.PodNamespace = "default";
                 }
+            }
+
+            if (string.IsNullOrEmpty(operatorSettings.WatchNamespace)
+                && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WATCH_NAMESPACE")))
+            {
+                operatorSettings.PodNamespace = Environment.GetEnvironmentVariable("WATCH_NAMESPACE");
             }
 
             if (!Services.Any(service => service.ServiceType == typeof(IKubernetes)))
@@ -136,7 +146,7 @@ namespace Neon.Operator.Builder
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.DeployedNamespace}:{operatorSettings.Name}");
+                    k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.PodNamespace}:{operatorSettings.Name}");
                 }
 
                 Services.AddSingleton<IKubernetes>(k8s);
