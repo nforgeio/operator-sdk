@@ -31,7 +31,7 @@ namespace Neon.Operator.Webhooks
     /// Describes a Validating webhook.
     /// </summary>
     /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
-    [OperatorComponent(OperatorComponentType.ValidationWebhook)]
+    [OperatorComponent(ComponentType = OperatorComponentType.ValidationWebhook)]
     [ValidatingWebhook]
     public interface IValidatingWebhook<TEntity> : IAdmissionWebhook<TEntity, ValidationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()

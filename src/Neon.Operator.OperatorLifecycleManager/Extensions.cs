@@ -26,8 +26,16 @@ using Neon.Operator.Rbac;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Useful extensions.
+    /// </summary>
     public static class Extensions
     {
+        /// <summary>
+        /// Converts the <see cref="Category"/> to a list of strings.
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
         public static List<string> ToStrings(this Category category)
         {
             var result = new List<string>();
@@ -47,6 +55,11 @@ namespace Neon.Operator.OperatorLifecycleManager
             return result.OrderBy(value => value).ToList();
         }
 
+        /// <summary>
+        /// Gets the types of the <see cref="InstallModeType"/>.
+        /// </summary>
+        /// <param name="installMode"></param>
+        /// <returns></returns>
         public static List<InstallModeType> GetTypes(this InstallModeType installMode)
         {
             var result = new List<InstallModeType>();

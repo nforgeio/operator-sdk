@@ -43,7 +43,7 @@ using k8s.Models;
 using Microsoft.AspNetCore.Hosting;
 
 using Neon.Operator;
-using Neon.Operator.Attributes;
+using Neon.Operator.AssemblyAttributes;
 using Neon.Operator.Rbac;
 
 namespace TestOperator.Foo.Bar

@@ -19,15 +19,29 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the display name for the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class DisplayNameAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public DisplayNameAttribute() { }
 
-        public string DisplayName { get; set; }
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="displayName"></param>
         public DisplayNameAttribute(string displayName)
         {
             this.DisplayName = displayName;
         }
+
+        /// <summary>
+        /// The display name for the Operator.
+        /// </summary>
+        public string DisplayName { get; set; }
     }
 }

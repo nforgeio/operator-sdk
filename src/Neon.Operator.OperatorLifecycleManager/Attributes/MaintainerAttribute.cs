@@ -19,16 +19,36 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies a maintainer of the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class MaintainerAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public MaintainerAttribute() { }
-        public string Name { get; set; }
-        public string Email { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="email"></param>
         public MaintainerAttribute(string name, string email)
         {
             this.Name = name;
             this.Email = email;
         }
+
+        /// <summary>
+        /// The maintainer name.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The maintainer email address.
+        /// </summary>
+        public string Email { get; set; }
     }
 }

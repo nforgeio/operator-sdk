@@ -121,6 +121,7 @@
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
         <None Include="build\*" Pack="true" PackagePath="build\" />
+        <None Remove="Generators\OlmGenerator.cs~RFae8e1d8.TMP" />
         <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 

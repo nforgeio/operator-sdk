@@ -25,6 +25,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using Neon.Operator.Analyzers.Generators;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
@@ -51,7 +52,8 @@ namespace Neon.Operator.Analyzers
                         return arg.GetLastToken().Value;
                     }
                 }
-                return default;
+
+                return null;
             }
             if (syntax is MemberAccessExpressionSyntax)
             {
@@ -68,7 +70,8 @@ namespace Neon.Operator.Analyzers
             {
                 return ((BinaryExpressionSyntax)syntax).GetEnumValue(metadataLoadContext);
             }
-            return default;
+
+            return null;
         }
 
         public static T GetExpressionValue<T>(this ExpressionSyntax syntax, MetadataLoadContext metadataLoadContext)
@@ -100,7 +103,7 @@ namespace Neon.Operator.Analyzers
             return left | right;
         }
 
-            public static string GetFullMetadataName(this ISymbol s)
+        public static string GetFullMetadataName(this ISymbol s)
         {
             if (s == null || IsRootNamespace(s))
             {
@@ -161,6 +164,74 @@ namespace Neon.Operator.Analyzers
             }
 
             return description;
+        }
+
+        public static T GetAttribute<T>(
+            MetadataLoadContext metadataLoadContext,
+            Compilation compilation,
+            List<AttributeSyntax> attributes)
+        {
+            try
+            {
+                AttributeSyntax syntax = null;
+
+                syntax = attributes
+                    .Where(a => a.Name.ToFullString() == typeof(T).Name)
+                    .FirstOrDefault();
+
+                if (syntax == null)
+                {
+                    var name = typeof(T).Name.Replace("Attribute", "");
+
+                    syntax = attributes
+                        .Where(a => a.Name.ToFullString() == name)
+                        .FirstOrDefault();
+                }
+
+                if (syntax == null)
+                {
+                    return default(T);
+                }
+
+                return syntax.GetCustomAttribute<T>(metadataLoadContext, compilation);
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
+
+        public static IEnumerable<T> GetAttributes<T>(
+            MetadataLoadContext   metadataLoadContext,
+            Compilation           compilation,
+            List<AttributeSyntax> attributes)
+        {
+            try
+            {
+                IEnumerable<AttributeSyntax> syntax = null;
+
+                syntax = attributes
+                    .Where(a => a.Name.ToFullString() == typeof(T).Name);
+
+                if (syntax == null || syntax.Count() == 0)
+                {
+                    var name = typeof(T).Name.Replace("Attribute", "");
+
+                    syntax = attributes
+                        .Where(a => a.Name.ToFullString() == name);
+                }
+
+                if (syntax == null || syntax.Count() == 0)
+                {
+                    return null;
+                }
+
+                return syntax.Select(s => s.GetCustomAttribute<T>(metadataLoadContext, compilation));
+            }
+            catch
+            {
+                return Enumerable.Empty<T>();
+            }
         }
     }
 }

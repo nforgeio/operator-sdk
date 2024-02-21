@@ -159,6 +159,6 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// <summary>
         ///  WebhookDescription provides details to OLM about required webhooks
         /// </summary>
-        public WebHookDescription WebHookDefinitions {get;set;}
+        public List<WebHookDescription> WebHookDefinitions {get;set;}
     }
 }

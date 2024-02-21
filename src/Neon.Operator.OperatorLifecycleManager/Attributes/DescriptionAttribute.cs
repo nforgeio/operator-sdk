@@ -19,10 +19,27 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies a description for an Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class DescriptionAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public DescriptionAttribute() { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="shortDescription"></param>
+        /// <param name="fullDescription"></param>
+        public DescriptionAttribute(string shortDescription, string fullDescription)
+        {
+            this.ShortDescription = shortDescription;
+            this.FullDescription = fullDescription;
+        }
 
         /// <summary>
         /// Short description of the operator.
@@ -33,12 +50,5 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// Full description of the operator.
         /// </summary>
         public string FullDescription { get; set; }
-
-
-        public DescriptionAttribute(string shortDescription, string fullDescription)
-        {
-            this.ShortDescription = shortDescription;
-            this.FullDescription = fullDescription;
-        }
     }
 }

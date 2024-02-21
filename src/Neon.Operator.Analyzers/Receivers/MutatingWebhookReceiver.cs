@@ -28,6 +28,7 @@ namespace Neon.Operator.Analyzers
     {
         public List<ClassDeclarationSyntax> MutatingWebhooks { get; }
             = new();
+        public List<AttributeSyntax> Attributes { get; } = new List<AttributeSyntax>();
 
         private List<string> baseNames = new List<string>()
         {
@@ -51,6 +52,33 @@ namespace Neon.Operator.Analyzers
                     if (bases.Count() > 0)
                     {
                         MutatingWebhooks.Add((ClassDeclarationSyntax)syntaxNode);
+                    }
+                }
+                catch { }
+            }
+
+            if (syntaxNode is CompilationUnitSyntax)
+            {
+                try
+                {
+                    var attributeList = ((CompilationUnitSyntax)syntaxNode).AttributeLists;
+
+                    foreach (var a in attributeList)
+                    {
+                        var attributes = a.DescendantNodes().OfType<AttributeSyntax>();
+
+                        foreach (var attr in attributes)
+                        {
+                            var name = attr.Name;
+                            var nameString = name.ToFullString();
+
+                            if (Constants.AssemblyAttributeNames.Contains(nameString)
+                                || nameString.StartsWith("OwnedEntity")
+                                || nameString.StartsWith("RequiredEntity"))
+                            {
+                                Attributes.Add(attr);
+                            }
+                        }
                     }
                 }
                 catch { }

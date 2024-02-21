@@ -19,20 +19,30 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the category of the operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class CategoryAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public CategoryAttribute() { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="category"></param>
+        public CategoryAttribute(Category category)
+        {
+            this.Category = category;
+        }
 
         /// <summary>
         /// Category 
         /// </summary>
         public Category Category { get; set; }
-
-        public CategoryAttribute(Category category)
-        {
-            this.Category = category;
-        }
     }
     
 }

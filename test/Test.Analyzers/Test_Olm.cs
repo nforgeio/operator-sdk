@@ -24,6 +24,8 @@ using FluentAssertions;
 
 using k8s.Models;
 
+using Microsoft.AspNetCore.Http.HttpResults;
+
 using Neon.Common;
 using Neon.IO;
 using Neon.K8s.Core;
@@ -50,6 +52,9 @@ namespace Test.Analyzers
             var version = "1.2.3";
             var maturity = "alpha";
             var minKubeVersion = "1.16.0";
+            var containerImage = "github.com/test-operator/cluster-operator";
+            var containerImageTag = "1.2.3";
+            var repository = "https://github.com/test-operator/cluster-operator";
 
             var source = $@"
 using Neon.Operator.OperatorLifecycleManager;
@@ -72,8 +77,8 @@ using Neon.Common;
 [assembly: Type(Supported = true, Type = InstallModeType.OwnNamespace)]
 [assembly: Category(Category = Category.ApplicationRuntime | Category.DeveloperTools | Category.BigData | Category.BigData)]
 [assembly: Capabilities(Capability = CapabilityLevel.DeepInsights)]
-[assembly: ContainerImage(Repository = ""github.com/test-operator/cluster-operator"", Tag =""1.2.3"")]
-[assembly: Repository(Repository = ""https://github.com/test-operator/cluster-operator"")]
+[assembly: ContainerImage(Repository = ""{containerImage}"", Tag =""{containerImageTag}"")]
+[assembly: Repository(Repository = ""{repository}"")]
 [assembly: InstallMode(Type = InstallModeType.OwnNamespace)]
 [assembly: InstallMode(Type = InstallModeType.MultiNamespace | InstallModeType.SingleNamespace)]
 [assembly: InstallMode(Type = InstallModeType.AllNamespaces, Supported = false)]
@@ -107,6 +112,8 @@ culpa qui officia deserunt mollit anim id est laborum."";
                 .AddSourceFile("Models/V1ExampleEntity.cs")
                 .AddSourceFile("Models/V2ExampleEntity.cs")
                 .AddSourceFile("Controllers/ExampleController.cs")
+                .AddSourceFile("Controllers/PodValidator.cs")
+                .AddSourceFile("Controllers/PodWebhook.cs")
                 .AddAdditionalFilePath("nuget-icon.png")
                 .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
                 .AddAssembly(typeof(NeonHelper).Assembly)
@@ -123,19 +130,16 @@ culpa qui officia deserunt mollit anim id est laborum."";
 
             var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
 
-            //var name = "test-operator";
-            //var displayName = "Testaroo Operator";
-            //var ownedEntityDesc = $"I'm owned by {name}";
-            //var requiredEntityDesc = $"Required by {name}";
-            //var providerName = "NeonSDK";
-            //var providerUrl = "foo.com";
-            //var maintainerName = "Bob Testaroni";
-            //var maintainerEmail = "foo@bar.com";
-            //var version = "1.2.3";
-            //var maturity = "alpha";
-            //var minKubeVersion = "1.16.0";
-
             outCsv.Metadata.Name.Should().Be($"{name}.v{version}");
+
+            // check annotations
+            outCsv.Metadata.Annotations["categories"].Should().Be($"{Category.ApplicationRuntime.ToMemberString()}, {Category.BigData.ToMemberString()}, {Category.DeveloperTools.ToMemberString()}");
+            outCsv.Metadata.Annotations["certified"].Should().Be("false");
+            outCsv.Metadata.Annotations["capabilities"].Should().Be(CapabilityLevel.DeepInsights.ToString());
+            outCsv.Metadata.Annotations["containerImage"].Should().Be($"{containerImage}:{containerImageTag}");
+            outCsv.Metadata.Annotations["repository"].Should().Be(repository);
+
+            // check spec
             outCsv.Spec.DisplayName.Should().Be(displayName);
             outCsv.Spec.CustomResourceDefinitions.Owned.Should().HaveCount(1);
             outCsv.Spec.CustomResourceDefinitions.Owned.First().Description.Should().Be(ownedEntityDesc);
@@ -149,7 +153,17 @@ culpa qui officia deserunt mollit anim id est laborum."";
             outCsv.Spec.Version.Should().Be(version);
             outCsv.Spec.Maturity.Should().Be(maturity);
             outCsv.Spec.MinKubeVersion.Should().Be(minKubeVersion);
-            outCsv.Metadata.Annotations["categories"].Should().Be($"{Category.ApplicationRuntime.ToMemberString()}, {Category.BigData.ToMemberString()}, {Category.DeveloperTools.ToMemberString()}");
+            outCsv.Spec.Keywords.Should().Contain("foo");
+            outCsv.Spec.Keywords.Should().Contain("bar");
+            outCsv.Spec.Keywords.Should().Contain("baz");
+            outCsv.Spec.Install.Spec.Deployments.First().Spec.Template.Spec.Containers.First().Image.Should().Be($"{containerImage}:{containerImageTag}");
+
+            // check webhooks
+            outCsv.Spec.WebHookDefinitions.Should().HaveCount(2);
+            outCsv.Spec.WebHookDefinitions.Where(wd => wd.Type == WebhookAdmissionType.ValidatingAdmissionWebhook).Should().HaveCount(1);
+            outCsv.Spec.WebHookDefinitions.Where(wd => wd.Type == WebhookAdmissionType.MutatingAdmissionWebhook).Should().HaveCount(1);
+
+
         }
 
         [Fact]

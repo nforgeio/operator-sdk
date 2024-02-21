@@ -17,14 +17,32 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the icon for the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class IconAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public IconAttribute() { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="mediaType"></param>
+        public IconAttribute(string path, string mediaType = null)
+        {
+            this.Path = path;
+            this.MediaType = mediaType;
+        }
 
         /// <summary>
         /// Path.
@@ -36,16 +54,19 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// </summary>
         public string MediaType { get; set; }
 
-
-        public IconAttribute(string path, string mediaType = null)
+        /// <summary>
+        /// Converts the IconAttribute to an Icon
+        /// </summary>
+        /// <param name="baseDir"></param>
+        /// <returns></returns>
+        public Icon ToIcon(string baseDir = null)
         {
-            this.Path = path;
-            this.MediaType = mediaType;
-        }
-
-        public Icon ToIcon()
-        {
-            byte[] imageArray = System.IO.File.ReadAllBytes(Path); // read the bytes
+            var path = Path;
+            if (baseDir != null)
+            {
+                path = System.IO.Path.Combine(baseDir, path);
+            }
+            byte[] imageArray = System.IO.File.ReadAllBytes(path); // read the bytes
             string base64ImageRepresentation = Convert.ToBase64String(imageArray);
             return new Icon()
             {

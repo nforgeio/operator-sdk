@@ -1,5 +1,3 @@
-// -----------------------------------------------------------------------------
-// FILE:	    Category.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -70,19 +68,19 @@ namespace Neon.Operator.OperatorLifecycleManager
         DriversAndPlugins = 64,
 
         /// <summary>
-        /// Integration & Delivery
+        /// Integration and Delivery
         /// </summary>
         [EnumMember(Value = "Integration & Delivery")]
         IntegrationAndDelivery = 128,
 
         /// <summary>
-        /// Logging & Tracing
+        /// Logging and Tracing
         /// </summary>
         [EnumMember(Value = "Logging & Tracing")]
         LoggingAndTracing = 256,
 
         /// <summary>
-        /// Modernization & Migration
+        /// Modernization and Migration
         /// </summary>
         [EnumMember(Value ="Modernization & Migration")]
         ModernizationMigration = 512,
@@ -118,7 +116,7 @@ namespace Neon.Operator.OperatorLifecycleManager
         Storage = 16384,
 
         /// <summary>
-        /// Streaming & Messaging
+        /// Streaming and Messaging
         /// </summary>
         [EnumMember(Value ="Streaming & Messaging")]
         StreamingMessaging = 32768,

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    NameAttribute.cs
+// FILE:	    Link.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -19,14 +19,36 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
-    public sealed class NameAttribute : Attribute
+    /// <summary>
+    /// Specifies a link to be displayed on the Operator Lifecycle Manager page.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
+    public sealed class LinkAttribute : Attribute
     {
-        public NameAttribute() { }
-        public string Name { get; set; }
-        public NameAttribute(string name)
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public LinkAttribute() { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="url"></param>
+        public LinkAttribute(string name , string url)
         {
             this.Name = name;
+            this.Url = url;
         }
+
+        /// <summary>
+        /// The name of the link.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The url.
+        /// </summary>
+        public string Url { get; set; }
     }
 }

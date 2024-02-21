@@ -16,21 +16,39 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// An attribute that can be used to annotate an assembly with key-value pairs.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class AnnotationAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public AnnotationAttribute() { }
-        public string Key { get; set; }
-        public string Value { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public AnnotationAttribute(string key, string value)
         {
             this.Key = key;
             this.Value = value;
         }
+
+        /// <summary>
+        /// The annotation key.
+        /// </summary>
+        public string Key { get; set; }
+
+        /// <summary>
+        /// The annotation value.
+        /// </summary>
+        public string Value { get; set; }
     }
 }

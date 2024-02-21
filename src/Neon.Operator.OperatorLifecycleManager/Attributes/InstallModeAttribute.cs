@@ -20,13 +20,25 @@ using System.Collections.Generic;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the install modes for the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class InstallModeAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public InstallModeAttribute() { }
 
+        /// <summary>
+        /// The install mode type.
+        /// </summary>
         public InstallModeType Type { get; set; }
 
+        /// <summary>
+        /// Whether the install mode is supported. Default is true.
+        /// </summary>
         public bool Supported { get; set; } = true;
     }
 }

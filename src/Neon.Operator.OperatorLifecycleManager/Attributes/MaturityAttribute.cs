@@ -19,14 +19,29 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the maturity of the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class MaturityAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public MaturityAttribute() { }
-        public string Maturity { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="maturity"></param>
         public MaturityAttribute(string maturity)
         {
             this.Maturity = maturity;
         }
+
+        /// <summary>
+        /// The maturity.
+        /// </summary>
+        public string Maturity { get; set; }
     }
 }

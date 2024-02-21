@@ -29,7 +29,8 @@ namespace Neon.Operator.Analyzers
 {
     public class RbacRuleReceiver : ISyntaxReceiver
     {
-        public List<AttributeSyntax> AttributesToRegister { get; } = new List<AttributeSyntax>();
+        public List<AttributeSyntax> AssemblyAttributes { get; } = new List<AttributeSyntax>();
+        public List<AttributeSyntax> RbacAttributesToRegister { get; } = new List<AttributeSyntax>();
         public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> ControllersToRegister { get; } = new List<ClassDeclarationSyntax>();
         public bool HasMutatingWebhooks { get; set; } = false;
@@ -91,6 +92,33 @@ namespace Neon.Operator.Analyzers
                     if (bases.Count() > 0)
                     {
                         ControllersToRegister.Add((ClassDeclarationSyntax)syntaxNode);
+                    }
+                }
+                catch { }
+            }
+
+            if (syntaxNode is CompilationUnitSyntax)
+            {
+                try
+                {
+                    var attributeList = ((CompilationUnitSyntax)syntaxNode).AttributeLists;
+
+                    foreach (var a in attributeList)
+                    {
+                        var attributes = a.DescendantNodes().OfType<AttributeSyntax>();
+
+                        foreach (var attr in attributes)
+                        {
+                            var name = attr.Name;
+                            var nameString = name.ToFullString();
+
+                            if (Constants.AssemblyAttributeNames.Contains(nameString)
+                                || nameString.StartsWith("OwnedEntity")
+                                || nameString.StartsWith("RequiredEntity"))
+                            {
+                                AssemblyAttributes.Add(attr);
+                            }
+                        }
                     }
                 }
                 catch { }

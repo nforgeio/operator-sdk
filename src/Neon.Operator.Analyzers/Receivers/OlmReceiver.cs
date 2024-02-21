@@ -21,40 +21,30 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using Neon.Operator.OperatorLifecycleManager;
+using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
 
 namespace Neon.Operator.Analyzers.Receivers
 {
     public class OlmReceiver : ISyntaxReceiver
     {
-        private List<string> attributeNames = [
-            nameof(AnnotationAttribute),
-            nameof(DescriptionAttribute),
-            nameof(InstallModeAttribute),
-            nameof(MaintainerAttribute),
-            nameof(MaturityAttribute),
-            nameof(MinKubeVersionAttribute),
-            nameof(DisplayNameAttribute),
-            nameof(KeywordAttribute),
-            nameof(NameAttribute),
-            nameof(VersionAttribute),
-            nameof(ProviderAttribute),
-            nameof(ContainerImageAttribute),
-            nameof(IconAttribute),
-            nameof(CapabilitiesAttribute),
-            nameof(CategoryAttribute),
-            nameof(RepositoryAttribute),
-            ];
-        public List<AttributeSyntax> AttributesToRegister { get; } = new List<AttributeSyntax>();
-        public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();
-        public List<ClassDeclarationSyntax> ControllersToRegister { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> ClassesToRegister { get; }
+            = new();
+
+        public List<ClassDeclarationSyntax> ControllersToRegister { get; }
+            = new();
+
+        public List<ClassDeclarationSyntax> Webhooks { get; }
+            = new();
+
         public bool HasMutatingWebhooks { get; set; } = false;
         public bool HasValidatingWebhooks { get; set; } = false;
 
         private static string[] attributes = new string[]
         {
-            "RbacRule"
+            "RbacRule",
+            "Webhook",
+            "WebhookRule",
         };
 
         private List<string> baseNames = new List<string>()
@@ -94,8 +84,7 @@ namespace Neon.Operator.Analyzers.Receivers
                             var name = attr.Name;
                             var nameString = name.ToFullString();
 
-                            if (attributeNames.Contains(nameString)
-                                || attributeNames.Contains(nameString + "Attribute")
+                            if (Constants.AssemblyAttributeNames.Contains(nameString)
                                 || nameString.StartsWith("OwnedEntity")
                                 || nameString.StartsWith("RequiredEntity"))
                             {
@@ -159,6 +148,7 @@ namespace Neon.Operator.Analyzers.Receivers
                         if (bases.Count() > 0)
                         {
                             HasMutatingWebhooks = true;
+                            Webhooks.Add((ClassDeclarationSyntax)syntaxNode);
                         }
                     }
                     catch { }
@@ -181,6 +171,7 @@ namespace Neon.Operator.Analyzers.Receivers
                         if (bases.Count() > 0)
                         {
                             HasValidatingWebhooks = true;
+                            Webhooks.Add((ClassDeclarationSyntax)syntaxNode);
                         }
                     }
                     catch { }

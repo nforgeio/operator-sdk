@@ -176,8 +176,8 @@ namespace Neon.Operator
                             i.IsGenericType && baseNames.Any(bn => bn.FullName == i.FullName))
                         .Select(i => i.CustomAttributes?
                                         .Where(a => a.AttributeType.Equals(typeof(OperatorComponentAttribute)))
-                                        .FirstOrDefault().ConstructorArguments.First().Value)
-                        .FirstOrDefault();
+                                        .FirstOrDefault().NamedArguments.First().TypedValue)
+                        .FirstOrDefault().Value.Value;
 
                     IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
                     var members = assemblySymbol.GlobalNamespace.

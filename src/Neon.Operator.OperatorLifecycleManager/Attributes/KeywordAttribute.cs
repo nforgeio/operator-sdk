@@ -22,22 +22,48 @@ using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies a keyword for the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class KeywordAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public KeywordAttribute() { }
-        public string Keyword { get; set; }
-        public List<string> Keywords { get; set; } = new List<string>();
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="keyword"></param>
         public KeywordAttribute(string keyword)
         {
             this.Keyword = keyword;
         }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public KeywordAttribute(params string[] keywords)
         {
             this.Keywords = keywords.ToList();
         }
 
+        /// <summary>
+        /// A keyword.
+        /// </summary>
+        public string Keyword { get; set; }
+
+        /// <summary>
+        /// The keywords.
+        /// </summary>
+        public List<string> Keywords { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Gets the keywords as a list.
+        /// </summary>
+        /// <returns></returns>
         public List<string> GetKeywords()
         {
             if (!string.IsNullOrEmpty(Keyword))

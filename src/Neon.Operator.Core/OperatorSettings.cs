@@ -21,6 +21,7 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
+using Neon.Operator.Attributes;
 using Neon.Operator.ResourceManager;
 
 using Prometheus;
@@ -45,12 +46,20 @@ namespace Neon.Operator
         {
             if (string.IsNullOrEmpty(Name))
             {
-                name = Assembly.GetEntryAssembly().GetName().Name;
+                var nameAttribute = Assembly.GetEntryAssembly().GetCustomAttribute<NameAttribute>();
+                if (nameAttribute != null)
+                {
+                    name = nameAttribute.Name;
+                }
+                else
+                {
+                    name = Assembly.GetEntryAssembly().GetName().Name;
+                }
             }
         }
 
         /// <summary>
-        /// The Operator name.  This defaults to a Kubernetes safe version of the entry assembly name.
+        /// The Operator name. This defaults to a Kubernetes safe version of the entry assembly name.
         /// </summary>
         public string Name
         {

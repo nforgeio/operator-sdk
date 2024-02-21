@@ -23,7 +23,7 @@ namespace Neon.Operator.OperatorLifecycleManager
     public interface IRequiredEntity
     {
         /// <summary>
-        /// Name is the metadata.name of the CRD (which is of the form <plural>.<group>)
+        /// Name is the metadata.name of the CRD (which is of the form {plural}.{group})
         /// </summary>
         public string Name { get; }
 
@@ -36,6 +36,5 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// Kind is the CamelCased singular value defined in spec.names.kind of the CRD.
         /// </summary>
         public string Kind { get; }
-
     }
 }

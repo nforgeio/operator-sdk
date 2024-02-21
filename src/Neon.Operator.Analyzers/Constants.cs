@@ -15,6 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Neon.Operator.Attributes;
+using Neon.Operator.OperatorLifecycleManager;
+using System.Collections.Generic;
+
 namespace Neon.Operator.Analyzers
 {
     internal static class Constants
@@ -38,5 +42,40 @@ namespace Neon.Operator.Analyzers
         public const string FloatTypeString = "float";
         public const string DoubleTypeString = "double";
         public const string DateTimeTypeString = "date-time";
+
+        public static List<string> AssemblyAttributeNames = [
+            nameof(AnnotationAttribute),
+            nameof(AnnotationAttribute).Replace("Attribute", ""),
+            nameof(DescriptionAttribute),
+            nameof(DescriptionAttribute).Replace("Attribute", ""),
+            nameof(InstallModeAttribute),
+            nameof(InstallModeAttribute).Replace("Attribute", ""),
+            nameof(MaintainerAttribute),
+            nameof(MaintainerAttribute).Replace("Attribute", ""),
+            nameof(MaturityAttribute),
+            nameof(MaturityAttribute).Replace("Attribute", ""),
+            nameof(MinKubeVersionAttribute),
+            nameof(MinKubeVersionAttribute).Replace("Attribute", ""),
+            nameof(DisplayNameAttribute),
+            nameof(DisplayNameAttribute).Replace("Attribute", ""),
+            nameof(KeywordAttribute),
+            nameof(KeywordAttribute).Replace("Attribute", ""),
+            nameof(NameAttribute),
+            nameof(NameAttribute).Replace("Attribute", ""),
+            nameof(VersionAttribute),
+            nameof(VersionAttribute).Replace("Attribute", ""),
+            nameof(ProviderAttribute),
+            nameof(ProviderAttribute).Replace("Attribute", ""),
+            nameof(ContainerImageAttribute),
+            nameof(ContainerImageAttribute).Replace("Attribute", ""),
+            nameof(IconAttribute),
+            nameof(IconAttribute).Replace("Attribute", ""),
+            nameof(CapabilitiesAttribute),
+            nameof(CapabilitiesAttribute).Replace("Attribute", ""),
+            nameof(CategoryAttribute),
+            nameof(CategoryAttribute).Replace("Attribute", ""),
+            nameof(RepositoryAttribute),
+            nameof(RepositoryAttribute).Replace("Attribute", ""),
+            ];
     }
 }

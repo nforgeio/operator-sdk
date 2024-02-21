@@ -31,6 +31,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
+using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
@@ -76,7 +77,9 @@ namespace Neon.Operator.Analyzers
             logs = new Dictionary<string, StringBuilder>();
 
             var metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            var ValidatingWebhooks = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
+            var ValidatingWebhooks  = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
+            var attributes          = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.Attributes;
+            var nameAttribute       = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
 
             if (ValidatingWebhooks.Count == 0)
             {
@@ -142,6 +145,11 @@ namespace Neon.Operator.Analyzers
                 {
                     operatorName = oName;
                 }
+            }
+
+            if (nameAttribute != null)
+            {
+                operatorName = nameAttribute.Name;
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var operatorNs))

@@ -16,21 +16,32 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the repository for the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class RepositoryAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public RepositoryAttribute() { }
 
-        public string Repository { get; set; }
-
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="repository"></param>
         public RepositoryAttribute(string repository)
         {
             this.Repository = repository;
         }
+
+        /// <summary>
+        /// The repository for the Operator.
+        /// </summary>
+        public string Repository { get; set; }
     }
 }

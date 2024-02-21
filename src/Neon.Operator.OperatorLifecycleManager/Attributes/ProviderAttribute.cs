@@ -21,18 +21,36 @@ using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the provider for the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class ProviderAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public ProviderAttribute() { }
 
-        public string Name { get; set; }
-        public string Url { get; set; }
-
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="url"></param>
         public ProviderAttribute(string name, string url)
         {
             this.Name = name;
             this.Url = url;
         }
+
+        /// <summary>
+        /// The name of the provider.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The url for the provider.
+        /// </summary>
+        public string Url { get; set; }
     }
 }

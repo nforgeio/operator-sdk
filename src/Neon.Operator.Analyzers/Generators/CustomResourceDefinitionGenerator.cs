@@ -143,6 +143,8 @@ namespace Neon.Operator.Analyzers
                 throw new Exception("CRD output directory not defined.");
             }
 
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetDir", out var targetDir);
+
             try
             {
                 Directory.CreateDirectory(crdOutputDirectory);
@@ -264,6 +266,14 @@ namespace Neon.Operator.Analyzers
                     }
                 }
 
+                var olmOutputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
+                var olmManifestDir   = Path.Combine(olmOutputBaseDir, "manifests");
+
+                if (!Directory.Exists(olmManifestDir))
+                {
+                    Directory.CreateDirectory(olmManifestDir);
+                }
+
                 foreach (var crd in customResourceDefinitions)
                 {
                     try
@@ -281,6 +291,13 @@ namespace Neon.Operator.Analyzers
                             var yaml = KubernetesYaml.Serialize(crd.Value);
 
                             var outputPath = Path.Combine(crdOutputDirectory, crd.Value.Name() + ".yaml");
+
+                            if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
+                            {
+                                File.WriteAllText(outputPath, yaml);
+                            }
+
+                            outputPath = Path.Combine(olmManifestDir, crd.Value.Name() + ".yaml");
 
                             if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
                             {

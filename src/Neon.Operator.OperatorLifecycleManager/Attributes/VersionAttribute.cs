@@ -19,16 +19,29 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the version of the Operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class VersionAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public VersionAttribute() { }
 
-        public string Version { get; set; }
-
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="version"></param>
         public VersionAttribute(string version)
         {
             this.Version = version;
         }
+
+        /// <summary>
+        /// The Version.
+        /// </summary>
+        public string Version { get; set; }
     }
 }

@@ -19,14 +19,29 @@ using System;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies the minimum Kubernetes version required for the operator to run.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class MinKubeVersionAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public MinKubeVersionAttribute() { }
-        public string MinKubeVersion { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="minKubeVersion"></param>
         public MinKubeVersionAttribute(string minKubeVersion)
         {
             this.MinKubeVersion = minKubeVersion;
         }
+
+        /// <summary>
+        /// The minimum Kubernetes version.
+        /// </summary>
+        public string MinKubeVersion { get; set; }
     }
 }

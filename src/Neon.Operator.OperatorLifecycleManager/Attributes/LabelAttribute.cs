@@ -16,21 +16,39 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Adds labels to the operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     public sealed class LabelAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public LabelAttribute() { }
-        public string Key { get; set; }
-        public string Value { get; set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public LabelAttribute(string key, string value)
         {
             this.Key = key;
             this.Value = value;
         }
+
+        /// <summary>
+        /// The label key.
+        /// </summary>
+        public string Key { get; set; }
+
+        /// <summary>
+        /// The label value.
+        /// </summary>
+        public string Value { get; set; }
     }
 }

@@ -16,25 +16,33 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Specifies that the Operator assembly is certified.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class CertifiedAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public CertifiedAttribute() { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="certified"></param>
+        public CertifiedAttribute(bool certified = true)
+        {
+            this.Certified = certified;
+        }
 
         /// <summary>
         /// Certified 
         /// </summary>
         public bool Certified { get; set; } = true;
-
-        public CertifiedAttribute(bool certified = true)
-        {
-            this.Certified = certified;
-        }
     }
     
 }

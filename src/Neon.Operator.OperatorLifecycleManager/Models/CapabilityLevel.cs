@@ -19,6 +19,9 @@ using System.Runtime.Serialization;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Enum for the capability level.
+    /// </summary>
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumMemberConverter))]
     public enum CapabilityLevel
     {

@@ -21,19 +21,19 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 using k8s;
-using k8s.KubeConfigModels;
 using k8s.Models;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Operator.Rbac;
+using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
@@ -57,6 +57,9 @@ namespace Neon.Operator.Analyzers.Generators
 
         public void Execute(GeneratorExecutionContext context)
         {
+            //System.Diagnostics.Debugger.Launch();
+
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir);
             if (!context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetDir", out var targetDir))
             {
                 return;
@@ -71,40 +74,41 @@ namespace Neon.Operator.Analyzers.Generators
             var hasMutatingWebhooks    = ((OlmReceiver)context.SyntaxReceiver)?.HasMutatingWebhooks ?? false;
             var hasValidatingWebhooks  = ((OlmReceiver)context.SyntaxReceiver)?.HasValidatingWebhooks ?? false;
             var classesWithRbac        = ((OlmReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+            var webhooks               = ((OlmReceiver)context.SyntaxReceiver)?.Webhooks;
             var rbacAttributes         = new List<IRbacRule>();
             var leaderElectionDisabled = false;
 
             var createdAt        = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddThh:mm:ss%K");
-            var operatorName     = GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var displayName      = GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var description      = GetAttribute<DescriptionAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var certified        = GetAttribute<CertifiedAttribute>(metadataLoadContext, context.Compilation, attributes)?.Certified ?? false;
-            var containerImage   = GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var capabilities     = GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var repository       = GetAttribute<RepositoryAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var maturity         = GetAttribute<MaturityAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var provider         = GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var version          = GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var minKubeVersion   = GetAttribute<MinKubeVersionAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var categories       = GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var keywords         = GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var maintainers      = GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var icons            = GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var installModeAttrs = GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes).ToList();
+            var operatorName     = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var displayName      = RoslynExtensions.GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var description      = RoslynExtensions.GetAttribute<DescriptionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var certified        = RoslynExtensions.GetAttribute<CertifiedAttribute>(metadataLoadContext, context.Compilation, attributes)?.Certified ?? false;
+            var containerImage   = RoslynExtensions.GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var capabilities     = RoslynExtensions.GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var repository       = RoslynExtensions.GetAttribute<RepositoryAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var maturity         = RoslynExtensions.GetAttribute<MaturityAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var provider         = RoslynExtensions.GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var version          = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var minKubeVersion   = RoslynExtensions.GetAttribute<MinKubeVersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var categories       = RoslynExtensions.GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var keywords         = RoslynExtensions.GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var maintainers      = RoslynExtensions.GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var icons            = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var installModeAttrs = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
 
             if (operatorName == null
-                || displayName    == null
-                || description    == null
+                || displayName == null
+                || description == null
                 || containerImage == null
-                || categories     == null
-                || capabilities   == null
-                || icons          == null
-                || keywords       == null
-                || maturity       == null
-                || maintainers    == null
-                || provider       == null
+                || categories == null
+                || capabilities == null
+                || icons == null
+                || keywords == null
+                || maturity == null
+                || maintainers == null
+                || provider == null
                 || minKubeVersion == null
-                || version        == null)
+                || version == null)
             {
                 return;
             }
@@ -116,7 +120,7 @@ namespace Neon.Operator.Analyzers.Generators
                     leaderElectionDisabled = leaderElectionBool;
                 }
             }
-            
+
             rbacAttributes.Add(
                 new RbacRule<V1CustomResourceDefinition>(
                     verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
@@ -215,15 +219,15 @@ namespace Neon.Operator.Analyzers.Generators
             };
 
 
-            csv.Spec                = new V1ClusterServiceVersionSpec();
-            csv.Spec.Icon           = icons?.Select(i => i.ToIcon()).ToList();
-            csv.Spec.Keywords       = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
-            csv.Spec.DisplayName    = displayName.DisplayName;
-            csv.Spec.Description    = description.FullDescription;
-            csv.Spec.Version        = version.Version;
-            csv.Spec.Maturity       = maturity.Maturity;
+            csv.Spec = new V1ClusterServiceVersionSpec();
+            csv.Spec.Icon = icons?.Select(i => i.ToIcon(projectDir)).ToList();
+            csv.Spec.Keywords = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
+            csv.Spec.DisplayName = displayName.DisplayName;
+            csv.Spec.Description = description.FullDescription;
+            csv.Spec.Version = version.Version;
+            csv.Spec.Maturity = maturity.Maturity;
             csv.Spec.MinKubeVersion = minKubeVersion.MinKubeVersion;
-            csv.Spec.Provider       = new Provider()
+            csv.Spec.Provider = new Provider()
             {
                 Name = provider.Name,
                 Url = provider.Url
@@ -255,13 +259,14 @@ namespace Neon.Operator.Analyzers.Generators
                     installModes.Add(new InstallMode()
                     {
                         Supported = mode.Supported,
-                        Type      = im
+                        Type = im
                     });
                 }
             }
             csv.Spec.InstallModes = installModes;
 
             csv.Spec.Install = new NamedInstallStrategy();
+            csv.Spec.Install.Strategy = "deployment";
             csv.Spec.Install.Spec = new StrategyDetailsDeployment();
             csv.Spec.Install.Spec.Permissions =
             [
@@ -335,10 +340,263 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             ];
 
+            csv.Spec.Install.Spec.Deployments =
+            [
+                new StrategyDeploymentSpec()
+                {
+                    Name = operatorName.Name,
+                    Label = new Dictionary<string, string>()
+                    {
+                        { "app.kubernetes.io/name", operatorName.Name },
+                        { "app.kubernetes.io/version", version.Version },
+                    },
+                    Spec = new V1DeploymentSpec()
+                    {
+                        Replicas = 1,
+                        Selector = new V1LabelSelector()
+                        {
+                            MatchLabels = new Dictionary<string, string>()
+                            {
+                                { "app.kubernetes.io/name", operatorName.Name },
+
+                            }
+
+                        },
+                        Template = new V1PodTemplateSpec()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Labels = new Dictionary<string, string>()
+                                {
+                                   { "app.kubernetes.io/name", operatorName.Name },
+
+                                },
+                                Annotations = new Dictionary<string, string>()
+                                {
+                                    { "prometheus.io/path", "/metrics" },
+                                    { "prometheus.io/port", "9762" },
+                                    { "prometheus.io/scheme", "http" },
+                                    { "prometheus.io/scrape", "true" },
+                                }
+
+                            },
+                            Spec = new V1PodSpec()
+                            {
+                                EnableServiceLinks = false,
+                                ServiceAccountName = operatorName.Name,
+                                Containers =
+                                [
+                                    new V1Container()
+                                    {
+                                        Name = operatorName.Name,
+                                        Image = $"{containerImage.Repository}:{containerImage.Tag}",
+                                        Env =
+                                        [
+                                            new V1EnvVar()
+                                            {
+                                                Name = "LISTEN_PORT",
+                                                Value = "5000",
+                                            },
+                                            new V1EnvVar()
+                                            {
+                                                Name = "METRICS_PORT",
+                                                Value = "9762",
+                                            },
+                                            new V1EnvVar()
+                                            {
+                                                Name = "KUBERNETES_NAMESPACE",
+                                                ValueFrom = new V1EnvVarSource()
+                                                {
+                                                    FieldRef = new V1ObjectFieldSelector()
+                                                    {
+                                                        FieldPath = "metadata.namespace"
+                                                    }
+                                                }
+                                            },
+                                            new V1EnvVar()
+                                            {
+                                                Name = "WATCH_NAMESPACE",
+                                                ValueFrom = new V1EnvVarSource()
+                                                {
+                                                    FieldRef = new V1ObjectFieldSelector()
+                                                    {
+                                                        FieldPath = "metadata.annotations['olm.targetNamespaces']"
+                                                    }
+                                                }
+
+                                            },
+
+                                         ],
+                                        Ports =
+                                        [
+                                            new V1ContainerPort()
+                                            {
+                                                Name = "http",
+                                                ContainerPort = 5000,
+                                                Protocol = "TCP"
+                                            },
+                                            new V1ContainerPort()
+                                            {
+                                                Name = "http-metrics",
+                                                ContainerPort = 9762,
+                                                Protocol = "TCP"
+
+                                            },
+                                        ],
+                                        LivenessProbe = new V1Probe()
+                                        {
+                                            HttpGet = new V1HTTPGetAction()
+                                            {
+                                                Path = "/healthz",
+                                                Port = "http",
+
+                                            },
+
+                                        },
+                                        ReadinessProbe = new V1Probe()
+                                        {
+                                            HttpGet = new V1HTTPGetAction()
+                                            {
+                                                Path ="/ready",
+                                                Port = "http",
+                                            }
+
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                }
+            ];
+
+            if (webhooks?.Count > 0)
+            {
+                csv.Spec.WebHookDefinitions = new List<WebHookDescription>();
+
+                foreach (var webhook in webhooks)
+                {
+                    var webhookNs = webhook.GetNamespace();
+
+                    var webhookSystemType = metadataLoadContext.ResolveType($"{webhookNs}.{webhook.Identifier.ValueText}");
+
+                    IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
+                    var members = assemblySymbol.GlobalNamespace.
+                             GetNamespaceMembers();
+
+                    var webhookAttribute = webhookSystemType.GetCustomAttribute<WebhookAttribute>();
+                    var webhookRules     = webhookSystemType.GetCustomAttributes<WebhookRuleAttribute>();
+                    var typeMembers      = context
+                        .Compilation
+                        .SourceModule
+                        .ReferencedAssemblySymbols
+                        .SelectMany(
+                            ras => ras.GlobalNamespace.GetNamespaceMembers())
+                        .SelectMany(nsm => nsm.GetTypeMembers());
+
+                    var webhookEntityType = webhook
+                            .DescendantNodes()?
+                            .OfType<BaseListSyntax>()?
+                            .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?.Any(gns =>
+                                gns.Identifier.ValueText.EndsWith("IValidatingWebhook")
+                                || gns.Identifier.ValueText.EndsWith("ValidatingWebhookBase") == true
+                                || gns.Identifier.ValueText.EndsWith("IMutatingWebhook")
+                                || gns.Identifier.ValueText.EndsWith("MutatingWebhookBase")) == true).FirstOrDefault();
+
+                    var webhookTypeIdentifier          = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
+
+                    var sdf = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+
+                    var webhookTypeIdentifierNamespace = webhookTypeIdentifier.GetNamespace();
+
+                    var webhookEntityTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == webhookTypeIdentifier.Identifier.ValueText).SingleOrDefault();
+                    var webhookEntityFullyQualifiedName = webhookEntityTypeIdentifier.ToDisplayString(sdf);
+
+                    var entitySystemType = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
+
+                    var componentType = webhookSystemType.GetCustomAttributes<OperatorComponentAttribute>(true).FirstOrDefault();
+
+                    csv.Spec.WebHookDefinitions.Add
+                        (
+                            new WebHookDescription()
+                            {
+                                Type = ToWebhookAdmissionType(componentType.ComponentType),
+                                GenerateName = webhookAttribute.Name,
+                                AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions.ToList(),
+                                ContainerPort = 5000,
+                                TargetPort = 5000,
+                                DeploymentName = operatorName.Name,
+                                FailurePolicy = webhookAttribute.FailurePolicy,
+                                SideEffects = webhookAttribute.SideEffects,
+
+                                Rules = webhookRules.Select(r => new V1RuleWithOperations()
+                                {
+                                    ApiGroups = r.ApiGroups.ToList(),
+                                    ApiVersions = r.ApiVersions.ToList(),
+                                    Operations = r.Operations.ToList(),
+                                    Resources = r.Resources.ToList(),
+                                }).ToList(),
+                                WebHookPath = CreateEndpoint(entitySystemType, webhookSystemType, ToWebhookAdmissionType(componentType.ComponentType)),
+                            }
+                        );
+                }
+            }
+
             var outputString = KubernetesYaml.Serialize(csv);
-            var outputPath = Path.Combine(targetDir, "clusterserviceversion.yaml");
-            File.WriteAllText(outputPath, outputString);
+            var outputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
+            var manifestDir = Path.Combine(outputBaseDir, "manifests");
+
+            if (!Directory.Exists(manifestDir))
+            {
+                Directory.CreateDirectory(manifestDir);
+            }
+
+            var csvPath = Path.Combine(manifestDir, $"{operatorName.Name.ToLower()}.clusterserviceversion.yaml");
+            File.WriteAllText(csvPath, outputString);
+
+            var metadataDir = Path.Combine(outputBaseDir, "metadata");
+
+            if (!Directory.Exists(metadataDir))
+            {
+                Directory.CreateDirectory(metadataDir);
+            }
+
+            var annotations = $@"annotations:
+  operators.operatorframework.io.bundle.mediatype.v1: ""registry+v1""
+  operators.operatorframework.io.bundle.manifests.v1: ""manifests/""
+  operators.operatorframework.io.bundle.metadata.v1: ""metadata/""
+  operators.operatorframework.io.bundle.package.v1: ""{operatorName.Name.ToLower()}""
+  operators.operatorframework.io.bundle.channels.v1: ""stable""
+  operators.operatorframework.io.bundle.channel.default.v1: ""stable""
+";
+            var annotationsPath = Path.Combine(metadataDir, "annotations.yaml");
+            File.WriteAllText(annotationsPath, annotations);
+
+            var dockerFile = $@"FROM scratch
+
+LABEL operators.operatorframework.io.bundle.mediatype.v1=registry+v1
+LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
+LABEL operators.operatorframework.io.bundle.metadata.v1=metadata/
+LABEL operators.operatorframework.io.bundle.package.v1={operatorName.Name.ToLower()}
+LABEL operators.operatorframework.io.bundle.channels.v1=beta,stable
+LABEL operators.operatorframework.io.bundle.channel.default.v1=stable
+
+ADD ./manifests/*.yaml /manifests/
+ADD ./metadata/annotations.yaml /metadata/annotations.yaml
+";
+            var dockerfilePath = Path.Combine(outputBaseDir, "Dockerfile");
+            File.WriteAllText(dockerfilePath, dockerFile);
+
+
         }
+
+        public static WebhookAdmissionType ToWebhookAdmissionType(OperatorComponentType componentType) => componentType switch
+        {
+            OperatorComponentType.ValidationWebhook => WebhookAdmissionType.ValidatingAdmissionWebhook,
+            OperatorComponentType.MutationWebhook => WebhookAdmissionType.MutatingAdmissionWebhook,
+            _ => throw new ArgumentException()
+        };
+
 
         public List<CrdDescription> GetOwnedEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
         {
@@ -469,81 +727,49 @@ namespace Neon.Operator.Analyzers.Generators
             }
         }
 
-        public T GetAttribute<T>(
-            MetadataLoadContext metadataLoadContext,
-            Compilation compilation,
-            List<AttributeSyntax> attributes)
+        private string CreateEndpoint(Type entityType, Type webhookImplementation, WebhookAdmissionType webhookAdmissionType)
         {
-            try
+            var metadata = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
+            var builder  = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(metadata.Group))
             {
-                AttributeSyntax syntax = null;
-
-                syntax = attributes
-                    .Where(a => a.Name.ToFullString() == typeof(T).Name)
-                    .FirstOrDefault();
-
-                if (syntax == null)
-                {
-                    var name = typeof(T).Name.Replace("Attribute", "");
-
-                    syntax = attributes
-                        .Where(a => a.Name.ToFullString() == name)
-                        .FirstOrDefault();
-                }
-
-                if (syntax == null)
-                {
-                    return default(T);
-                }
-
-                return syntax.GetCustomAttribute<T>(metadataLoadContext, compilation);
+                builder.Append($"/{metadata.Group}");
             }
-            catch
+
+            if (!string.IsNullOrEmpty(metadata.ApiVersion))
             {
-                return default;
+                builder.Append($"/{metadata.ApiVersion}");
             }
-        }
 
-        public IEnumerable<T> GetAttributes<T>(
-            MetadataLoadContext metadataLoadContext,
-            Compilation compilation,
-            List<AttributeSyntax> attributes)
-        {
-            try
+            if (!string.IsNullOrEmpty(metadata.PluralName))
             {
-                IEnumerable<AttributeSyntax> syntax = null;
-
-                syntax = attributes
-                    .Where(a => a.Name.ToFullString() == typeof(T).Name);
-
-                if (syntax == null || syntax.Count() == 0)
-                {
-                    var name = typeof(T).Name.Replace("Attribute", "");
-
-                    syntax = attributes
-                        .Where(a => a.Name.ToFullString() == name);
-                }
-
-                if (syntax == null || syntax.Count() == 0)
-                {
-                    return null;
-                }
-
-                return syntax.Select(s => s.GetCustomAttribute<T>(metadataLoadContext, compilation));
+                builder.Append($"/{metadata.PluralName}");
             }
-            catch
+
+            builder.Append($"/{webhookImplementation.Name}");
+
+            switch (webhookAdmissionType)
             {
-                return default;
+                case WebhookAdmissionType.MutatingAdmissionWebhook:
+                    builder.Append("/mutate");
+                    break;
+                case WebhookAdmissionType.ValidatingAdmissionWebhook:
+                    builder.Append("/validate");
+                    break;
             }
+
+            return builder.ToString().ToLowerInvariant();
         }
     }
+
 
     public static class OlmExtensions
     {
         public static T GetCustomAttribute<T>(
             this AttributeSyntax attributeData,
-            MetadataLoadContext  metadataLoadContext,
-            Compilation          compilation)
+            MetadataLoadContext metadataLoadContext,
+            Compilation compilation)
         {
             if (attributeData == null)
             {
@@ -603,6 +829,8 @@ namespace Neon.Operator.Analyzers.Generators
             return attribute;
         }
 
-        
+
+
+
     }
 }

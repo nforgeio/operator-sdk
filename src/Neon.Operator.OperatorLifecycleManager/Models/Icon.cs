@@ -40,6 +40,11 @@ namespace Neon.Operator.OperatorLifecycleManager
         [YamlMember(Alias = "mediatype", ApplyNamingConventions = false)]
         public string MediaType { get; set; }
 
+        /// <summary>
+        /// Convert an IconAttribute to an <see cref="Icon"/>.
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <returns></returns>
         public static Icon FromAttribute(IconAttribute attribute)
         {
             byte[] imageArray = System.IO.File.ReadAllBytes(attribute.Path); // read the bytes

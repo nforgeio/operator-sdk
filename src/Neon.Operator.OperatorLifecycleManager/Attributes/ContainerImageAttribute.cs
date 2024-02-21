@@ -21,10 +21,27 @@ using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
+    /// <summary>
+    /// Attribute to specify the container image for the operator.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public sealed class ContainerImageAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public ContainerImageAttribute() { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="repository"></param>
+        /// <param name="tag"></param>
+        public ContainerImageAttribute(string repository, string tag)
+        {
+            this.Repository = repository;
+            this.Tag        = tag;
+        }
 
         /// <summary>
         /// Repository 
@@ -35,12 +52,6 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// tag
         /// </summary>
         public string Tag { get; set; }
-
-        public ContainerImageAttribute(string repositor, string tag)
-        {
-            this.Repository = repositor;
-            this.Tag = tag;
-        }
     }
     
 }
