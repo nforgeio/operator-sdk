@@ -29,6 +29,7 @@ using k8s.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using Neon.Common;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
@@ -526,8 +527,8 @@ namespace Neon.Operator.Analyzers.Generators
                                 ContainerPort = 5000,
                                 TargetPort = 5000,
                                 DeploymentName = operatorName.Name,
-                                FailurePolicy = webhookAttribute.FailurePolicy,
-                                SideEffects = webhookAttribute.SideEffects,
+                                FailurePolicy = webhookAttribute.FailurePolicy.ToMemberString(),
+                                SideEffects = webhookAttribute.SideEffects.ToMemberString(),
 
                                 Rules = webhookRules.Select(r => new V1RuleWithOperations()
                                 {
