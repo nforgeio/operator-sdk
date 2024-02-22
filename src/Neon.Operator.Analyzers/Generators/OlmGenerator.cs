@@ -66,6 +66,8 @@ namespace Neon.Operator.Analyzers.Generators
                 return;
             }
 
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.OlmChannels", out var olmChannels);
+
             var metadataLoadContext    = new MetadataLoadContext(context.Compilation);
             var attributes             = ((OlmReceiver)context.SyntaxReceiver)?.Attributes;
             var namedTypeSymbols       = context.Compilation.GetNamedTypeSymbols();
@@ -96,6 +98,16 @@ namespace Neon.Operator.Analyzers.Generators
             var maintainers      = RoslynExtensions.GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
             var icons            = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
             var installModeAttrs = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var defaultChannel   = RoslynExtensions.GetAttribute<DefaultChannelAttribute>(metadataLoadContext, context.Compilation,attributes);
+
+            if (string.IsNullOrEmpty(olmChannels))
+            {
+                olmChannels = defaultChannel.DefaultChannel;
+            }
+            else
+            {
+                olmChannels = olmChannels.Replace(";", ",");
+            }
 
             if (operatorName == null
                 || displayName == null
