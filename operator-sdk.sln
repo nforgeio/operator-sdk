@@ -60,7 +60,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{E25EE7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kubernetes.Resources", "src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj", "{037EEE6A-CC11-4D42-954F-2561EA726654}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.OLM", "Test\Test.OLM\Test.OLM.csproj", "{26B451EA-7BCA-4FC7-A969-E2FCCA9D1D4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.OLM", "test\Test.OLM\Test.OLM.csproj", "{26B451EA-7BCA-4FC7-A969-E2FCCA9D1D4A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Operator.OperatorLifecycleManager", "src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj", "{5AD8DE6F-2398-4BAB-8181-5EA6E409F545}"
 EndProject

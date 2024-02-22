@@ -18,11 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-using Neon.BuildInfo;
 using Neon.Common;
-using Neon.Operator.Rbac;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
