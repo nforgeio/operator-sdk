@@ -74,7 +74,6 @@ using Neon.Common;
 [assembly: MinKubeVersion(""{minKubeVersion}"")]
 [assembly: Icon(Path = ""nuget-icon.png"", MediaType = ""image/png"")]
 [assembly: Keyword(""foo"", ""bar"", ""baz"")]
-[assembly: Type(Supported = true, Type = InstallModeType.OwnNamespace)]
 [assembly: Category(Category = Category.ApplicationRuntime | Category.DeveloperTools | Category.BigData | Category.BigData)]
 [assembly: Capabilities(Capability = CapabilityLevel.DeepInsights)]
 [assembly: ContainerImage(Repository = ""{containerImage}"", Tag =""{containerImageTag}"")]
@@ -82,6 +81,7 @@ using Neon.Common;
 [assembly: InstallMode(Type = InstallModeType.OwnNamespace)]
 [assembly: InstallMode(Type = InstallModeType.MultiNamespace | InstallModeType.SingleNamespace)]
 [assembly: InstallMode(Type = InstallModeType.AllNamespaces, Supported = false)]
+[assembly: DefaultChannel(""stable"")]
 
 
 namespace TestNamespace

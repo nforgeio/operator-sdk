@@ -76,6 +76,8 @@ namespace Neon.Operator.Analyzers
             nameof(CategoryAttribute).Replace("Attribute", ""),
             nameof(RepositoryAttribute),
             nameof(RepositoryAttribute).Replace("Attribute", ""),
+            nameof(DefaultChannelAttribute),
+            nameof(DefaultChannelAttribute).Replace("Attribute", ""),
             ];
     }
 }

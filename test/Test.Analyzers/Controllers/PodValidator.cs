@@ -10,7 +10,7 @@ namespace Test_Analyzers
     [Webhook(
         name: "example-validating-hook.neonkube.io",
         admissionReviewVersions: "v1",
-        failurePolicy: "Ignore")]
+        failurePolicy: FailurePolicy.Ignore)]
     [WebhookRule(
         apiGroups: V1Deployment.KubeGroup,
         apiVersions: V1Deployment.KubeApiVersion,
