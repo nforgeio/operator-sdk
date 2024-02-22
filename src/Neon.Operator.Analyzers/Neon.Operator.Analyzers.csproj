@@ -40,7 +40,7 @@
         <PackageReference Include="YamlDotNet" Version="13.3.1" GeneratePathProperty="true" PrivateAssets="all" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup Condition="'$(_IsPacking)' == 'true'">
         <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />
         <None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    WebhookAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -38,14 +38,14 @@ namespace Neon.Operator.Webhooks
         /// <param name="reinvocationPolicy">Optionally specifies a reinvocation pilicy.</param>
         /// <param name="url">Optionally specifies the webhook URL.</param>
         public WebhookAttribute(
-            string  name,
-            string  admissionReviewVersions,
-            string  failurePolicy      = "Fail", 
-            string  sideEffects        = "None", 
-            int     timeoutSeconds     = 5,
-            string  matchPolicy        = "Equivalent",
-            string  reinvocationPolicy = "Never",
-            string  url                = null)
+            string             name,
+            string             admissionReviewVersions,
+            FailurePolicy      failurePolicy      = FailurePolicy.Fail, 
+            SideEffects        sideEffects        = SideEffects.None, 
+            int                timeoutSeconds     = 5,
+            MatchPolicy        matchPolicy        = MatchPolicy.Equivalent,
+            ReinvocationPolicy reinvocationPolicy = ReinvocationPolicy.Never,
+            string             url                = null)
         {
             // $todo(marcusbooyah):
             //
@@ -95,7 +95,7 @@ namespace Neon.Operator.Webhooks
         /// allowed values are Ignore or Fail. Defaults to Fail.
         /// </para>
         /// </summary>
-        public string FailurePolicy { get; } = "Fail";
+        public FailurePolicy FailurePolicy { get; } = FailurePolicy.Fail;
 
         /// <summary>
         /// <para>
@@ -107,7 +107,7 @@ namespace Neon.Operator.Webhooks
         /// be auto-rejected if they match a webhook with sideEffects == Unknown or Some.
         /// </para>
         /// </summary>
-        public string SideEffects { get; } = "None";
+        public SideEffects SideEffects { get; } = SideEffects.None;
 
         /// <summary>
         /// <para>
@@ -133,7 +133,7 @@ namespace Neon.Operator.Webhooks
         /// converted to apps/v1 and sent to the webhook. Defaults to "Equivalent"
         /// </para>
         /// </summary>
-        public string MatchPolicy { get; } = "Equivalent";
+        public MatchPolicy MatchPolicy { get; } = MatchPolicy.Equivalent;
 
         /// <summary>
         /// <para>
@@ -151,7 +151,7 @@ namespace Neon.Operator.Webhooks
         /// </para>
         /// Defaults to "Never".
         /// </summary>
-        public string ReinvocationPolicy { get; } = "Never";
+        public ReinvocationPolicy ReinvocationPolicy { get; } = ReinvocationPolicy.Never;
 
         /// <summary>
         /// The external URL of the webhook.
