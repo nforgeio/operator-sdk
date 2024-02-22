@@ -122,7 +122,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
                 .AddAssembly(typeof(ResourceControllerAttribute).Assembly)
                 .Build();
 
-            var outFile = Path.Combine(temp.Path, "clusterserviceversion.yaml");
+            var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", "manifests", $"{name}.clusterserviceversion.yaml");
 
             File.Exists(outFile).Should().BeTrue();
 

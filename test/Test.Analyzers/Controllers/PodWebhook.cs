@@ -9,8 +9,7 @@ namespace Test_Analyzers
 {
     [Webhook(
         name: "pod-mutating-hook.neonkube.io",
-        admissionReviewVersions: "v1",
-        failurePolicy: FailurePolicy.Ignore)]
+        admissionReviewVersions: "v1")]
     [WebhookRule(
         apiGroups: V1Pod.KubeGroup,
         apiVersions: V1Pod.KubeApiVersion,

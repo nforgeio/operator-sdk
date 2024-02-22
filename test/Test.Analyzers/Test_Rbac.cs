@@ -43,7 +43,7 @@ using k8s.Models;
 using Microsoft.AspNetCore.Hosting;
 
 using Neon.Operator;
-using Neon.Operator.AssemblyAttributes;
+using Neon.Operator.Attributes;
 using Neon.Operator.Rbac;
 
 namespace TestOperator.Foo.Bar
@@ -61,7 +61,7 @@ namespace TestOperator.Foo.Bar
                .ConfigureOperator(configure =>
                {{
                    configure.AssemblyScanningEnabled = false;
-                   configure.PodNamespace       = ""default"";
+                   configure.PodNamespace            = ""default"";
                }})
                .ConfigureNeonKube()
                .UseStartup<Startup>().Build();
@@ -79,6 +79,7 @@ namespace TestOperator.Foo.Bar
                 .AddOption("build_property.NeonOperatorName", "test-operator")
                 .AddOption("build_property.NeonOperatorGenerateRbac", true)
                 .AddOption("build_property.NeonOperatorRbacOutputDir", tempFile.Path)
+                .AddOption("build_property.TargetDir", tempFile.Path)
                 .AddSource(classDefinition)
                 .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
                 .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
