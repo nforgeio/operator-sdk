@@ -31,6 +31,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
+using Neon.Common;
 using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
@@ -390,11 +391,11 @@ namespace Neon.Operator.Analyzers
                 Rules                   = new List<V1RuleWithOperations>(),
                 ClientConfig            = clientConfig,
                 AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions,
-                FailurePolicy           = webhookAttribute.FailurePolicy,
-                SideEffects             = webhookAttribute.SideEffects,
+                FailurePolicy           = webhookAttribute.FailurePolicy.ToMemberString(),
+                SideEffects             = webhookAttribute.SideEffects.ToMemberString(),
                 TimeoutSeconds          = webhookAttribute.TimeoutSeconds,
-                MatchPolicy             = webhookAttribute.MatchPolicy,
-                ReinvocationPolicy      = webhookAttribute.ReinvocationPolicy,
+                MatchPolicy             = webhookAttribute.MatchPolicy.ToMemberString(),
+                ReinvocationPolicy      = webhookAttribute.ReinvocationPolicy.ToMemberString(),
             };
 
             var namespaceSelectorExpressions =  webhookSystemType.GetCustomAttributes<NamespaceSelectorExpressionAttribute>();

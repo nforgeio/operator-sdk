@@ -10,7 +10,7 @@ namespace TestOperator
     [Webhook(
         name: "pod-mutating-hook.neonkube.io",
         admissionReviewVersions: "v1",
-        failurePolicy: "Ignore")]
+        failurePolicy: FailurePolicy.Ignore)]
     [WebhookRule(
         apiGroups: V1Pod.KubeGroup,
         apiVersions: V1Pod.KubeApiVersion,
