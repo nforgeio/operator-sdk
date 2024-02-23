@@ -146,14 +146,15 @@ try
         Write-Info "OperatorSdkVersion: $neonOperatorVersion"
         Write-Info "NeonSdkVersion: $neonSdkVersion"
 
-        Publish -project Neon.Kubernetes                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Kubernetes.Core           -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Kubernetes.Resources      -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator                  -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Analyzers        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Core             -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Templates        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Xunit            -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Kubernetes                        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Kubernetes.Core                   -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Kubernetes.Resources              -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator                          -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Analyzers                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Core                     -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.OperatorLifecycleManager -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Templates                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Operator.Xunit                    -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
     }
 
     #------------------------------------------------------------------------------

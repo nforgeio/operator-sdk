@@ -14,6 +14,7 @@
         <CompilerVisibleProperty Include="NeonOperatorCertManagerDisabled" />
         <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingEnabled" />
         <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingDir" />
+        <CompilerVisibleProperty Include="NeonOperatorVersion" />
         <CompilerVisibleProperty Include="TargetDir" />
         <CompilerVisibleProperty Include="Configuration" />
     </ItemGroup>

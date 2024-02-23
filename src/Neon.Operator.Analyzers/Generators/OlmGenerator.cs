@@ -47,10 +47,23 @@ namespace Neon.Operator.Analyzers.Generators
         internal static readonly DiagnosticDescriptor InstallModeDuplicateError = new DiagnosticDescriptor(id: "NO11001",
                                                                                               title: "Each install mode may only be specified once",
                                                                                               messageFormat: "'{0}' has been specified multiple times",
-                                                                                              category: "NeonOperatorSdk",
+                                                                                              category: "Operator Lifecycle Manager",
                                                                                               DiagnosticSeverity.Error,
                                                                                               isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor IconNotFoundError = new DiagnosticDescriptor(id: "NO11002",
+                                                                                              title: "Icon file not found",
+                                                                                              messageFormat: "'{0}' could not be found",
+                                                                                              category: "Operator Lifecycle Manager",
+                                                                                              DiagnosticSeverity.Error,
+                                                                                              isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor MissingRequiredAttributes = new DiagnosticDescriptor(id: "NO11003",
+                                                                                              title: "Required attributes not set",
+                                                                                              messageFormat: "The following attributes are required: [{0}]",
+                                                                                              category: "Operator Lifecycle Manager",
+                                                                                              DiagnosticSeverity.Warning,
+                                                                                              isEnabledByDefault: true);
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new OlmReceiver());
@@ -65,6 +78,8 @@ namespace Neon.Operator.Analyzers.Generators
             {
                 return;
             }
+
+            targetDir = targetDir.TrimEnd('\\');
 
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.OlmChannels", out var olmChannels);
 
@@ -81,24 +96,25 @@ namespace Neon.Operator.Analyzers.Generators
             var rbacAttributes         = new List<IRbacRule>();
             var leaderElectionDisabled = false;
 
-            var createdAt        = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddThh:mm:ss%K");
-            var operatorName     = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var displayName      = RoslynExtensions.GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var description      = RoslynExtensions.GetAttribute<DescriptionAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var certified        = RoslynExtensions.GetAttribute<CertifiedAttribute>(metadataLoadContext, context.Compilation, attributes)?.Certified ?? false;
-            var containerImage   = RoslynExtensions.GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var capabilities     = RoslynExtensions.GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var repository       = RoslynExtensions.GetAttribute<RepositoryAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var maturity         = RoslynExtensions.GetAttribute<MaturityAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var provider         = RoslynExtensions.GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var version          = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var minKubeVersion   = RoslynExtensions.GetAttribute<MinKubeVersionAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var categories       = RoslynExtensions.GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var keywords         = RoslynExtensions.GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var maintainers      = RoslynExtensions.GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var icons            = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var installModeAttrs = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var defaultChannel   = RoslynExtensions.GetAttribute<DefaultChannelAttribute>(metadataLoadContext, context.Compilation,attributes);
+            var createdAt            = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddThh:mm:ss%K");
+            var operatorName         = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var displayName          = RoslynExtensions.GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var description          = RoslynExtensions.GetAttribute<DescriptionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var certified            = RoslynExtensions.GetAttribute<CertifiedAttribute>(metadataLoadContext, context.Compilation, attributes)?.Certified ?? false;
+            var containerImage       = RoslynExtensions.GetAttribute<ContainerImageAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var capabilities         = RoslynExtensions.GetAttribute<CapabilitiesAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var repository           = RoslynExtensions.GetAttribute<RepositoryAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var maturity             = RoslynExtensions.GetAttribute<MaturityAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var provider             = RoslynExtensions.GetAttribute<ProviderAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var versionAttribute     = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var minKubeVersion       = RoslynExtensions.GetAttribute<MinKubeVersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var defaultChannel       = RoslynExtensions.GetAttribute<DefaultChannelAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var webhookPortAttribute = RoslynExtensions.GetAttribute<WebhookPortAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var categories           = RoslynExtensions.GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var keywords             = RoslynExtensions.GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var maintainers          = RoslynExtensions.GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var icons                = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var installModeAttrs     = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
 
             if (string.IsNullOrEmpty(olmChannels))
             {
@@ -109,20 +125,25 @@ namespace Neon.Operator.Analyzers.Generators
                 olmChannels = olmChannels.Replace(";", ",");
             }
 
-            if (operatorName == null
-                || displayName == null
-                || description == null
-                || containerImage == null
-                || categories == null
-                || capabilities == null
-                || icons == null
-                || keywords == null
-                || maturity == null
-                || maintainers == null
-                || provider == null
-                || minKubeVersion == null
-                || version == null)
+            var requiredAttributes = new object[]
             {
+                operatorName, displayName, description, containerImage,
+                        categories, capabilities, icons, keywords, maturity,
+                        maintainers, provider, minKubeVersion, defaultChannel,
+                        versionAttribute
+            };
+
+            if (requiredAttributes.Any(a => a == null))
+            {
+                if (!requiredAttributes.All(a => a == null))
+                {
+                    context.ReportDiagnostic(
+                                    Diagnostic.Create(MissingRequiredAttributes,
+                                    Location.None,
+                                    GetRequiredAttributes(requiredAttributes)));
+                    
+                }
+
                 return;
             }
 
@@ -133,6 +154,18 @@ namespace Neon.Operator.Analyzers.Generators
                     leaderElectionDisabled = leaderElectionBool;
                 }
             }
+
+            var version = versionAttribute.Version;
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorVersion", out var versionString))
+            {
+                if (!string.IsNullOrEmpty(versionString))
+                {
+                    version = versionString;
+                }
+            }
+
+            var webhookPort = webhookPortAttribute?.Port ?? Constants.DefaultWebhookPort;
 
             rbacAttributes.Add(
                 new RbacRule<V1CustomResourceDefinition>(
@@ -216,10 +249,21 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
+            foreach (var icon in icons)
+            {
+                if (!File.Exists(System.IO.Path.Combine(projectDir, icon.Path)))
+                {
+                    context.ReportDiagnostic(
+                                    Diagnostic.Create(IconNotFoundError,
+                                    Location.None,
+                                    icon.Path));
+                }
+            }
+
             var csv = new V1ClusterServiceVersion().Initialize();
 
-            csv.Metadata = new k8s.Models.V1ObjectMeta();
-            csv.Metadata.Name = $"{operatorName.Name}.v{version.Version}";
+            csv.Metadata             = new k8s.Models.V1ObjectMeta();
+            csv.Metadata.Name        = $"{operatorName.Name}.v{version}";
             csv.Metadata.Annotations = new Dictionary<string, string>
             {
                 { "description", description.ShortDescription },
@@ -232,15 +276,15 @@ namespace Neon.Operator.Analyzers.Generators
             };
 
 
-            csv.Spec = new V1ClusterServiceVersionSpec();
-            csv.Spec.Icon = icons?.Select(i => i.ToIcon(projectDir)).ToList();
-            csv.Spec.Keywords = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
-            csv.Spec.DisplayName = displayName.DisplayName;
-            csv.Spec.Description = description.FullDescription;
-            csv.Spec.Version = version.Version;
-            csv.Spec.Maturity = maturity.Maturity;
+            csv.Spec                = new V1ClusterServiceVersionSpec();
+            csv.Spec.Icon           = icons?.Select(i => i.ToIcon(projectDir)).ToList();
+            csv.Spec.Keywords       = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
+            csv.Spec.DisplayName    = displayName.DisplayName;
+            csv.Spec.Description    = description.FullDescription;
+            csv.Spec.Version        = version;
+            csv.Spec.Maturity       = maturity.Maturity;
             csv.Spec.MinKubeVersion = minKubeVersion.MinKubeVersion;
-            csv.Spec.Provider = new Provider()
+            csv.Spec.Provider       = new Provider()
             {
                 Name = provider.Name,
                 Url = provider.Url
@@ -252,8 +296,8 @@ namespace Neon.Operator.Analyzers.Generators
             }).ToList();
             csv.Spec.CustomResourceDefinitions = new CustomResourceDefinitions()
             {
-                Owned = ownedEntities,
-                Required = requiredEntities
+                Owned = ownedEntities.ToList(),
+                Required = requiredEntities.ToList()
             };
 
             var installModes = new List<InstallMode>();
@@ -278,9 +322,9 @@ namespace Neon.Operator.Analyzers.Generators
             }
             csv.Spec.InstallModes = installModes;
 
-            csv.Spec.Install = new NamedInstallStrategy();
-            csv.Spec.Install.Strategy = "deployment";
-            csv.Spec.Install.Spec = new StrategyDetailsDeployment();
+            csv.Spec.Install                  = new NamedInstallStrategy();
+            csv.Spec.Install.Strategy         = "deployment";
+            csv.Spec.Install.Spec             = new StrategyDetailsDeployment();
             csv.Spec.Install.Spec.Permissions =
             [
                 new StrategyDeploymentPermission()
@@ -361,7 +405,7 @@ namespace Neon.Operator.Analyzers.Generators
                     Label = new Dictionary<string, string>()
                     {
                         { "app.kubernetes.io/name", operatorName.Name },
-                        { "app.kubernetes.io/version", version.Version },
+                        { "app.kubernetes.io/versionAttribute", version },
                     },
                     Spec = new V1DeploymentSpec()
                     {
@@ -371,9 +415,7 @@ namespace Neon.Operator.Analyzers.Generators
                             MatchLabels = new Dictionary<string, string>()
                             {
                                 { "app.kubernetes.io/name", operatorName.Name },
-
                             }
-
                         },
                         Template = new V1PodTemplateSpec()
                         {
@@ -391,7 +433,6 @@ namespace Neon.Operator.Analyzers.Generators
                                     { "prometheus.io/scheme", "http" },
                                     { "prometheus.io/scrape", "true" },
                                 }
-
                             },
                             Spec = new V1PodSpec()
                             {
@@ -408,7 +449,7 @@ namespace Neon.Operator.Analyzers.Generators
                                             new V1EnvVar()
                                             {
                                                 Name = "LISTEN_PORT",
-                                                Value = "5000",
+                                                Value = $"{webhookPort}",
                                             },
                                             new V1EnvVar()
                                             {
@@ -445,7 +486,7 @@ namespace Neon.Operator.Analyzers.Generators
                                             new V1ContainerPort()
                                             {
                                                 Name = "http",
-                                                ContainerPort = 5000,
+                                                ContainerPort = webhookPort,
                                                 Protocol = "TCP"
                                             },
                                             new V1ContainerPort()
@@ -533,21 +574,21 @@ namespace Neon.Operator.Analyzers.Generators
                         (
                             new WebHookDescription()
                             {
-                                Type = ToWebhookAdmissionType(componentType.ComponentType),
-                                GenerateName = webhookAttribute.Name,
+                                Type                    = ToWebhookAdmissionType(componentType.ComponentType),
+                                GenerateName            = webhookAttribute.Name,
                                 AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions.ToList(),
-                                ContainerPort = 5000,
-                                TargetPort = 5000,
-                                DeploymentName = operatorName.Name,
-                                FailurePolicy = webhookAttribute.FailurePolicy.ToMemberString(),
-                                SideEffects = webhookAttribute.SideEffects.ToMemberString(),
+                                ContainerPort           = webhookPort,
+                                TargetPort              = webhookPort,
+                                DeploymentName          = operatorName.Name,
+                                FailurePolicy           = webhookAttribute.FailurePolicy.ToMemberString(),
+                                SideEffects             = webhookAttribute.SideEffects.ToMemberString(),
 
                                 Rules = webhookRules.Select(r => new V1RuleWithOperations()
                                 {
-                                    ApiGroups = r.ApiGroups.ToList(),
+                                    ApiGroups   = r.ApiGroups.ToList(),
                                     ApiVersions = r.ApiVersions.ToList(),
-                                    Operations = r.Operations.ToList(),
-                                    Resources = r.Resources.ToList(),
+                                    Operations  = r.Operations.ToList(),
+                                    Resources   = r.Resources.ToList(),
                                 }).ToList(),
                                 WebHookPath = CreateEndpoint(entitySystemType, webhookSystemType, ToWebhookAdmissionType(componentType.ComponentType)),
                             }
@@ -555,32 +596,25 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
-            var outputString = KubernetesYaml.Serialize(csv);
+            var outputString  = KubernetesYaml.Serialize(csv);
             var outputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
-            var manifestDir = Path.Combine(outputBaseDir, "manifests");
+            var manifestDir   = Path.Combine(outputBaseDir, "manifests");
+            var metadataDir   = Path.Combine(outputBaseDir, "metadata");
 
-            if (!Directory.Exists(manifestDir))
-            {
-                Directory.CreateDirectory(manifestDir);
-            }
+            Directory.CreateDirectory(outputBaseDir);
+            Directory.CreateDirectory(manifestDir);
+            Directory.CreateDirectory(metadataDir);
 
             var csvPath = Path.Combine(manifestDir, $"{operatorName.Name.ToLower()}.clusterserviceversion.yaml");
             File.WriteAllText(csvPath, outputString);
-
-            var metadataDir = Path.Combine(outputBaseDir, "metadata");
-
-            if (!Directory.Exists(metadataDir))
-            {
-                Directory.CreateDirectory(metadataDir);
-            }
 
             var annotations = $@"annotations:
   operators.operatorframework.io.bundle.mediatype.v1: ""registry+v1""
   operators.operatorframework.io.bundle.manifests.v1: ""manifests/""
   operators.operatorframework.io.bundle.metadata.v1: ""metadata/""
   operators.operatorframework.io.bundle.package.v1: ""{operatorName.Name.ToLower()}""
-  operators.operatorframework.io.bundle.channels.v1: ""stable""
-  operators.operatorframework.io.bundle.channel.default.v1: ""stable""
+  operators.operatorframework.io.bundle.channels.v1: ""{olmChannels}""
+  operators.operatorframework.io.bundle.channel.default.v1: ""{defaultChannel}""
 ";
             var annotationsPath = Path.Combine(metadataDir, "annotations.yaml");
             File.WriteAllText(annotationsPath, annotations);
@@ -591,16 +625,33 @@ LABEL operators.operatorframework.io.bundle.mediatype.v1=registry+v1
 LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
 LABEL operators.operatorframework.io.bundle.metadata.v1=metadata/
 LABEL operators.operatorframework.io.bundle.package.v1={operatorName.Name.ToLower()}
-LABEL operators.operatorframework.io.bundle.channels.v1=beta,stable
-LABEL operators.operatorframework.io.bundle.channel.default.v1=stable
+LABEL operators.operatorframework.io.bundle.channels.v1={olmChannels}
+LABEL operators.operatorframework.io.bundle.channel.default.v1={defaultChannel}
 
 ADD ./manifests/*.yaml /manifests/
 ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 ";
             var dockerfilePath = Path.Combine(outputBaseDir, "Dockerfile");
             File.WriteAllText(dockerfilePath, dockerFile);
+        }
+        private static string GetRequiredAttributes(params object[] args)
+        {
+            var sb = new StringBuilder();
 
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == null)
+                {
+                    sb.Append(args[i].GetType().Name);
 
+                    if (i < args.Length - 1)
+                    {
+                        sb.Append(", ");
+                    }
+                }
+            }
+
+            return sb.ToString();
         }
 
         public static WebhookAdmissionType ToWebhookAdmissionType(OperatorComponentType componentType) => componentType switch
@@ -611,7 +662,7 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
         };
 
 
-        public List<CrdDescription> GetOwnedEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
+        public IEnumerable<CrdDescription> GetOwnedEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
         {
             try
             {
@@ -628,40 +679,48 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
                     var ownedAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                    .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "OwnedEntity"
-                      && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+                        .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "OwnedEntity"
+                          && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
 
                     var description = ownedAttribute
-                    .First().ArgumentList.Arguments
-                    .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.Description))
-                    .FirstOrDefault()
-                    ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .First().ArgumentList.Arguments
+                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.Description))
+                        .FirstOrDefault()
+                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var displayName = ownedAttribute
-                    .First().ArgumentList.Arguments
-                    .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.DisplayName))
-                    .FirstOrDefault()
-                    ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .First().ArgumentList.Arguments
+                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.DisplayName))
+                        .FirstOrDefault()
+                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var dependents = entityType.CustomAttributes
-                    .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
-                    .Select(a => a.AttributeType.GenericTypeArguments.First())
-                    .ToList();
+                        .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
+                        .Select(a => a.AttributeType.GenericTypeArguments.First())
+                        .ToList();
 
                     var crdDescription = new CrdDescription()
                     {
                         Name        = $"{metadata.PluralName}.{metadata.Group}",
                         Version     = metadata.ApiVersion,
                         Kind        = metadata.Kind,
-                        DisplayName = displayName,
-                        Description = description
                     };
+
+                    if (!string.IsNullOrEmpty(description))
+                    {
+                        crdDescription.Description = description;
+                    }
+
+                    if (!string.IsNullOrEmpty(displayName))
+                    {
+                        crdDescription.DisplayName = displayName;
+                    }
 
                     crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
                     {
-                        Kind = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
+                        Kind    = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
                         Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
-                        Name = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
+                        Name    = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
                     }).ToList();
 
                     results.Add(crdDescription);
@@ -671,12 +730,12 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             }
             catch
             {
-                return default;
+                return Enumerable.Empty<CrdDescription>();
             }
 
         }
 
-        public List<CrdDescription> GetRequiredEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
+        public IEnumerable<CrdDescription> GetRequiredEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
         {
             try
             {
@@ -693,40 +752,48 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
                     var requiredAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                    .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "RequiredEntity"
-                      && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+                        .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "RequiredEntity"
+                          && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
 
                     var description = requiredAttribute
-                    .First().ArgumentList.Arguments
-                    .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.Description))
-                    .FirstOrDefault()
-                    ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .First().ArgumentList.Arguments
+                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.Description))
+                        .FirstOrDefault()
+                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var displayName = requiredAttribute
-                    .First().ArgumentList.Arguments
-                    .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.DisplayName))
-                    .FirstOrDefault()
-                    ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .First().ArgumentList.Arguments
+                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.DisplayName))
+                        .FirstOrDefault()
+                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var dependents = entityType.CustomAttributes
-                    .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
-                    .Select(a => a.AttributeType.GenericTypeArguments.First())
-                    .ToList();
+                        .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
+                        .Select(a => a.AttributeType.GenericTypeArguments.First())
+                        .ToList();
 
                     var crdDescription = new CrdDescription()
                     {
                         Name        = $"{metadata.PluralName}.{metadata.Group}",
                         Version     = metadata.ApiVersion,
-                        Kind        = metadata.Kind,
-                        DisplayName = displayName,
-                        Description = description
+                        Kind        = metadata.Kind
                     };
+
+                    if (!string.IsNullOrEmpty(description))
+                    {
+                        crdDescription.Description = description;
+                    }
+
+                    if (!string.IsNullOrEmpty(displayName))
+                    {
+                        crdDescription.DisplayName = displayName;
+                    }
 
                     crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
                     {
-                        Kind = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
+                        Kind    = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
                         Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
-                        Name = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
+                        Name    = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
                     }).ToList();
 
                     results.Add(crdDescription);
@@ -736,7 +803,7 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             }
             catch
             {
-                return default;
+                return Enumerable.Empty<CrdDescription>();
             }
         }
 
@@ -841,9 +908,6 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             }
             return attribute;
         }
-
-
-
 
     }
 }
