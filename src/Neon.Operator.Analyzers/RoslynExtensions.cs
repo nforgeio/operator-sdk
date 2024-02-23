@@ -223,10 +223,12 @@ namespace Neon.Operator.Analyzers
 
                 if (syntax == null || syntax.Count() == 0)
                 {
-                    return null;
+                    return Enumerable.Empty<T>();
                 }
 
-                return syntax.Select(s => s.GetCustomAttribute<T>(metadataLoadContext, compilation));
+                return syntax
+                    .Select(s => s.GetCustomAttribute<T>(metadataLoadContext, compilation))
+                    .AsEnumerable();
             }
             catch
             {
