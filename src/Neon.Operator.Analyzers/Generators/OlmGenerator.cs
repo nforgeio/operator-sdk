@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -96,6 +97,7 @@ namespace Neon.Operator.Analyzers.Generators
             var rbacAttributes         = new List<IRbacRule>();
             var leaderElectionDisabled = false;
 
+            var missingRequired      = new List<Type>();
             var createdAt            = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddThh:mm:ss%K");
             var operatorName         = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
             var displayName          = RoslynExtensions.GetAttribute<DisplayNameAttribute>(metadataLoadContext, context.Compilation, attributes);
@@ -116,6 +118,24 @@ namespace Neon.Operator.Analyzers.Generators
             var icons                = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
             var installModeAttrs     = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
 
+            var requiredCount = 0;
+            requiredCount = AddIfNullOrEmpty<NameAttribute>(operatorName, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<DisplayNameAttribute>(displayName, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<DescriptionAttribute>(description, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<ContainerImageAttribute>(containerImage, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<CapabilitiesAttribute>(capabilities, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<RepositoryAttribute>(repository, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<MaturityAttribute>(maturity, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<ProviderAttribute>(provider, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<MinKubeVersionAttribute>(minKubeVersion, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<DefaultChannelAttribute>(defaultChannel, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<CategoryAttribute>(categories, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<KeywordAttribute>(keywords, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<MaintainerAttribute>(maintainers, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<IconAttribute>(icons, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<InstallModeAttribute>(installModeAttrs, missingRequired, requiredCount);
+
+
             if (string.IsNullOrEmpty(olmChannels))
             {
                 olmChannels = defaultChannel.DefaultChannel;
@@ -125,24 +145,14 @@ namespace Neon.Operator.Analyzers.Generators
                 olmChannels = olmChannels.Replace(";", ",");
             }
 
-            var requiredAttributes = new object[]
+            if (missingRequired.Count > 0 && missingRequired.Count < requiredCount)
             {
-                operatorName, displayName, description, containerImage,
-                        categories, capabilities, icons, keywords, maturity,
-                        maintainers, provider, minKubeVersion, defaultChannel,
-                        versionAttribute
-            };
-
-            if (requiredAttributes.Any(a => a == null))
-            {
-                if (!requiredAttributes.All(a => a == null))
-                {
-                    context.ReportDiagnostic(
-                                    Diagnostic.Create(MissingRequiredAttributes,
-                                    Location.None,
-                                    GetRequiredAttributes(requiredAttributes)));
+                var miss = string.Join(", ", missingRequired.Select(x => x.Name));
+                context.ReportDiagnostic(
+                                Diagnostic.Create(MissingRequiredAttributes,
+                                Location.None,
+                                string.Join(", ", missingRequired.Select(x => x.Name))));
                     
-                }
 
                 return;
             }
@@ -155,7 +165,7 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
-            var version = versionAttribute.Version;
+            var version = versionAttribute?.Version ?? "";
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorVersion", out var versionString))
             {
@@ -640,26 +650,6 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             var dockerfilePath = Path.Combine(outputBaseDir, "Dockerfile");
             File.WriteAllText(dockerfilePath, dockerFile);
         }
-        private static string GetRequiredAttributes(params object[] args)
-        {
-            var sb = new StringBuilder();
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == null)
-                {
-                    sb.Append(args[i].GetType().Name);
-
-                    if (i < args.Length - 1)
-                    {
-                        sb.Append(", ");
-                    }
-                }
-            }
-
-            return sb.ToString();
-        }
-
         public static WebhookAdmissionType ToWebhookAdmissionType(OperatorComponentType componentType) => componentType switch
         {
             OperatorComponentType.ValidationWebhook => WebhookAdmissionType.ValidatingAdmissionWebhook,
@@ -667,7 +657,21 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             _ => throw new ArgumentException()
         };
 
+        private int AddIfNullOrEmpty<T>(object arg, List<Type> types, int requiredCount)
+        {
+            if (arg == null)
+            {
+                types.Add(typeof(T));
+            }
+            else if (typeof(IEnumerable).IsAssignableFrom(arg.GetType())
+                && ((IEnumerable<object>)arg).IsEmpty())
+            {
+                types.Add(typeof(T));
+            }
 
+            requiredCount += 1;
+            return requiredCount;
+        }
         public IEnumerable<CrdDescription> GetOwnedEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
         {
             try
