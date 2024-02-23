@@ -62,7 +62,8 @@ namespace Neon.Operator.OperatorLifecycleManager
         public Icon ToIcon(string baseDir = null)
         {
             var path = Path;
-            if (baseDir != null)
+            if (!System.IO.Path.IsPathRooted(path)
+                    && !string.IsNullOrEmpty(baseDir))
             {
                 path = System.IO.Path.Combine(baseDir, path);
             }

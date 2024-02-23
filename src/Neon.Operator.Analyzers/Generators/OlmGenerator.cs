@@ -251,7 +251,13 @@ namespace Neon.Operator.Analyzers.Generators
 
             foreach (var icon in icons)
             {
-                if (!File.Exists(System.IO.Path.Combine(projectDir, icon.Path)))
+                var iconPath = icon.Path;
+                if (!Path.IsPathRooted(icon.Path))
+                {
+                    iconPath = Path.Combine(projectDir ?? "", icon.Path);
+                }
+
+                if (!File.Exists(iconPath))
                 {
                     context.ReportDiagnostic(
                                     Diagnostic.Create(IconNotFoundError,
