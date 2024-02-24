@@ -201,11 +201,13 @@ namespace Neon.Operator.Analyzers
             }
         }
 
-        public static IEnumerable<T> GetAttributes<T>(
+        public static Dictionary<AttributeSyntax, T> GetAttributes<T>(
             MetadataLoadContext   metadataLoadContext,
             Compilation           compilation,
             List<AttributeSyntax> attributes)
         {
+            var result = new Dictionary<AttributeSyntax, T>();
+
             try
             {
                 IEnumerable<AttributeSyntax> syntax = null;
@@ -223,16 +225,19 @@ namespace Neon.Operator.Analyzers
 
                 if (syntax == null || syntax.Count() == 0)
                 {
-                    return Enumerable.Empty<T>();
+                    return result;
                 }
 
-                return syntax
-                    .Select(s => s.GetCustomAttribute<T>(metadataLoadContext, compilation))
-                    .AsEnumerable();
+                foreach (var s in syntax)
+                {
+                    result.Add(s, s.GetCustomAttribute<T>(metadataLoadContext, compilation));
+                }
+
+                return result;
             }
             catch
             {
-                return Enumerable.Empty<T>();
+                return result;
             }
         }
     }

@@ -34,6 +34,7 @@ using Microsoft.CodeAnalysis;
 using Neon.Common;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
+using Neon.Operator.OperatorLifecycleManager;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
@@ -152,9 +153,20 @@ namespace Neon.Operator.Analyzers
 
                 var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
                 var customResources           = ((CustomResourceReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+                var attributes                = ((CustomResourceReceiver)context.SyntaxReceiver)?.Attributes;
                 var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
                 var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
+                var operatorVersionAttribute  = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
 
+                var operatorVersion = operatorVersionAttribute?.Version ?? "";
+
+                if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorVersion", out var versionString))
+                {
+                    if (!string.IsNullOrEmpty(versionString))
+                    {
+                        operatorVersion = versionString;
+                    }
+                }
                 foreach (var cr in customResources)
                 {
                     try
@@ -268,7 +280,8 @@ namespace Neon.Operator.Analyzers
                 }
 
                 var olmOutputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
-                var olmManifestDir   = Path.Combine(olmOutputBaseDir, "manifests");
+                var olmVersionDir    = Path.Combine(olmOutputBaseDir, operatorVersion);
+                var olmManifestDir   = Path.Combine(olmVersionDir, "manifests");
 
                 if (!Directory.Exists(olmManifestDir))
                 {
@@ -282,10 +295,11 @@ namespace Neon.Operator.Analyzers
                         if (crd.Value.Spec.Versions.Where(v => v.Storage).Count() > 1)
                         {
                             context.ReportDiagnostic(
-                                Diagnostic.Create(TooManyStorageVersionsError,
-                                Location.None,
-                                crd.Value.Name(),
-                                crd.Value.Spec.Versions.Where(v => v.Storage).Count().ToString()));
+                                Diagnostic.Create(
+                                    descriptor: TooManyStorageVersionsError,
+                                    location: Location.None,
+                                    crd.Value.Name(),
+                                    crd.Value.Spec.Versions.Where(v => v.Storage).Count().ToString()));
                         }
                         else
                         {

@@ -25,7 +25,8 @@ using FluentAssertions;
 
 using k8s.Models;
 
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Common;
 using Neon.IO;
@@ -188,6 +189,77 @@ culpa qui officia deserunt mollit anim id est laborum."";
 
             var result = string.Join(", ", categories.SelectMany(c => c.ToStrings()).ToImmutableHashSet().Order());
             result.Should().Be($"{Category.BigData.ToMemberString()}, {Category.Database.ToMemberString()}");
+        }
+
+        [Fact]
+        public void TestReviewerDiagnostic()
+        {
+            var maintainerName = "bob testaroni";
+
+            var source = $@"
+using Neon.Operator.OperatorLifecycleManager;
+
+[assembly: Maintainer(Name = ""eric testaroo"", Email = ""foo@bar.com"", Reviewer = false)]
+[assembly: Maintainer(Name = ""{maintainerName}"", Email = ""bar@baz.com"", Reviewer = true)]
+";
+
+            using var temp = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddAssembly(typeof(MaintainerAttribute).Assembly)
+                .Build();
+
+            var syntax = testCompilation
+                .Compilation
+                .SyntaxTrees
+                .First()
+                .GetRoot()
+                .DescendantNodes()
+                .OfType<AttributeSyntax>()
+                .Last();
+
+            testCompilation.Should().HaveDiagnostic(Diagnostic.Create(
+                OlmGenerator.MissingReviewerError,
+                syntax.GetLocation(),
+                [maintainerName]));
+        }
+
+        [Fact]
+        public void TestInstallModeDiagnostic()
+        {
+            var maintainerName = "bob testaroni";
+
+            var source = $@"
+using Neon.Operator.OperatorLifecycleManager;
+
+[assembly: InstallMode(Type = InstallModeType.OwnNamespace, Supported = true)]
+[assembly: InstallMode(Type = InstallModeType.OwnNamespace, Supported = false)]
+";
+            using var temp = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddAssembly(typeof(InstallModeAttribute).Assembly)
+                .Build();
+
+            var syntax = testCompilation
+                .Compilation
+                .SyntaxTrees
+                .First()
+                .GetRoot()
+                .DescendantNodes()
+                .OfType<AttributeSyntax>()
+                .Last();
+
+            testCompilation.Should().HaveDiagnostic(Diagnostic.Create(
+                OlmGenerator.InstallModeDuplicateError,
+                syntax.GetLocation(),
+                [maintainerName]));
         }
     }
 }

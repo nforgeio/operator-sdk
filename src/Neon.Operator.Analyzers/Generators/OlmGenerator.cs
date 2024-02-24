@@ -19,12 +19,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 
 using k8s;
 using k8s.Models;
@@ -69,8 +67,8 @@ namespace Neon.Operator.Analyzers.Generators
                                                                                               DiagnosticSeverity.Warning,
                                                                                               isEnabledByDefault: true);
         internal static readonly DiagnosticDescriptor MissingReviewerError = new DiagnosticDescriptor(id: "NO11004",
-                                                                                              title: "Github Not Specified",
-                                                                                              messageFormat: "Github username is required for maintainers [{0}]",
+                                                                                              title: "GitHubUsername Not Specified",
+                                                                                              messageFormat: "Github username is required for maintainer [{0}]",
                                                                                               category: "Operator Lifecycle Manager",
                                                                                               DiagnosticSeverity.Error,
                                                                                               isEnabledByDefault: true);
@@ -150,7 +148,7 @@ namespace Neon.Operator.Analyzers.Generators
 
             if (string.IsNullOrEmpty(olmChannels))
             {
-                olmChannels = defaultChannel.DefaultChannel;
+                olmChannels = defaultChannel?.DefaultChannel;
             }
             else
             {
@@ -164,9 +162,6 @@ namespace Neon.Operator.Analyzers.Generators
                                 Diagnostic.Create(MissingRequiredAttributes,
                                 Location.None,
                                 string.Join(", ", missingRequired.Select(x => x.Name))));
-                    
-
-                return;
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorLeaderElectionDisabled", out var leaderElectionString))
@@ -273,34 +268,34 @@ namespace Neon.Operator.Analyzers.Generators
 
             foreach (var icon in icons)
             {
-                var iconPath = icon.Path;
-                if (!Path.IsPathRooted(icon.Path))
+                var iconPath = icon.Value.Path;
+                if (!Path.IsPathRooted(icon.Value.Path))
                 {
-                    iconPath = Path.Combine(projectDir ?? "", icon.Path);
+                    iconPath = Path.Combine(projectDir ?? "", icon.Value.Path);
                 }
 
                 if (!File.Exists(iconPath))
                 {
                     context.ReportDiagnostic(
                                     Diagnostic.Create(IconNotFoundError,
-                                    Location.None,
-                                    icon.Path));
+                                    icon.Key.GetLocation(),
+                                    icon.Value.Path));
                 }
             }
 
             var csv = new V1ClusterServiceVersion().Initialize();
 
             csv.Metadata             = new k8s.Models.V1ObjectMeta();
-            csv.Metadata.Name        = $"{operatorName.Name}.v{version}";
+            csv.Metadata.Name        = $"{operatorName?.Name}.v{version}";
             csv.Metadata.Annotations = new Dictionary<string, string>
             {
-                { "description", description.ShortDescription },
+                { "description", description?.ShortDescription },
                 { "certified", certified.ToString().ToLower() },
                 { "createdAt", createdAt },
-                { "capabilities", capabilities.Capability.ToMemberString()},
-                { "containerImage", $"{containerImage.Repository}:{containerImage.Tag}" },
-                { "repository", repository.Repository },
-                { "categories", string.Join(", ", categories.SelectMany(c => c.Category.ToStrings()).ToImmutableHashSet().OrderBy(x=>x)) },
+                { "capabilities", capabilities?.Capability.ToMemberString()},
+                { "containerImage", $"{containerImage?.Repository}:{containerImage?.Tag}" },
+                { "repository", repository?.Repository },
+                { "categories", string.Join(", ", categories?.SelectMany(c => c.Value.Category.ToStrings()).ToImmutableHashSet().OrderBy(x=>x)) },
             };
 
             if (!string.IsNullOrEmpty(almExampleJson))
@@ -309,22 +304,22 @@ namespace Neon.Operator.Analyzers.Generators
             }
 
             csv.Spec                = new V1ClusterServiceVersionSpec();
-            csv.Spec.Icon           = icons?.Select(i => i.ToIcon(projectDir)).ToList();
-            csv.Spec.Keywords       = keywords?.SelectMany(k => k.GetKeywords()).Distinct().ToList();
-            csv.Spec.DisplayName    = displayName.DisplayName;
-            csv.Spec.Description    = description.FullDescription;
+            csv.Spec.Icon           = icons?.Select(i => i.Value.ToIcon(projectDir)).ToList();
+            csv.Spec.Keywords       = keywords?.SelectMany(k => k.Value.GetKeywords()).Distinct().ToList();
+            csv.Spec.DisplayName    = displayName?.DisplayName;
+            csv.Spec.Description    = description?.FullDescription;
             csv.Spec.Version        = version;
-            csv.Spec.Maturity       = maturity.Maturity;
-            csv.Spec.MinKubeVersion = minKubeVersion.MinKubeVersion;
+            csv.Spec.Maturity       = maturity?.Maturity;
+            csv.Spec.MinKubeVersion = minKubeVersion?.MinKubeVersion;
             csv.Spec.Provider       = new Provider()
             {
-                Name = provider.Name,
-                Url = provider.Url
+                Name = provider?.Name,
+                Url = provider?.Url
             };
             csv.Spec.Maintainers = maintainers?.Select(m => new Maintainer()
             {
-                Name = m.Name,
-                Email = m.Email
+                Name = m.Value.Name,
+                Email = m.Value.Email
             }).ToList();
             csv.Spec.CustomResourceDefinitions = new CustomResourceDefinitions()
             {
@@ -336,18 +331,20 @@ namespace Neon.Operator.Analyzers.Generators
 
             foreach (var mode in installModeAttrs)
             {
-                foreach (var im in mode.Type.GetTypes())
+                foreach (var im in mode.Value.Type.GetTypes())
                 {
                     if (installModes.Any(i => i.Type == im))
                     {
                         context.ReportDiagnostic(
-                                Diagnostic.Create(InstallModeDuplicateError,
-                                Location.None,
-                                im));
+                                Diagnostic.Create(
+                                    descriptor:  InstallModeDuplicateError,
+                                    location:    mode.Key.GetLocation(),
+                                    messageArgs: [im]));
                     }
+
                     installModes.Add(new InstallMode()
                     {
-                        Supported = mode.Supported,
+                        Supported = mode.Value.Supported,
                         Type = im
                     });
                 }
@@ -361,7 +358,7 @@ namespace Neon.Operator.Analyzers.Generators
             [
                 new StrategyDeploymentPermission()
                 {
-                    ServiceAccountName = operatorName.Name,
+                    ServiceAccountName = operatorName?.Name,
                     Rules = rbacAttributes.Where(attr =>
                         attr.Scope == EntityScope.Namespaced)
                             .GroupBy(
@@ -397,7 +394,7 @@ namespace Neon.Operator.Analyzers.Generators
             [
                 new StrategyDeploymentPermission()
                 {
-                    ServiceAccountName = operatorName.Name,
+                    ServiceAccountName = operatorName?.Name,
                     Rules = rbacAttributes
                     .Where(attr => attr.Scope == EntityScope.Cluster)
                     .GroupBy(attr => new
@@ -433,10 +430,10 @@ namespace Neon.Operator.Analyzers.Generators
             [
                 new StrategyDeploymentSpec()
                 {
-                    Name = operatorName.Name,
+                    Name = operatorName?.Name,
                     Label = new Dictionary<string, string>()
                     {
-                        { "app.kubernetes.io/name", operatorName.Name },
+                        { "app.kubernetes.io/name", operatorName?.Name },
                         { "app.kubernetes.io/versionAttribute", version },
                     },
                     Spec = new V1DeploymentSpec()
@@ -446,7 +443,7 @@ namespace Neon.Operator.Analyzers.Generators
                         {
                             MatchLabels = new Dictionary<string, string>()
                             {
-                                { "app.kubernetes.io/name", operatorName.Name },
+                                { "app.kubernetes.io/name", operatorName?.Name },
                             }
                         },
                         Template = new V1PodTemplateSpec()
@@ -455,7 +452,7 @@ namespace Neon.Operator.Analyzers.Generators
                             {
                                 Labels = new Dictionary<string, string>()
                                 {
-                                   { "app.kubernetes.io/name", operatorName.Name },
+                                   { "app.kubernetes.io/name", operatorName?.Name },
 
                                 },
                                 Annotations = new Dictionary<string, string>()
@@ -469,13 +466,13 @@ namespace Neon.Operator.Analyzers.Generators
                             Spec = new V1PodSpec()
                             {
                                 EnableServiceLinks = false,
-                                ServiceAccountName = operatorName.Name,
+                                ServiceAccountName = operatorName?.Name,
                                 Containers =
                                 [
                                     new V1Container()
                                     {
-                                        Name = operatorName.Name,
-                                        Image = $"{containerImage.Repository}:{containerImage.Tag}",
+                                        Name = operatorName?.Name,
+                                        Image = $"{containerImage?.Repository}:{containerImage?.Tag}",
                                         Env =
                                         [
                                             new V1EnvVar()
@@ -611,7 +608,7 @@ namespace Neon.Operator.Analyzers.Generators
                                 AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions.ToList(),
                                 ContainerPort           = webhookPort,
                                 TargetPort              = webhookPort,
-                                DeploymentName          = operatorName.Name,
+                                DeploymentName          = operatorName?.Name,
                                 FailurePolicy           = webhookAttribute.FailurePolicy.ToMemberString(),
                                 SideEffects             = webhookAttribute.SideEffects.ToMemberString(),
 
@@ -630,7 +627,7 @@ namespace Neon.Operator.Analyzers.Generators
 
             var outputString  = KubernetesHelper.YamlSerialize(csv);
             var outputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
-            var versionDir = Path.Combine(outputBaseDir, version);
+            var versionDir    = Path.Combine(outputBaseDir, version);
             var manifestDir   = Path.Combine(versionDir, "manifests");
             var metadataDir   = Path.Combine(versionDir, "metadata");
 
@@ -639,10 +636,10 @@ namespace Neon.Operator.Analyzers.Generators
             Directory.CreateDirectory(manifestDir);
             Directory.CreateDirectory(metadataDir);
 
-            var csvPath = Path.Combine(manifestDir, $"{operatorName.Name.ToLower()}.clusterserviceversion.yaml");
+            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion.yaml");
             File.WriteAllText(csvPath, outputString);
 
-            if (maintainers?.Any(m => m.Reviewer) == true
+            if (maintainers?.Any(m => m.Value.Reviewer) == true
                 || updateGraph != null)
             {
                 var ci = new Ci();
@@ -650,28 +647,29 @@ namespace Neon.Operator.Analyzers.Generators
                 {
                     ci.UpdateGraph = updateGraph.UpdateGraph;
                 }
-                if (maintainers?.Any(m => m.Reviewer) == true)
+                if (maintainers?.Any(m => m.Value.Reviewer) == true)
                 {
                     ci.AddReviewers = true;
 
                     // check that github is set for all reviewers
-                    if(maintainers.Any(m => m.Reviewer && string.IsNullOrEmpty(m.GitHub)))
+                    if(maintainers.Any(m => m.Value.Reviewer && string.IsNullOrEmpty(m.Value.GitHub)))
                     {
-                        var githubMissing = maintainers.Where(m => m.Reviewer && string.IsNullOrEmpty(m.GitHub)).Select(r => r.Name);
-
-                        context.ReportDiagnostic(Diagnostic.Create(MissingReviewerError,
-                                                                   Location.None,
-                                                                   string.Join(", ", githubMissing)));
-
-                        return;
+                        foreach (var maintainer in maintainers.Where(m => m.Value.Reviewer && string.IsNullOrEmpty(m.Value.GitHub)))
+                        {
+                            context.ReportDiagnostic(
+                                diagnostic: Diagnostic.Create(
+                                    descriptor:  MissingReviewerError,
+                                    location:    maintainer.Key.GetLocation(),
+                                    messageArgs: [maintainer.Value.Name]));
+                        }
                     }
 
-                    ci.Reviewers.AddRange(maintainers.Where(m => m.Reviewer).Select(m => m.GitHub));
+                    ci.Reviewers.AddRange(maintainers.Where(m => m.Value.Reviewer).Select(m => m.Value.GitHub));
                 }
                 if (reviewers?.Any() == true)
                 {
                     ci.AddReviewers = true;
-                    ci.Reviewers.AddRange(reviewers.SelectMany(r=> r.GetReviewers()).Distinct());
+                    ci.Reviewers.AddRange(reviewers.SelectMany(r=> r.Value.GetReviewers()).Distinct());
                 }
 
                 var outputStringCi  = KubernetesHelper.YamlSerialize(ci);
@@ -683,7 +681,7 @@ namespace Neon.Operator.Analyzers.Generators
   operators.operatorframework.io.bundle.mediatype.v1: ""registry+v1""
   operators.operatorframework.io.bundle.manifests.v1: ""manifests/""
   operators.operatorframework.io.bundle.metadata.v1: ""metadata/""
-  operators.operatorframework.io.bundle.package.v1: ""{operatorName.Name.ToLower()}""
+  operators.operatorframework.io.bundle.package.v1: ""{operatorName?.Name.ToLower()}""
   operators.operatorframework.io.bundle.channels.v1: ""{olmChannels}""
   operators.operatorframework.io.bundle.channel.default.v1: ""{defaultChannel}""
 ";
@@ -695,14 +693,14 @@ namespace Neon.Operator.Analyzers.Generators
 LABEL operators.operatorframework.io.bundle.mediatype.v1=registry+v1
 LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
 LABEL operators.operatorframework.io.bundle.metadata.v1=metadata/
-LABEL operators.operatorframework.io.bundle.package.v1={operatorName.Name.ToLower()}
+LABEL operators.operatorframework.io.bundle.package.v1={operatorName?.Name.ToLower()}
 LABEL operators.operatorframework.io.bundle.channels.v1={olmChannels}
 LABEL operators.operatorframework.io.bundle.channel.default.v1={defaultChannel}
 
 ADD ./manifests/*.yaml /manifests/
 ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 ";
-            var dockerfilePath = Path.Combine(outputBaseDir, "Dockerfile");
+            var dockerfilePath = Path.Combine(versionDir, "Dockerfile");
             File.WriteAllText(dockerfilePath, dockerFile);
         }
         public static WebhookAdmissionType ToWebhookAdmissionType(OperatorComponentType componentType) => componentType switch
@@ -718,10 +716,19 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             {
                 types.Add(typeof(T));
             }
-            else if (typeof(IEnumerable).IsAssignableFrom(arg.GetType())
-                && ((IEnumerable<object>)arg).IsEmpty())
+            else if (typeof(IDictionary).IsAssignableFrom(arg.GetType()))
             {
-                types.Add(typeof(T));
+                if (((IDictionary)arg).Keys.Count == 0)
+                {
+                    types.Add(typeof(T));
+                }
+            }
+            else if (typeof(IEnumerable).IsAssignableFrom(arg.GetType()))
+            {
+                if (((IEnumerable<object>)arg).IsEmpty())
+                {
+                    types.Add(typeof(T));
+                }
             }
 
             requiredCount += 1;
