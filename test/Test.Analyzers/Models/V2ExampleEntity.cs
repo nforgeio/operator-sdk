@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 using k8s;
@@ -75,6 +77,7 @@ namespace Test_Analyzers
             /// The message
             /// </summary>
             [Pattern("^(\\d+|\\*)(/\\d+)?(\\s+(\\d+|\\*)(/\\d+)?){4}$")]
+            [DefaultValue("default message")]
             public string Message { get; set; }
 
             /// <summary>
@@ -92,6 +95,7 @@ namespace Test_Analyzers
             /// <summary>
             /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
             /// </summary>
+            [DefaultValue(false)]
             public bool Enabled { get; set; } = false;
         }
 

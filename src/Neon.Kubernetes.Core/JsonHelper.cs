@@ -103,6 +103,7 @@ namespace Neon.K8s.Core
         {
             JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
             JsonSerializerOptions.Converters.Add(new Iso8601TimeSpanConverter());
             JsonSerializerOptions.Converters.Add(new KubernetesDateTimeConverter());
             JsonSerializerOptions.Converters.Add(new KubernetesDateTimeOffsetConverter());

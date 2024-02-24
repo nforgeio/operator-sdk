@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -515,7 +516,7 @@ namespace Neon.Operator.Analyzers
                 props.EnumProperty = type.GetMembers()
                         .Where(static member => member.MemberType is System.Reflection.MemberTypes.Field)
                         .Select(static member =>
-                            (object)member.GetCustomAttribute<EnumMemberAttribute>()?.Value
+                            (object)((RoslynFieldInfo)member).GetCustomAttribute<EnumMemberAttribute>()?.Value
                             ?? (object)member.Name.ToLower())
                         .ToList();
             }

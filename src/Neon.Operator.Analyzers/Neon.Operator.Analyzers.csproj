@@ -26,7 +26,6 @@
         <PackageReference Include="Fractions" Version="7.2.1" GeneratePathProperty="true" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" GeneratePathProperty="true" />
         <PackageReference Include="Microsoft.CodeAnalysis" Version="4.8.0" />
-        <PackageReference Include="Microsoft.CSharp" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="NJsonSchema" Version="10.9.0" GeneratePathProperty="true" PrivateAssets="all" />
@@ -43,8 +42,11 @@
 
     <ItemGroup Condition="'$(_IsPacking)' == 'true'">
         <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CSharp" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
         <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />
+        <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" IncludeRuntimeDependency="false" />
         <None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
     <Choose>
@@ -80,7 +82,6 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMacross_Json_Extensions)\lib\netstandard2.0\Macross.Json.Extensions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Rest_ClientRuntime)\lib\netstandard2.0\Microsoft.Rest.ClientRuntime.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" IncludeRuntimeDependency="false" />
-            <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNJsonSchema)\lib\netstandard2.0\NJsonSchema.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_Text_Encodings_Web)\lib\netstandard2.0\System.Text.Encodings.Web.dll" IncludeRuntimeDependency="false" />

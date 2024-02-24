@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 using k8s;
@@ -114,6 +115,7 @@ namespace Test.Analyzers
         /// <summary>
         /// A test string.
         /// </summary>
+        [DefaultValue("default message")]
         public string Message { get; set; }
     }
 

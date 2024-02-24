@@ -17,6 +17,7 @@
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -122,6 +123,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
                 .AddAssembly(typeof(V1TestResource).Assembly)
                 .AddAssembly(typeof(CapabilitiesAttribute).Assembly)
                 .AddAssembly(typeof(ResourceControllerAttribute).Assembly)
+                .AddAssembly(typeof(DefaultValueAttribute).Assembly)
                 .Build();
 
             var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", version,  "manifests", $"{name}.clusterserviceversion.yaml");
@@ -140,6 +142,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
             outCsv.Metadata.Annotations["capabilities"].Should().Be(CapabilityLevel.DeepInsights.ToMemberString());
             outCsv.Metadata.Annotations["containerImage"].Should().Be($"{containerImage}:{containerImageTag}");
             outCsv.Metadata.Annotations["repository"].Should().Be(repository);
+            outCsv.Metadata.Annotations["alm-examples"].Should().Be($@"[{{""spec"":{{""message"":""default message""}},""apiVersion"":""test.neonkube.io/v1alpha1"",""kind"":""NeonTestObject"",""metadata"":{{""name"":""my-neontestobject"",""namespace"":""default""}}}}]");
 
             // check spec
             outCsv.Spec.DisplayName.Should().Be(displayName);

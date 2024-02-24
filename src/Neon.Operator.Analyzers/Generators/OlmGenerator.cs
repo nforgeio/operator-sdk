@@ -297,13 +297,16 @@ namespace Neon.Operator.Analyzers.Generators
                 { "description", description.ShortDescription },
                 { "certified", certified.ToString().ToLower() },
                 { "createdAt", createdAt },
-                { "alm-examples", almExampleJson},
                 { "capabilities", capabilities.Capability.ToMemberString()},
                 { "containerImage", $"{containerImage.Repository}:{containerImage.Tag}" },
                 { "repository", repository.Repository },
                 { "categories", string.Join(", ", categories.SelectMany(c => c.Category.ToStrings()).ToImmutableHashSet().OrderBy(x=>x)) },
             };
 
+            if (!string.IsNullOrEmpty(almExampleJson))
+            {
+                csv.Metadata.Annotations.Add("alm-examples", almExampleJson);
+            }
 
             csv.Spec                = new V1ClusterServiceVersionSpec();
             csv.Spec.Icon           = icons?.Select(i => i.ToIcon(projectDir)).ToList();
@@ -727,7 +730,6 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 
         public string GetOwnedEntityExampleJson(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
         {
-            //return string.Empty;
             try
             {
                 var results = new List<CrdDescription>();
@@ -742,8 +744,25 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                     var etype      = (INamedTypeSymbol)entity.AttributeClass.TypeArguments.FirstOrDefault();
                     var entityType = metadataLoadContext.ResolveType(etype);
 
-                    var d = entityType.GetDefault();
-                    jsonStrings.Add(JsonSerializer.Serialize(d));
+                    dynamic defaultEntity = entityType.GetDefault();
+                    var metadata = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
+                    defaultEntity.ApiVersion = $"{metadata.Group}/{metadata.ApiVersion}";
+                    defaultEntity.Kind = metadata.Kind;
+                    defaultEntity.Metadata = new V1ObjectMeta()
+                    {
+                        Name = $"my-{metadata.Kind.ToLower()}",
+                        NamespaceProperty = "default"
+                    };
+
+                    if (defaultEntity != null)
+                    {
+                        jsonStrings.Add(KubernetesHelper.JsonSerialize(defaultEntity));
+                    }
+                }
+
+                if (jsonStrings.IsEmpty())
+                {
+                    return null;
                 }
 
                 var sb = new StringBuilder();
