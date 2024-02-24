@@ -74,9 +74,7 @@ function Publish
         [Parameter(Position=0, Mandatory=$true)]
         [string]$project,
         [Parameter(Position=1, Mandatory=$true)]
-        [string]$version,
-        [Parameter(Position=1, Mandatory=$true)]
-        [string]$neonSdkVersion
+        [string]$version
     )
 
     $projectPath = [io.path]::combine($env:NO_ROOT, "src", "$project", "$project" + ".csproj")
@@ -85,7 +83,7 @@ function Publish
     #
     # dotnet pack $projectPath -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -o "$env:NO_BUILD\nuget"
 
-    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName -p:PackageVersion=$version -p:NeonSdkPackageVersion=$neonSdkVersion -p:NeonBuildUseNugets=true
+    dotnet pack $projectPath -c Release -o "$env:NO_BUILD\nuget" -p:SolutionName=$env:SolutionName -p:PackageVersion=$version -p:NeonBuildUseNugets=true
     ThrowOnExitCode
 
     dotnet nuget push "$env:NO_BUILD\nuget\$project.$version.nupkg" --api-key $nugetApiKey --source https://nuget.pkg.github.com/nforgeio/index.json --skip-duplicate
@@ -107,7 +105,7 @@ try
     $noBuild             = "$env:NO_BUILD"
     $nfLib               = "$nfRoot\Lib"
     $neonSdkVersion      = $(& "neon-build" read-version "$nfLib/Neon.Common/Build.cs" NeonSdkVersion)
-    $neonOperatorVersion = "$(Get-Date -format yyyy.%M.%d)-$(git rev-parse --short HEAD)"
+    $neonOperatorVersion = "$(Get-Date -format yyyy.%M.%d)-$([int](Get-Date -UFormat %s -Second 0))"
 
     #------------------------------------------------------------------------------
     # Save the publish version to [$/build/nuget/version.text] so release tools can
@@ -143,15 +141,15 @@ try
         Write-Info "OperatorSdkVersion: $neonOperatorVersion"
         Write-Info "NeonSdkVersion: $neonSdkVersion"
 
-        Publish -project Neon.Kubernetes                        -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Kubernetes.Core                   -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Kubernetes.Resources              -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator                          -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Analyzers                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Core                     -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.OperatorLifecycleManager -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Templates                -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
-        Publish -project Neon.Operator.Xunit                    -version $neonOperatorVersion -neonSdkVersion $neonSdkVersion 
+        Publish -project Neon.Kubernetes                        -version $neonOperatorVersion
+        Publish -project Neon.Kubernetes.Core                   -version $neonOperatorVersion
+        Publish -project Neon.Kubernetes.Resources              -version $neonOperatorVersion
+        Publish -project Neon.Operator                          -version $neonOperatorVersion
+        Publish -project Neon.Operator.Analyzers                -version $neonOperatorVersion
+        Publish -project Neon.Operator.Core                     -version $neonOperatorVersion
+        Publish -project Neon.Operator.OperatorLifecycleManager -version $neonOperatorVersion
+        Publish -project Neon.Operator.Templates                -version $neonOperatorVersion
+        Publish -project Neon.Operator.Xunit                    -version $neonOperatorVersion
     }
 
     #------------------------------------------------------------------------------
