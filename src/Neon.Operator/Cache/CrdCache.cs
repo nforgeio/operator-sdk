@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    CrdCache.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
+using System.Text;
 
 using k8s;
 using k8s.Models;
@@ -27,6 +28,9 @@ using k8s.Models;
 using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
+
+using OpenTelemetry.Resources;
+using YamlDotNet.Core;
 
 namespace Neon.Operator.Cache
 {
@@ -36,20 +40,17 @@ namespace Neon.Operator.Cache
     internal class CrdCache : ICrdCache
     {
         private readonly ILogger<CrdCache>                                        logger;
-        private readonly ConcurrentDictionary<string, V1CustomResourceDefinition> cache;
-        private readonly ResourceCacheMetrics<V1CustomResourceDefinition>         metrics;
+        private readonly ConcurrentDictionary<string, V1APIResource> cache;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="metrics">Specifies the resource metrics.</param>
         /// <param name="loggerFactory">Optionally specifies a logger factory.</param>
-        public CrdCache(ResourceCacheMetrics<V1CustomResourceDefinition> metrics, ILoggerFactory loggerFactory = null) 
+        public CrdCache(ILoggerFactory loggerFactory = null) 
         {
-            Covenant.Requires<ArgumentNullException>(metrics != null, nameof(metrics));
 
-            this.cache   = new ConcurrentDictionary<string, V1CustomResourceDefinition>();
-            this.metrics = metrics;
+            this.cache   = new ConcurrentDictionary<string, V1APIResource>();
             this.logger  = loggerFactory?.CreateLogger<CrdCache>();
         }
 
@@ -57,79 +58,123 @@ namespace Neon.Operator.Cache
         public void Clear()
         {
             cache.Clear();
-            metrics.ItemsCount.DecTo(0);
+        }
+
+        private static string CreateKey(KubernetesEntityAttribute metadata)
+        {
+            var sb = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(metadata.Group))
+            {
+                sb.Append(metadata.Group);
+                sb.Append('/');
+            }
+
+            sb.Append(metadata.ApiVersion);
+            sb.Append('/');
+            sb.Append(metadata.PluralName);
+            return sb.ToString();
+        }
+
+        private static string CreateKey(string group, string version, string pluralName)
+        {
+            var sb = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(group))
+            {
+                sb.Append(group);
+                sb.Append('/');
+            }
+
+            sb.Append(version);
+            sb.Append('/');
+            sb.Append(pluralName);
+            return sb.ToString();
+        }
+
+        private static string CreateKey(string groupVersion, string pluralName)
+        {
+            return $"{groupVersion}/{pluralName}";
         }
 
         /// <inheritdoc/>
-        public V1CustomResourceDefinition Get(string id)
+        public V1APIResource Get(KubernetesEntityAttribute metadata)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
+            Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
-            var result = cache.GetValueOrDefault(id);
-
-            if (result == null)
-            {
-                metrics.HitsTotal.Inc();
-            }
+            var result = cache.GetValueOrDefault(CreateKey(metadata));
 
             return result;
         }
 
         /// <inheritdoc/>
-        public V1CustomResourceDefinition Get<TEntity>()
-            where TEntity : IKubernetesObject<V1ObjectMeta>
+        public V1APIResource Get<TResource>()
+            where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            var result = cache.GetValueOrDefault(typeof(TEntity).GetKubernetesCrdName());
-
-            if (result == null)
-            {
-                metrics.HitsTotal.Inc();
-            }
+            var result = cache.GetValueOrDefault(CreateKey(typeof(TResource).GetKubernetesTypeMetadata()));
 
             return result;
         }
 
         /// <inheritdoc/>
-        public void Remove(V1CustomResourceDefinition entity)
+        public void Remove(string group, string version, V1APIResource resource)
         {
-            Covenant.Requires<ArgumentNullException>(entity != null, nameof(entity));
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            if (cache.TryRemove(entity.Metadata.Name, out _))
-            {
-                metrics.ItemsCount.Dec();
-            }
+            cache.Remove(CreateKey(group, version, resource.Name), out _);
         }
 
         /// <inheritdoc/>
-        public void Upsert(V1CustomResourceDefinition entity)
+        public void Upsert(string group, string version, V1APIResource resource)
         {
-            Covenant.Requires<ArgumentNullException>(entity != null, nameof(entity));
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            var id = entity.Metadata.Name;
+            var id = CreateKey(group, version, resource.Name);
 
             logger?.LogDebugEx(() => $"Adding {id} to cache.");
 
             cache.AddOrUpdate(
                 key: id,
-                addValueFactory: (id) => 
+                addValueFactory: (id) =>
                 {
-                    metrics.ItemsCount.Inc();
-                    metrics.ItemsTotal.Inc();
-                    return Clone(entity);
+                    return Clone(resource);
                 },
-                updateValueFactory: (key, oldEntity) =>
+                updateValueFactory: (key, oldresource) =>
                 {
-                    metrics.HitsTotal.Inc();
-                    return Clone(entity);
+                    return Clone(resource);
                 });
         }
 
         /// <inheritdoc/>
-        private V1CustomResourceDefinition Clone(V1CustomResourceDefinition entity)
+        public void Upsert(V1APIResourceList resources)
         {
-            Covenant.Requires<ArgumentNullException>(entity != null, nameof(entity));
+            Covenant.Requires<ArgumentNullException>(resources != null, nameof(resources));
 
-            return KubernetesJson.Deserialize<V1CustomResourceDefinition>(KubernetesJson.Serialize(entity));
+            foreach (var resource in resources.Resources)
+            {
+                var id = CreateKey(resources.GroupVersion, resource.Name);
+
+                logger?.LogDebugEx(() => $"Adding {id} to cache.");
+
+                cache.AddOrUpdate(
+                    key: id,
+                    addValueFactory: (id) =>
+                    {
+                        return Clone(resource);
+                    },
+                    updateValueFactory: (key, oldresource) =>
+                    {
+                        return Clone(resource);
+                    });
+            }
+        }
+
+        /// <inheritdoc/>
+        private V1APIResource Clone(V1APIResource resource)
+        {
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
+
+            return KubernetesJson.Deserialize<V1APIResource>(KubernetesJson.Serialize(resource));
         }
     }
 }

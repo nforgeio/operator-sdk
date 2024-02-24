@@ -247,13 +247,6 @@ namespace Neon.Operator.Analyzers
                             verbs: RbacVerb.All,
                             scope: EntityScope.Cluster));
                 }
-                else
-                {
-                    attributes.Add(
-                        new RbacRule<V1CustomResourceDefinition>(
-                            verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
-                            scope: EntityScope.Cluster));
-                }
 
                 if (!leaderElectionDisabled)
                 {

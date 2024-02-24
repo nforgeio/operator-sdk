@@ -382,41 +382,31 @@ namespace Neon.Operator.ResourceManager
 
             logger?.LogInformationEx(() => $"Checking permissions for {typeof(TEntity)}.");
 
-            HttpOperationResponse<object> response;
+            V1SelfSubjectAccessReview response;
 
-            try
+            var metadata = typeof(TEntity).GetKubernetesTypeMetadata();
+            var review   = new V1SelfSubjectAccessReview().Initialize();
+
+            review.Spec                    = new V1SelfSubjectAccessReviewSpec();
+            review.Spec.ResourceAttributes = new V1ResourceAttributes()
             {
-                if (resourceNamespaces == null)
-                {
-                    response = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync<TEntity>(
-                        allowWatchBookmarks: true,
-                        watch: true);
+                Group    = metadata.Group,
+                Version  = metadata.ApiVersion,
+                Resource = metadata.PluralName,
+                Verb     = "watch",
+            };
 
-                    response.Dispose();
-                }
-                else
-                {
-                    foreach (var @namespace in resourceNamespaces)
-                    {
-                        response = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync<TEntity>(
-                            @namespace,
-                            allowWatchBookmarks: true,
-                            watch:               true);
-
-                        response.Dispose();
-                    }
-                }
+            if (resourceNamespaces == null)
+            {
+                (await k8s.AuthorizationV1.CreateSelfSubjectAccessReviewAsync(review)).ThrowIfNotAllowed();
             }
-            catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.Forbidden)
+            else
             {
-                logger?.LogErrorEx(e, () => $"Cannot watch type {typeof(TEntity)}, please check RBAC rules for the controller.");
-                throw;
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(e, () => $"Cannot watch type {typeof(TEntity)}.");
-
-                throw;
+                foreach (var @namespace in resourceNamespaces)
+                {
+                    review.Spec.ResourceAttributes.NamespaceProperty = @namespace;
+                    (await k8s.AuthorizationV1.CreateSelfSubjectAccessReviewAsync(review)).ThrowIfNotAllowed();
+                }
             }
 
             logger?.LogInformationEx(() => $"Permissions for {typeof(TEntity)} ok.");
@@ -425,49 +415,35 @@ namespace Neon.Operator.ResourceManager
             {
                 logger?.LogInformationEx(() => $"Checking permissions for dependent resources.");
 
-                foreach (var dependent in options.DependentResources.Where(d => !kubernetesTypes.Contains(d.GetEntityType().GetKubernetesCrdName())))
+                foreach (var dependent in options
+                    .DependentResources
+                    .Where(d => !kubernetesTypes.Contains(d.GetEntityType().GetKubernetesCrdName())))
                 {
-                    try
+                    logger?.LogInformationEx(() => $"Checking permissions for {dependent.GetEntityType()}.");
+
+                    metadata = dependent.GetKubernetesEntityAttribute();
+                    review   = new V1SelfSubjectAccessReview().Initialize();
+
+                    review.Spec                    = new V1SelfSubjectAccessReviewSpec();
+                    review.Spec.ResourceAttributes = new V1ResourceAttributes()
                     {
-                        logger?.LogInformationEx(() => $"Checking permissions for {dependent.GetEntityType()}.");
+                        Group = metadata.Group,
+                        Version = metadata.ApiVersion,
+                        Resource = metadata.PluralName,
+                        Verb = "watch",
+                    };
 
-                        if (resourceNamespaces == null)
-                        {
-                            response = await k8s.CustomObjects.ListClusterCustomObjectWithHttpMessagesAsync(
-                                dependent.GetKubernetesEntityAttribute().Group,
-                                dependent.GetKubernetesEntityAttribute().ApiVersion,
-                                dependent.GetKubernetesEntityAttribute().PluralName,
-                                allowWatchBookmarks: true,
-                                watch: true);
-
-                            response.Dispose();
-                        }
-                        else
-                        {
-                            foreach (var @namespace in resourceNamespaces)
-                            {
-                                response = await k8s.CustomObjects.ListNamespacedCustomObjectWithHttpMessagesAsync(
-                                    dependent.GetKubernetesEntityAttribute().Group,
-                                    dependent.GetKubernetesEntityAttribute().ApiVersion,
-                                    @namespace,
-                                    dependent.GetKubernetesEntityAttribute().PluralName,
-                                    allowWatchBookmarks: true,
-                                    watch: true);
-
-                                response.Dispose();
-                            }
-                        }
+                    if (resourceNamespaces == null)
+                    {
+                        (await k8s.AuthorizationV1.CreateSelfSubjectAccessReviewAsync(review)).ThrowIfNotAllowed();
                     }
-                    catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.Forbidden)
+                    else
                     {
-                        logger?.LogErrorEx(e, () => $"Cannot watch type {dependent.GetEntityType()}, please check RBAC rules for the controller.");
-                        throw;
-                    }
-                    catch (Exception e)
-                    {
-                        logger?.LogErrorEx(e, () => $"Cannot watch type {typeof(TEntity)}.");
-
-                        throw;
+                        foreach (var @namespace in resourceNamespaces)
+                        {
+                            review.Spec.ResourceAttributes.NamespaceProperty = @namespace;
+                            (await k8s.AuthorizationV1.CreateSelfSubjectAccessReviewAsync(review)).ThrowIfNotAllowed();
+                        }
                     }
 
                     logger?.LogInformationEx(() => $"Permissions for {dependent.GetEntityType()} ok.");
@@ -494,41 +470,23 @@ namespace Neon.Operator.ResourceManager
                 return;
             }
 
-            _ = k8s.WatchAsync<V1CustomResourceDefinition>(
-                async (@event) =>
-                {
-                    await SyncContext.Clear;
+            var resources = await k8s.CustomObjects.GetAPIResourcesAsync(
+                group:   crdMeta.Group,
+                version: crdMeta.ApiVersion);
 
-                    crdCache.Upsert(@event.Value);
-
-                    logger?.LogInformationEx(() => $"Updated {typeof(TEntity)} CRD.");
-                },
-                fieldSelector:     $"metadata.name={crdName}",
-                retryDelay:        operatorSettings.WatchRetryDelay,
-                cancellationToken: cancellationToken,
-                logger:            logger);
-
-            crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+            crdCache.Upsert(resources);
 
             if (options.DependentResources != null)
             {
                 foreach (var dependent in options.DependentResources.Where(d => !kubernetesTypes.Contains(d.GetEntityType().GetKubernetesCrdName())))
                 {
-                    crdName = dependent.GetEntityType().GetKubernetesCrdName();
+                    crdMeta = dependent.GetEntityType().GetKubernetesTypeMetadata();
 
-                    _ = k8s.WatchAsync<V1CustomResourceDefinition>(
-                        async (@event) =>
-                        {
-                            crdCache.Upsert(@event.Value);
-                            logger?.LogInformationEx(() => $"Updated {dependent.GetEntityType()} CRD.");
-                            await Task.CompletedTask;
-                        },
-                        fieldSelector:     $"metadata.name={crdName}",
-                        retryDelay:        operatorSettings.WatchRetryDelay,
-                        cancellationToken: cancellationToken,
-                        logger:            logger);
+                    resources = await k8s.CustomObjects.GetAPIResourcesAsync(
+                        group:   crdMeta.Group,
+                        version: crdMeta.ApiVersion);
 
-                    crdCache.Upsert(await k8s.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName));
+                    crdCache.Upsert(resources);
                 }
             }
         }
@@ -1179,7 +1137,7 @@ namespace Neon.Operator.ResourceManager
             {
                 var tasks = new List<Task>();
 
-                if (this.resourceNamespaces != null && crdCache.Get(typeof(TEntity).GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                if (this.resourceNamespaces != null && crdCache.Get(typeof(TEntity).GetKubernetesTypeMetadata())?.Namespaced == true)
                 {
                     foreach (var ns in resourceNamespaces)
                     {
@@ -1217,7 +1175,7 @@ namespace Neon.Operator.ResourceManager
                     args[9] = cancellationToken;
                     args[10] = logger;
 
-                    if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesCrdName())?.Spec.Scope != "Cluster")
+                    if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesTypeMetadata())?.Namespaced == false)
                     {
                         foreach (var @namespace in this.resourceNamespaces)
                         {

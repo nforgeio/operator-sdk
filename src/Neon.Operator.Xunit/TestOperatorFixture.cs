@@ -99,7 +99,7 @@ namespace Neon.Operator.Xunit
             where T : IKubernetesObject<V1ObjectMeta>
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var key          = $"{typeMetadata.Group}/{typeMetadata.ApiVersion}/{typeMetadata.PluralName}";
+            var key          = ApiHelper.CreateKey(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName);
 
             testApiServerHost.Cluster.Types.TryAdd(key, typeof(T));
         }

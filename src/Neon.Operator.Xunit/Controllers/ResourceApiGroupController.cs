@@ -100,7 +100,7 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var key = $"{Group}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -150,7 +150,7 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            var key = $"{Group}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -177,7 +177,7 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            var key = $"{Group}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -219,7 +219,7 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
 
-            var key = $"{Group}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -251,7 +251,7 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var key = $"{Group}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {

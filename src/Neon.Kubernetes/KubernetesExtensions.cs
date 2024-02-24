@@ -1118,31 +1118,5 @@ namespace Neon.K8s
 
             return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(configmap.UntypedConfigMap, name, namespaceParameter, cancellationToken: cancellationToken));
         }
-
-        /// <summary>
-        /// Deletes a namespaced typed configmap.
-        /// </summary>
-        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
-        /// <param name="name">Specifies the object name.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
-        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <remarks>
-        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
-        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
-        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
-        /// </remarks>
-        public static async Task DeleteNamespacedTypedConfigMapAsync(
-            this ICoreV1Operations  k8sCoreV1,
-            string                  name,
-            string                  namespaceParameter,
-            CancellationToken       cancellationToken = default)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
-
-            await k8sCoreV1.DeleteNamespacedConfigMapAsync(name, namespaceParameter, cancellationToken: cancellationToken);
-        }
     }
 }

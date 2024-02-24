@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ICrdCache.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -26,31 +26,41 @@ namespace Neon.Operator.Cache
     internal interface ICrdCache
     {
         /// <summary>
-        /// Attempts to retrieve cached entity by ID.
+        /// Attempts to retrieve cached resource by ID.
         /// </summary>
-        /// <param name="id">Specifies the CRD ID.</param>
+        /// <param name="metadata">The entity attribute.</param>
         /// <returns>The retrieved CRD or <c>null</c> when it's not cached.</returns>
-        V1CustomResourceDefinition Get(string id);
+        V1APIResource Get(KubernetesEntityAttribute metadata);
 
         /// <summary>
-        /// Attempts to retrieve a cached entity by type.
+        /// Attempts to retrieve a cached resource by type.
         /// </summary>
-        /// <typeparam name="TEntity">Specifies the CRD type.</typeparam>
+        /// <typeparam name="Tresource">Specifies the CRD type.</typeparam>
         /// <returns>The retrieved CRD or <c>null</c> when it's not cached.</returns>
-        V1CustomResourceDefinition Get<TEntity>()
-            where TEntity : IKubernetesObject<V1ObjectMeta>;
+        V1APIResource Get<TResource>()
+            where TResource : IKubernetesObject<V1ObjectMeta>;
 
         /// <summary>
-        /// Adds or replaces an entity in the cache.
+        /// Adds or replaces an resource in the cache.
         /// </summary>
+        /// <param name="group"></param>
+        /// <param name="version"></param>
         /// <param name="resource">Specifies the new or updated CRD.</param>
-        void Upsert(V1CustomResourceDefinition resource);
+        void Upsert(string group, string version, V1APIResource resource);
 
         /// <summary>
-        /// Removes an entity from the cache, if present.
+        /// Adds or replaces an resource in the cache.
         /// </summary>
+        /// <param name="resourceList">Specifies the new or updated CRD.</param>
+        void Upsert(V1APIResourceList resourceList);
+
+        /// <summary>
+        /// Removes an resource from the cache, if present.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <param name="version"></param>
         /// <param name="resource">Specifies the CRD to be removed.</param>
-        void Remove(V1CustomResourceDefinition resource);
+        void Remove(string group, string version, V1APIResource resource);
 
         /// <summary>
         /// Clears the cache.
