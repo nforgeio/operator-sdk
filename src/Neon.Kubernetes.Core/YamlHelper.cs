@@ -28,6 +28,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.K8s.Core.YamlConverters;
+using Neon.Kubernetes.Core.YamlConverters;
 
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
@@ -75,6 +76,7 @@ namespace Neon.K8s.Core
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .WithTypeConverter(new IntOrStringYamlConverter())
                 .WithTypeConverter(new ByteArrayStringYamlConverter())
+                .WithTypeConverter(new YamlStringEnumConverter())
                 .WithTypeConverter(new ResourceQuantityYamlConverter())
                 .WithEventEmitter(e => new StringQuotingEmitter(e))
                 .WithEventEmitter(e => new FloatEmitter(e))

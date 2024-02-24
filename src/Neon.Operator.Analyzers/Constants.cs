@@ -80,6 +80,10 @@ namespace Neon.Operator.Analyzers
             nameof(RepositoryAttribute).Replace("Attribute", ""),
             nameof(DefaultChannelAttribute),
             nameof(DefaultChannelAttribute).Replace("Attribute", ""),
+            nameof(ReviewersAttribute),
+            nameof(ReviewersAttribute).Replace("Attribute", ""),
+            nameof(UpdateGraphAttribute),
+            nameof(UpdateGraphAttribute).Replace("Attribute", ""),
             ];
     }
 }

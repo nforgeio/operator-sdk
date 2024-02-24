@@ -48,7 +48,9 @@ namespace Test.Analyzers
             var providerName = "NeonSDK";
             var providerUrl = "foo.com";
             var maintainerName = "Bob Testaroni";
+            var maintainerName2 = "Bab Testaroni";
             var maintainerEmail = "foo@bar.com";
+            var maintainerGitHub = "BobFooGit";
             var version = "1.2.3";
             var maturity = "alpha";
             var minKubeVersion = "1.16.0";
@@ -68,7 +70,7 @@ using Neon.Common;
 [assembly: RequiredEntity<V1TestResource>(Description = ""{requiredEntityDesc}"", DisplayName = TestConstants.DisplayName)]
 [assembly: Description(FullDescription = MoreTestConstants.Description, ShortDescription = ""This is a short description."")]
 [assembly: Provider(Name = ""{providerName}"", Url = ""{providerUrl}"")]
-[assembly: Maintainer(Name = ""{maintainerName}"", Email = ""{maintainerEmail}"")]
+[assembly: Maintainer(Name = ""{maintainerName}"", Email = ""{maintainerEmail}"" GitHub = ""{maintainerGitHub}"", Reviewer = true)]
 [assembly: Version(""{version}"")]
 [assembly: Maturity(""{maturity}"")]
 [assembly: MinKubeVersion(""{minKubeVersion}"")]
@@ -122,7 +124,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
                 .AddAssembly(typeof(ResourceControllerAttribute).Assembly)
                 .Build();
 
-            var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", "manifests", $"{name}.clusterserviceversion.yaml");
+            var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", version,  "manifests", $"{name}.clusterserviceversion.yaml");
 
             File.Exists(outFile).Should().BeTrue();
 
@@ -135,7 +137,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
             // check annotations
             outCsv.Metadata.Annotations["categories"].Should().Be($"{Category.ApplicationRuntime.ToMemberString()}, {Category.BigData.ToMemberString()}, {Category.DeveloperTools.ToMemberString()}");
             outCsv.Metadata.Annotations["certified"].Should().Be("false");
-            outCsv.Metadata.Annotations["capabilities"].Should().Be(CapabilityLevel.DeepInsights.ToString());
+            outCsv.Metadata.Annotations["capabilities"].Should().Be(CapabilityLevel.DeepInsights.ToMemberString());
             outCsv.Metadata.Annotations["containerImage"].Should().Be($"{containerImage}:{containerImageTag}");
             outCsv.Metadata.Annotations["repository"].Should().Be(repository);
 
@@ -162,8 +164,6 @@ culpa qui officia deserunt mollit anim id est laborum."";
             outCsv.Spec.WebHookDefinitions.Should().HaveCount(2);
             outCsv.Spec.WebHookDefinitions.Where(wd => wd.Type == WebhookAdmissionType.ValidatingAdmissionWebhook).Should().HaveCount(1);
             outCsv.Spec.WebHookDefinitions.Where(wd => wd.Type == WebhookAdmissionType.MutatingAdmissionWebhook).Should().HaveCount(1);
-
-
         }
 
         [Fact]

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// FILE:	    MaintainerAttribute.cs
+// FILE:	    ReviewersAttribute.cs
 // CONTRIBUTOR: NEONFORGE Team
 // COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -16,55 +16,62 @@
 // limitations under the License.
 
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Neon.Operator.OperatorLifecycleManager
 {
     /// <summary>
-    /// Specifies a maintainer of the Operator.
+    /// A list of reviewers to be added to pull requests (GitHub user name)
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
-    public sealed class MaintainerAttribute : Attribute
+    public sealed class ReviewersAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public MaintainerAttribute() { }
+        public ReviewersAttribute() { }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="email"></param>
-        /// <param name="gitHub"></param>
         /// <param name="reviewer"></param>
-        public MaintainerAttribute(string name, string email, string gitHub, bool reviewer)
+        public ReviewersAttribute(string reviewer)
         {
-            this.Name = name;
-            this.Email = email;
-            this.GitHub = gitHub;
             this.Reviewer = reviewer;
         }
 
         /// <summary>
-        /// The maintainer name.
+        /// Constructor.
         /// </summary>
-        public string Name { get; set; }
+        public ReviewersAttribute(params string[] reviewers)
+        {
+            this.Reviewers = reviewers.ToList();
+        }
 
         /// <summary>
-        /// The maintainer email address.
+        /// A reviewer.
         /// </summary>
-        public string Email { get; set; }
+        public string Reviewer { get; set; }
 
         /// <summary>
-        /// The maintainer Github address.
+        /// The reviewers.
         /// </summary>
-        public string GitHub { get; set; }
+        public List<string> Reviewers { get; set; } = new List<string>();
 
         /// <summary>
-        /// reviewer flag for the maintainer.
+        /// Gets the reviewers as a list.
         /// </summary>
-        [DefaultValue(false)]
-        public bool Reviewer { get; set; } = false;
+        /// <returns></returns>
+        public List<string> GetReviewers()
+        {
+            if (!string.IsNullOrEmpty(Reviewer))
+            {
+                Reviewers.Add(Reviewer);
+            }
+
+            return Reviewers;
+        }
     }
 }

@@ -20,8 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -61,10 +61,10 @@ namespace Neon.Operator.Analyzers
             context.RegisterForSyntaxNotifications(() => new CustomResourceReceiver());
         }
 
-        public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        public System.Reflection.Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
-            var assemblyName = new AssemblyName(args.Name);
-            Assembly assembly = null;
+            var assemblyName = new System.Reflection.AssemblyName(args.Name);
+            System.Reflection.Assembly assembly = null;
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
@@ -72,7 +72,7 @@ namespace Neon.Operator.Analyzers
                     .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
-                    assembly = Assembly.LoadFrom(targetAssembly);
+                    assembly = System.Reflection.Assembly.LoadFrom(targetAssembly);
             }
             catch (Exception)
             {
@@ -353,7 +353,7 @@ namespace Neon.Operator.Analyzers
 
         private V1JSONSchemaProps MapProperty(
             IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
-            PropertyInfo                            info,
+            System.Reflection.PropertyInfo          info,
             IList<V1CustomResourceColumnDefinition> additionalColumns,
             string                                  jsonPath)
         {
@@ -513,8 +513,11 @@ namespace Neon.Operator.Analyzers
                 catch { }
                 props.Type         = Constants.StringTypeString;
                 props.EnumProperty = type.GetMembers()
-                        .Where(static member => member.MemberType is MemberTypes.Field)
-                        .Select(static member => (object)member.Name.ToLower()).ToList();
+                        .Where(static member => member.MemberType is System.Reflection.MemberTypes.Field)
+                        .Select(static member =>
+                            (object)member.GetCustomAttribute<EnumMemberAttribute>()?.Value
+                            ?? (object)member.Name.ToLower())
+                        .ToList();
             }
             else 
             {
@@ -556,7 +559,7 @@ namespace Neon.Operator.Analyzers
             props.XKubernetesEmbeddedResource      = true;
         }
         
-        private static string GetPropertyName(PropertyInfo property)
+        private static string GetPropertyName(System.Reflection.PropertyInfo property)
         {
             var attribute    = property.GetCustomAttribute<JsonPropertyNameAttribute>();
             var propertyName = attribute?.Name ?? property.Name;

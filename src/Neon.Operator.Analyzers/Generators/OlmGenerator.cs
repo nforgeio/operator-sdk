@@ -19,10 +19,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 using k8s;
 using k8s.Models;
@@ -31,6 +33,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Common;
+using Neon.K8s.Core;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
@@ -64,6 +67,12 @@ namespace Neon.Operator.Analyzers.Generators
                                                                                               messageFormat: "The following attributes are required: [{0}]",
                                                                                               category: "Operator Lifecycle Manager",
                                                                                               DiagnosticSeverity.Warning,
+                                                                                              isEnabledByDefault: true);
+        internal static readonly DiagnosticDescriptor MissingReviewerError = new DiagnosticDescriptor(id: "NO11004",
+                                                                                              title: "Github Not Specified",
+                                                                                              messageFormat: "Github username is required for maintainers [{0}]",
+                                                                                              category: "Operator Lifecycle Manager",
+                                                                                              DiagnosticSeverity.Error,
                                                                                               isEnabledByDefault: true);
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -117,6 +126,9 @@ namespace Neon.Operator.Analyzers.Generators
             var maintainers          = RoslynExtensions.GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
             var icons                = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
             var installModeAttrs     = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var reviewers            = RoslynExtensions.GetAttributes<ReviewersAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var updateGraph          = RoslynExtensions.GetAttribute<UpdateGraphAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var almExampleJson       = GetOwnedEntityExampleJson(context,metadataLoadContext,attributes);
 
             var requiredCount = 0;
             requiredCount = AddIfNullOrEmpty<NameAttribute>(operatorName, missingRequired, requiredCount);
@@ -285,7 +297,8 @@ namespace Neon.Operator.Analyzers.Generators
                 { "description", description.ShortDescription },
                 { "certified", certified.ToString().ToLower() },
                 { "createdAt", createdAt },
-                { "capabilities", capabilities.Capability.ToString()},
+                { "alm-examples", almExampleJson},
+                { "capabilities", capabilities.Capability.ToMemberString()},
                 { "containerImage", $"{containerImage.Repository}:{containerImage.Tag}" },
                 { "repository", repository.Repository },
                 { "categories", string.Join(", ", categories.SelectMany(c => c.Category.ToStrings()).ToImmutableHashSet().OrderBy(x=>x)) },
@@ -612,17 +625,56 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
-            var outputString  = KubernetesYaml.Serialize(csv);
+            var outputString  = KubernetesHelper.YamlSerialize(csv);
             var outputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
-            var manifestDir   = Path.Combine(outputBaseDir, "manifests");
-            var metadataDir   = Path.Combine(outputBaseDir, "metadata");
+            var versionDir = Path.Combine(outputBaseDir, version);
+            var manifestDir   = Path.Combine(versionDir, "manifests");
+            var metadataDir   = Path.Combine(versionDir, "metadata");
 
             Directory.CreateDirectory(outputBaseDir);
+            Directory.CreateDirectory(versionDir);
             Directory.CreateDirectory(manifestDir);
             Directory.CreateDirectory(metadataDir);
 
             var csvPath = Path.Combine(manifestDir, $"{operatorName.Name.ToLower()}.clusterserviceversion.yaml");
             File.WriteAllText(csvPath, outputString);
+
+            if (maintainers?.Any(m => m.Reviewer) == true
+                || updateGraph != null)
+            {
+                var ci = new Ci();
+                if(updateGraph != null)
+                {
+                    ci.UpdateGraph = updateGraph.UpdateGraph;
+                }
+                if (maintainers?.Any(m => m.Reviewer) == true)
+                {
+                    ci.AddReviewers = true;
+
+                    // check that github is set for all reviewers
+                    if(maintainers.Any(m => m.Reviewer && string.IsNullOrEmpty(m.GitHub)))
+                    {
+                        var githubMissing = maintainers.Where(m => m.Reviewer && string.IsNullOrEmpty(m.GitHub)).Select(r => r.Name);
+
+                        context.ReportDiagnostic(Diagnostic.Create(MissingReviewerError,
+                                                                   Location.None,
+                                                                   string.Join(", ", githubMissing)));
+
+                        return;
+                    }
+
+                    ci.Reviewers.AddRange(maintainers.Where(m => m.Reviewer).Select(m => m.GitHub));
+                }
+                if (reviewers?.Any() == true)
+                {
+                    ci.AddReviewers = true;
+                    ci.Reviewers.AddRange(reviewers.SelectMany(r=> r.GetReviewers()).Distinct());
+                }
+
+                var outputStringCi  = KubernetesHelper.YamlSerialize(ci);
+                var ciPath          = Path.Combine(outputBaseDir,"ci.yaml");
+                File.WriteAllText(ciPath, outputStringCi);
+            }
 
             var annotations = $@"annotations:
   operators.operatorframework.io.bundle.mediatype.v1: ""registry+v1""
@@ -672,6 +724,42 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             requiredCount += 1;
             return requiredCount;
         }
+
+        public string GetOwnedEntityExampleJson(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
+        {
+            //return string.Empty;
+            try
+            {
+                var results = new List<CrdDescription>();
+
+                var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+                var ownedEntities = assemblyAttributes
+                    .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(OwnedEntityAttribute).Namespace}.OwnedEntity"));
+
+                var jsonStrings = new List<string>();
+                foreach (var entity in ownedEntities)
+                {
+                    var etype      = (INamedTypeSymbol)entity.AttributeClass.TypeArguments.FirstOrDefault();
+                    var entityType = metadataLoadContext.ResolveType(etype);
+
+                    var d = entityType.GetDefault();
+                    jsonStrings.Add(JsonSerializer.Serialize(d));
+                }
+
+                var sb = new StringBuilder();
+
+                sb.Append("[");
+                sb.Append(string.Join(",", jsonStrings));
+                sb.Append("]");
+
+                return sb.ToString();
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
         public IEnumerable<CrdDescription> GetOwnedEntities(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
         {
             try
