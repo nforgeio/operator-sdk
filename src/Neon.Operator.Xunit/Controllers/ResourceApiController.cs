@@ -285,6 +285,20 @@ namespace Neon.Operator.Xunit
                 status.Status = "deleted";
                 status.Code = 200;
 
+                if (type == typeof(V1Service)
+                    || type == typeof(V1Pod)
+                    || type == typeof(V1ResourceQuota)
+                    || type == typeof(V1Service)
+                    || type == typeof(V1PodTemplate)
+                    || type == typeof(V1PersistentVolume)
+                    || type == typeof(V1PersistentVolumeClaim)
+                    || type == typeof(V1ResourceQuota)
+                    || type == typeof(V1ServiceAccount)
+                    )
+                {
+                    return Ok(existing);
+                }
+
                 return Content(KubernetesHelper.JsonSerialize(status), "application/json");
             }
 
