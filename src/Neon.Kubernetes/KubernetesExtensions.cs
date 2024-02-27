@@ -122,6 +122,64 @@ namespace Neon.K8s
             }
         }
 
+        /// <summary>
+        /// Sets an annotation within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The annotation name.</param>
+        /// <param name="value">Optionally specifies a annotation value. This defaults to an empty string.</param>
+        public static void SetAnnotation(this V1ObjectMeta metadata, string name, string value = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Annotations == null)
+            {
+                metadata.Annotations = new Dictionary<string, string>();
+            }
+
+            metadata.Annotations[name] = value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Sets a collection of annotations within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="annotations">The dictionary of annotations to set.</param>
+        public static void SetAnnotations(this V1ObjectMeta metadata, Dictionary<string, string> annotations)
+        {
+            Covenant.Requires<ArgumentNullException>(annotations != null, nameof(annotations));
+
+            foreach (var annotation in annotations)
+            {
+                metadata.SetAnnotation(annotation.Key, annotation.Value);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the value of a annotation from the metadata.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The annotation name.</param>
+        /// <returns>The label value or <c>null</c> when the label doesn't exist.</returns>
+        public static string GetAnnotation(this V1ObjectMeta metadata, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Annotations == null)
+            {
+                return null;
+            }
+
+            if (metadata.Annotations.TryGetValue(name, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Deployment extensions
 
