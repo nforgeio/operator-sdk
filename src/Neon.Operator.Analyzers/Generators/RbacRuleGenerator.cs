@@ -260,7 +260,7 @@ namespace Neon.Operator.Analyzers
                     attributes.Add(
                         new RbacRule<V1Lease>(
                             verbs: RbacVerb.All,
-                            scope: EntityScope.Cluster));
+                            scope: EntityScope.Namespaced));
                 }
 
                 if (hasMutatingWebhooks && autoRegisterWebhooks)
