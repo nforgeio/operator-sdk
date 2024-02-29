@@ -85,5 +85,19 @@ namespace Neon.Operator.Analyzers
             nameof(UpdateGraphAttribute),
             nameof(UpdateGraphAttribute).Replace("Attribute", ""),
             ];
+
+        public static class Labels
+        {
+            public const string Name = "app.kubernetes.io/name";
+            public const string Version = "app.kubernetes.io/version";
+        }
+
+        public static class Annotations
+        {
+            public const string PrometheusPath = "prometheus.io/path";
+            public const string PrometheusPort = "prometheus.io/port";
+            public const string PrometheusScheme = "prometheus.io/scheme";
+            public const string PrometheusScrape = "prometheus.io/scrape";
+        }
     }
 }

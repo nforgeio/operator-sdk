@@ -66,9 +66,17 @@ namespace Neon.Operator.Analyzers.Generators
                                                                                               category: "Operator Lifecycle Manager",
                                                                                               DiagnosticSeverity.Warning,
                                                                                               isEnabledByDefault: true);
+
         internal static readonly DiagnosticDescriptor MissingReviewerError = new DiagnosticDescriptor(id: "NO11004",
                                                                                               title: "GitHubUsername Not Specified",
                                                                                               messageFormat: "Github username is required for maintainer [{0}]",
+                                                                                              category: "Operator Lifecycle Manager",
+                                                                                              DiagnosticSeverity.Error,
+                                                                                              isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor OwnedAttributeExampleError = new DiagnosticDescriptor(id: "NO11005",
+                                                                                              title: "Cannot define JSON and YAML",
+                                                                                              messageFormat: "Cannot define both JSON and YAML examples, please choose just one for [{0}]",
                                                                                               category: "Operator Lifecycle Manager",
                                                                                               DiagnosticSeverity.Error,
                                                                                               isEnabledByDefault: true);
@@ -194,7 +202,7 @@ namespace Neon.Operator.Analyzers.Generators
                 rbacAttributes.Add(
                     new RbacRule<V1Lease>(
                         verbs: RbacVerb.All,
-                        scope: EntityScope.Cluster));
+                        scope: EntityScope.Namespaced));
             }
 
             foreach (var rbacClass in classesWithRbac)
@@ -321,11 +329,18 @@ namespace Neon.Operator.Analyzers.Generators
                 Name = m.Value.Name,
                 Email = m.Value.Email
             }).ToList();
-            csv.Spec.CustomResourceDefinitions = new CustomResourceDefinitions()
+
+            if (ownedEntities.Count() > 0)
             {
-                Owned = ownedEntities.ToList(),
-                Required = requiredEntities.ToList()
-            };
+                csv.Spec.CustomResourceDefinitions       = csv.Spec.CustomResourceDefinitions ?? new CustomResourceDefinitions();
+                csv.Spec.CustomResourceDefinitions.Owned = ownedEntities.ToList();
+            }
+
+            if (requiredEntities.Count() > 0)
+            {
+                csv.Spec.CustomResourceDefinitions          = csv.Spec.CustomResourceDefinitions ?? new CustomResourceDefinitions();
+                csv.Spec.CustomResourceDefinitions.Required = requiredEntities.ToList();
+            }
 
             var installModes = new List<InstallMode>();
 
@@ -433,8 +448,8 @@ namespace Neon.Operator.Analyzers.Generators
                     Name = operatorName?.Name,
                     Label = new Dictionary<string, string>()
                     {
-                        { "app.kubernetes.io/name", operatorName?.Name },
-                        { "app.kubernetes.io/versionAttribute", version },
+                        { Constants.Labels.Name, operatorName?.Name },
+                        { Constants.Labels.Version, version },
                     },
                     Spec = new V1DeploymentSpec()
                     {
@@ -443,7 +458,7 @@ namespace Neon.Operator.Analyzers.Generators
                         {
                             MatchLabels = new Dictionary<string, string>()
                             {
-                                { "app.kubernetes.io/name", operatorName?.Name },
+                                { Constants.Labels.Name, operatorName?.Name },
                             }
                         },
                         Template = new V1PodTemplateSpec()
@@ -452,15 +467,15 @@ namespace Neon.Operator.Analyzers.Generators
                             {
                                 Labels = new Dictionary<string, string>()
                                 {
-                                   { "app.kubernetes.io/name", operatorName?.Name },
+                                   { Constants.Labels.Name, operatorName?.Name },
 
                                 },
                                 Annotations = new Dictionary<string, string>()
                                 {
-                                    { "prometheus.io/path", "/metrics" },
-                                    { "prometheus.io/port", "9762" },
-                                    { "prometheus.io/scheme", "http" },
-                                    { "prometheus.io/scrape", "true" },
+                                    { Constants.Annotations.PrometheusPath, "/metrics" },
+                                    { Constants.Annotations.PrometheusPort, "9762" },
+                                    { Constants.Annotations.PrometheusScheme, "http" },
+                                    { Constants.Annotations.PrometheusScrape, "true" },
                                 }
                             },
                             Spec = new V1PodSpec()
@@ -683,7 +698,7 @@ namespace Neon.Operator.Analyzers.Generators
   operators.operatorframework.io.bundle.metadata.v1: ""metadata/""
   operators.operatorframework.io.bundle.package.v1: ""{operatorName?.Name.ToLower()}""
   operators.operatorframework.io.bundle.channels.v1: ""{olmChannels}""
-  operators.operatorframework.io.bundle.channel.default.v1: ""{defaultChannel}""
+  operators.operatorframework.io.bundle.channel.default.v1: ""{defaultChannel.DefaultChannel}""
 ";
             var annotationsPath = Path.Combine(metadataDir, "annotations.yaml");
             File.WriteAllText(annotationsPath, annotations);
@@ -695,7 +710,7 @@ LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
 LABEL operators.operatorframework.io.bundle.metadata.v1=metadata/
 LABEL operators.operatorframework.io.bundle.package.v1={operatorName?.Name.ToLower()}
 LABEL operators.operatorframework.io.bundle.channels.v1={olmChannels}
-LABEL operators.operatorframework.io.bundle.channel.default.v1={defaultChannel}
+LABEL operators.operatorframework.io.bundle.channel.default.v1={defaultChannel.DefaultChannel}
 
 ADD ./manifests/*.yaml /manifests/
 ADD ./metadata/annotations.yaml /metadata/annotations.yaml
@@ -735,7 +750,10 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             return requiredCount;
         }
 
-        public string GetOwnedEntityExampleJson(GeneratorExecutionContext context, MetadataLoadContext metadataLoadContext, List<AttributeSyntax> attributes)
+        public string GetOwnedEntityExampleJson(
+            GeneratorExecutionContext context,
+            MetadataLoadContext       metadataLoadContext,
+            List<AttributeSyntax>     attributes)
         {
             try
             {
@@ -750,9 +768,51 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                 {
                     var etype      = (INamedTypeSymbol)entity.AttributeClass.TypeArguments.FirstOrDefault();
                     var entityType = metadataLoadContext.ResolveType(etype);
+                    var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
+
+                    var ownedAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
+                        .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "OwnedEntity"
+                          && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name)
+                        .First();
+
+                    var exampleJson = ownedAttribute
+                        .ArgumentList
+                        .Arguments
+                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.ExampleJson))
+                        .FirstOrDefault()
+                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+
+                    var exampleYaml = ownedAttribute
+                        .ArgumentList
+                        .Arguments
+                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.ExampleYaml))
+                        .FirstOrDefault()
+                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+
+                    if (!string.IsNullOrEmpty(exampleJson)
+                        && !string.IsNullOrEmpty(exampleYaml))
+                    {
+                        context.ReportDiagnostic(
+                            diagnostic: Diagnostic.Create(
+                                descriptor: OwnedAttributeExampleError,
+                                location: ownedAttribute.GetLocation(),
+                                messageArgs: [entityType.Name]));
+                    }
+
+                    if (!string.IsNullOrEmpty(exampleJson))
+                    {
+                        jsonStrings.Add(exampleJson);
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(exampleYaml))
+                    {
+                        var obj = KubernetesHelper.YamlDeserialize<dynamic>(exampleYaml, stringTypeDeserialization: false);
+                        jsonStrings.Add(KubernetesHelper.JsonSerialize(obj));
+                        continue;
+                    }
 
                     dynamic defaultEntity = entityType.GetDefault();
-                    var metadata = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
                     defaultEntity.ApiVersion = $"{metadata.Group}/{metadata.ApiVersion}";
                     defaultEntity.Kind = metadata.Kind;
                     defaultEntity.Metadata = new V1ObjectMeta()
@@ -840,13 +900,16 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                         crdDescription.DisplayName = displayName;
                     }
 
-                    crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
+                    if (dependents?.Count > 0)
                     {
-                        Kind    = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
-                        Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
-                        Name    = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
-                    }).ToList();
-
+                        crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
+                        {
+                            Kind = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
+                            Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
+                            Name = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
+                        }).ToList();
+                    }
+                    
                     results.Add(crdDescription);
                 }
 
@@ -867,7 +930,7 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 
                 var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
                 var requiredEntities = assemblyAttributes
-                .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(RequiredEntityAttribute).Namespace}.RequiredEntity"));
+                    .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(RequiredEntityAttribute).Namespace}.RequiredEntity"));
 
                 foreach (var entity in requiredEntities)
                 {

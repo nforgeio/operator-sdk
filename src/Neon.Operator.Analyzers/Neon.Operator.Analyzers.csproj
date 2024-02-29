@@ -41,12 +41,12 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(_IsPacking)' == 'true'">
-        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CSharp" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />
-        <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" IncludeRuntimeDependency="false" />
-        <None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-        <None Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <!--<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />-->
+        <!--<PackageReference Include="Microsoft.CSharp" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />-->
+        <!--<TargetPathWithTargetPlatformMoniker Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" IncludeRuntimeDependency="false" />-->
+        <!--<TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" IncludeRuntimeDependency="false" />-->
+        <!--<None Include="$(PKGSystem_ComponentModel_Annotations)\lib\netstandard2.0\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+        <!--<None Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\Microsoft.CSharp.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
     </ItemGroup>
 
     <Choose>
@@ -92,7 +92,7 @@
             <None Include="$(OutputPath)\Neon.Kubernetes.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\Neon.Operator.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(OutputPath)\Neon.Operator.OperatorLifecycleManager.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-            <None Include="$(OutputPath)\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            <!--<None Include="$(OutputPath)\System.ComponentModel.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
             <None Include="$(PKGFractions)\lib\netstandard2.0\Fractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGKubernetesClient_Basic)\lib\netstandard2.0\KubernetesClient.Basic.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGKubernetesClient_Models)\lib\netstandard2.0\KubernetesClient.Models.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

@@ -20,9 +20,11 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 using FluentAssertions;
 
+using k8s;
 using k8s.Models;
 
 using Microsoft.CodeAnalysis;
@@ -50,7 +52,6 @@ namespace Test.Analyzers
             var providerName = "NeonSDK";
             var providerUrl = "foo.com";
             var maintainerName = "Bob Testaroni";
-            var maintainerName2 = "Bab Testaroni";
             var maintainerEmail = "foo@bar.com";
             var maintainerGitHub = "BobFooGit";
             var version = "1.2.3";
@@ -261,5 +262,157 @@ using Neon.Operator.OperatorLifecycleManager;
                 syntax.GetLocation(),
                 [maintainerName]));
         }
+
+        [Fact]
+        public void TestExampleJson()
+        {
+            var example = new V1TestResource().Initialize();
+            example.Metadata.Name = "test";
+            example.Metadata.NamespaceProperty = "test";
+            example.Spec = new TestSpec();
+            example.Spec.Message = "test message";
+
+            var exampleJson = KubernetesHelper.JsonSerialize(example);
+            var escapedExampleJson = exampleJson.Replace("\"", "\\\"");
+            var source = $@"
+using Neon.Operator.OperatorLifecycleManager;
+using Test.Analyzers;
+
+[assembly: OwnedEntity<V1TestResource>(Description = ""This is a description"", DisplayName = ""Name"", ExampleJson = ""{escapedExampleJson}"")]
+";
+            using var temp = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddAssembly(typeof(V1TestResource).Assembly)
+                .AddAssembly(typeof(OwnedEntityAttribute).Assembly)
+                .Build();
+
+            var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", "manifests", $".clusterserviceversion.yaml");
+
+            File.Exists(outFile).Should().BeTrue();
+
+            var output = File.ReadAllText(outFile);
+
+            var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
+
+            outCsv.Metadata.Annotations["alm-examples"].Should().Be($"[{exampleJson}]");
+        }
+
+        [Fact]
+        public void TestExampleYaml()
+        {
+            var example = new V1TestResource().Initialize();
+            example.Metadata.Name = "test";
+            example.Metadata.NamespaceProperty = "test";
+            example.Spec = new TestSpec();
+            example.Spec.Message = "test message";
+
+            var exampleJson = KubernetesHelper.JsonSerialize(example);
+
+            var source = $@"
+using Neon.Operator.OperatorLifecycleManager;
+using Test.Analyzers;
+using TestNamespace;
+
+[assembly: OwnedEntity<V1TestResource>(Description = ""This is a description"", DisplayName = ""Name"", ExampleYaml = TestConstants.ExampleYaml)]
+";
+            var constants = $@"
+namespace TestNamespace
+{{
+    public class TestConstants
+    {{
+        public const string ExampleYaml = $@""apiVersion: test.neonkube.io/v1alpha1
+kind: NeonTestObject
+metadata:
+  name: test
+  namespace: test
+spec:
+  message: test message"";
+    }}
+}}";
+
+            using var temp = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddSource(constants)
+                .AddAssembly(typeof(V1TestResource).Assembly)
+                .AddAssembly(typeof(OwnedEntityAttribute).Assembly)
+                .Build();
+
+            var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", "manifests", $".clusterserviceversion.yaml");
+
+            File.Exists(outFile).Should().BeTrue();
+
+            var output = File.ReadAllText(outFile);
+
+            var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
+
+            outCsv.Metadata.Annotations["alm-examples"].Should().Be($"[{exampleJson}]");
+        }
+
+        [Fact]
+        public void TestExampleJsonYamlDiagnostic()
+        {
+
+            var example = new V1TestResource().Initialize();
+            example.Spec = new TestSpec();
+            example.Spec.Message = "test message";
+
+            var exampleJson = KubernetesHelper.JsonSerialize(example).Replace("\"", "\\\"");
+
+            var source = $@"
+using Neon.Operator.OperatorLifecycleManager;
+using Test.Analyzers;
+using TestNamespace;
+
+[assembly: OwnedEntity<V1TestResource>(Description = ""This is a description"", DisplayName = ""Name"", ExampleJson = ""{exampleJson}"", ExampleYaml = TestConstants.ExampleYaml)]
+";
+            var constants = $@"
+namespace TestNamespace
+{{
+    public class TestConstants
+    {{
+        public const string ExampleYaml = $@""apiVersion: test.neonkube.io/v1alpha1
+kind: V1TestResource
+metadata:
+  name: test
+  namespace: test
+spec:
+  message: test message"";
+    }}
+}}";
+
+            using var temp = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddSource(constants)
+                .AddAssembly(typeof(V1TestResource).Assembly)
+                .AddAssembly(typeof(OwnedEntityAttribute).Assembly)
+                .Build();
+
+            var syntax = testCompilation
+                .Compilation
+                .SyntaxTrees
+                .First()
+                .GetRoot()
+                .DescendantNodes()
+                .OfType<AttributeSyntax>()
+                .Last();
+
+            testCompilation.Should().HaveDiagnostic(Diagnostic.Create(
+                OlmGenerator.OwnedAttributeExampleError,
+                syntax.GetLocation(),
+                ["V1TestResource"]));
+        }
     }
+
 }

@@ -64,6 +64,16 @@ namespace Neon.Operator.OperatorLifecycleManager
         /// </summary>
         public string DisplayName { get; set; }
 
+        /// <summary>
+        /// Example Json of the CRD
+        /// </summary>
+        public string ExampleJson { get; set; }
+
+        /// <summary>
+        /// Example yaml of the CRD
+        /// </summary>
+        public string ExampleYaml { get; set; }
+
 
 
         /// <inheritdoc/>

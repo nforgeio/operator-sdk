@@ -84,6 +84,17 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.IsTestProject", out var isTestProject))
+            {
+                if (bool.TryParse(isTestProject, out var isTestProjectBool))
+                {
+                    if (isTestProjectBool == true)
+                    {
+                        return;
+                    }
+                }
+            }
+
             var metadataLoadContext = new MetadataLoadContext(context.Compilation);
             var namedTypeSymbols    = context.Compilation.GetNamedTypeSymbols();
 

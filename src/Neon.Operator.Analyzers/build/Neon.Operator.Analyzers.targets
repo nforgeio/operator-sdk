@@ -17,5 +17,6 @@
         <CompilerVisibleProperty Include="NeonOperatorVersion" />
         <CompilerVisibleProperty Include="TargetDir" />
         <CompilerVisibleProperty Include="Configuration" />
+        <CompilerVisibleProperty Include="IsTestProject" />
     </ItemGroup>
 </Project>
