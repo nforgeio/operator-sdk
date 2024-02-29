@@ -153,10 +153,9 @@ namespace Neon.Operator.Analyzers.Generators
             requiredCount = AddIfNullOrEmpty<IconAttribute>(icons, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<InstallModeAttribute>(installModeAttrs, missingRequired, requiredCount);
 
-
             if (string.IsNullOrEmpty(olmChannels))
             {
-                olmChannels = defaultChannel?.DefaultChannel;
+                olmChannels = defaultChannel?.DefaultChannel ?? string.Empty;
             }
             else
             {
@@ -698,7 +697,7 @@ namespace Neon.Operator.Analyzers.Generators
   operators.operatorframework.io.bundle.metadata.v1: ""metadata/""
   operators.operatorframework.io.bundle.package.v1: ""{operatorName?.Name.ToLower()}""
   operators.operatorframework.io.bundle.channels.v1: ""{olmChannels}""
-  operators.operatorframework.io.bundle.channel.default.v1: ""{defaultChannel.DefaultChannel}""
+  operators.operatorframework.io.bundle.channel.default.v1: ""{defaultChannel?.DefaultChannel}""
 ";
             var annotationsPath = Path.Combine(metadataDir, "annotations.yaml");
             File.WriteAllText(annotationsPath, annotations);
@@ -710,7 +709,7 @@ LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
 LABEL operators.operatorframework.io.bundle.metadata.v1=metadata/
 LABEL operators.operatorframework.io.bundle.package.v1={operatorName?.Name.ToLower()}
 LABEL operators.operatorframework.io.bundle.channels.v1={olmChannels}
-LABEL operators.operatorframework.io.bundle.channel.default.v1={defaultChannel.DefaultChannel}
+LABEL operators.operatorframework.io.bundle.channel.default.v1={defaultChannel?.DefaultChannel}
 
 ADD ./manifests/*.yaml /manifests/
 ADD ./metadata/annotations.yaml /metadata/annotations.yaml
