@@ -191,11 +191,6 @@ namespace Neon.Operator.Analyzers.Generators
 
             var webhookPort = webhookPortAttribute?.Port ?? Constants.DefaultWebhookPort;
 
-            rbacAttributes.Add(
-                new RbacRule<V1CustomResourceDefinition>(
-                    verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
-                    scope: EntityScope.Cluster));
-
             if (!leaderElectionDisabled)
             {
                 rbacAttributes.Add(

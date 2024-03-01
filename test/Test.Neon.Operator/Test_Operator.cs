@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
+using k8s;
 using k8s.Models;
 
 using Neon.Operator.Xunit;
@@ -103,6 +104,24 @@ namespace Test.Neon.Operator
             // verify service
             var service     = fixture.GetResource<V1Service>(resource.Name(), resource.Namespace());
             service.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task TestApiResourceList()
+        {
+            fixture.ClearResources();
+
+            var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
+            var resourceList = await fixture.KubernetesClient.CustomObjects.GetAPIResourcesAsync(meta.Group, meta.ApiVersion);
+            resourceList.Resources.Should().HaveCount(3);
+
+            meta = typeof(V1StatefulSet).GetKubernetesTypeMetadata();
+            resourceList = await fixture.KubernetesClient.CustomObjects.GetAPIResourcesAsync(meta.Group, meta.ApiVersion);
+            resourceList.Resources.Should().HaveCount(1);
+
+            resourceList = await fixture.KubernetesClient.CoreV1.GetAPIResourcesAsync();
+            resourceList.Resources.Should().HaveCount(1);
+
         }
     }
 }
