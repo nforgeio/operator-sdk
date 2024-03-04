@@ -178,11 +178,11 @@ namespace Neon.Operator.Finalizers
                             {
                                 if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))
                                 {
-                                    entity = await k8s.CustomObjects.ReadClusterCustomObjectAsync<TEntity>(name: entity.Name());
+                                    entity = await k8s.CustomObjects.GetClusterCustomObjectAsync<TEntity>(name: entity.Name());
                                 }
                                 else
                                 {
-                                    entity = await k8s.CustomObjects.ReadNamespacedCustomObjectAsync<TEntity>(
+                                    entity = await k8s.CustomObjects.GetNamespacedCustomObjectAsync<TEntity>(
                                         name:               entity.Name(),
                                         namespaceParameter: entity.Namespace());
                                 }

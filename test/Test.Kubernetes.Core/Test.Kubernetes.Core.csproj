@@ -38,7 +38,7 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" />
+      <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" />
     </ItemGroup>
 
 </Project>

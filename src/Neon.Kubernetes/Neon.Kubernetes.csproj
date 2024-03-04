@@ -37,10 +37,6 @@
         </Otherwise>
     </Choose>
 
-    <Target Name="BUILD_USE_NUGETS" AfterTargets="BeforeBuild">
-        <Message Importance="High" Text="BUILD_USE_NUGETS: $(NeonBuildUseNugets)" />
-    </Target>
-
     <ItemGroup>
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />

@@ -468,7 +468,7 @@ namespace Neon.K8s
         /// <param name="name">Specifies the object name.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        public static async Task<T> ReadClusterCustomObjectAsync<T>(
+        public static async Task<T> GetClusterCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             string              name,
             CancellationToken   cancellationToken = default) 
@@ -478,14 +478,22 @@ namespace Neon.K8s
             await SyncContext.Clear;
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.GetClusterCustomObjectAsync(
-                group:             typeMetadata.Group,
-                version:           typeMetadata.ApiVersion,
-                plural:            typeMetadata.PluralName, 
-                name:              name,
-                cancellationToken: cancellationToken);
 
-            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
+            try
+            {
+                var result       = await k8s.GetClusterCustomObjectAsync(
+                    group:             typeMetadata.Group,
+                    version:           typeMetadata.ApiVersion,
+                    plural:            typeMetadata.PluralName, 
+                    name:              name,
+                    cancellationToken: cancellationToken);
+
+                return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
+            }
+            catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return default(T);
+            }
         }
 
         /// <summary>
@@ -576,20 +584,11 @@ namespace Neon.K8s
 
             T existing;
 
-            try
+            existing = await k8s.GetClusterCustomObjectAsync<T>(name, cancellationToken);
+
+            if (existing == null)
             {
-                existing = await k8s.ReadClusterCustomObjectAsync<T>(name, cancellationToken);
-            }
-            catch (HttpOperationException e)
-            {
-                if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return await k8s.CreateClusterCustomObjectAsync<T>(body, name, dryRun, fieldManager, cancellationToken);
-                }
-                else
-                {
-                    throw;
-                }
+                return await k8s.CreateClusterCustomObjectAsync<T>(body, name, dryRun, fieldManager, cancellationToken);
             }
 
             body.Metadata.ResourceVersion   = existing.Metadata.ResourceVersion;
