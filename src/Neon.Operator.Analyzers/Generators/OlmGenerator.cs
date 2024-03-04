@@ -189,6 +189,17 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorImageTag", out var imageTagString))
+            {
+                if (!string.IsNullOrEmpty(imageTagString))
+                {
+                    if (containerImage != null)
+                    {
+                        containerImage.Tag = imageTagString;
+                    }
+                }
+            }
+
             var webhookPort = webhookPortAttribute?.Port ?? Constants.DefaultWebhookPort;
 
             if (!leaderElectionDisabled)

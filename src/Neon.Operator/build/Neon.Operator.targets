@@ -15,6 +15,7 @@
         <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingEnabled" />
         <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingDir" />
         <CompilerVisibleProperty Include="NeonOperatorVersion" />
+        <CompilerVisibleProperty Include="NeonOperatorImageTag" />
         <CompilerVisibleProperty Include="TargetDir" />
         <CompilerVisibleProperty Include="Configuration" />
         <CompilerVisibleProperty Include="IsTestProject" />
