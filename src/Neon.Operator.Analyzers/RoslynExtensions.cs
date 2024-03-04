@@ -154,6 +154,7 @@ namespace Neon.Operator.Analyzers
             {
                 return null;
             }
+
             var xml = typeSymbol.GetDocumentationCommentXml();
 
             var description = DocumentationComment.From(xml, Environment.NewLine).SummaryText.Trim();

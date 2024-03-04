@@ -480,7 +480,6 @@ namespace Neon.Operator.Analyzers
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                     additionalColumns,
                     jsonPath);
-                props.Description ??= typeSymbol.GetSummary();
             }
             else if (type.Equals(typeof(IntstrIntOrString)))
             {
@@ -560,8 +559,6 @@ namespace Neon.Operator.Analyzers
                     props.Required = null;
                 }
             }
-
-            props.Description ??= typeSymbol.GetSummary();
 
             return props;
         }
