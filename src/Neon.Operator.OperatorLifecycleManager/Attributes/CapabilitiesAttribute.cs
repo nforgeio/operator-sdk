@@ -31,15 +31,6 @@ namespace Neon.Operator.OperatorLifecycleManager
         public CapabilitiesAttribute() { }
 
         /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="capability"></param>
-        public CapabilitiesAttribute(CapabilityLevel capability)
-        {
-            this.Capability = capability;
-        }
-
-        /// <summary>
         /// Capability of the operator. 
         /// </summary>
         public CapabilityLevel Capability { get; set; }

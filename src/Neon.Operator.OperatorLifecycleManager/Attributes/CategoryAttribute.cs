@@ -31,15 +31,6 @@ namespace Neon.Operator.OperatorLifecycleManager
         public CategoryAttribute() { }
 
         /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="category"></param>
-        public CategoryAttribute(Category category)
-        {
-            this.Category = category;
-        }
-
-        /// <summary>
         /// Category 
         /// </summary>
         public Category Category { get; set; }

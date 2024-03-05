@@ -57,7 +57,7 @@ namespace Neon.Operator.OperatorLifecycleManager
         public string Email { get; set; }
 
         /// <summary>
-        /// The maintainer Github address.
+        /// The maintainer Github username.
         /// </summary>
         public string GitHub { get; set; }
 

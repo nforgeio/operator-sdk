@@ -95,6 +95,14 @@ namespace Neon.Operator.Analyzers.Generators
                 return;
             }
 
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorOlmOutputDir", out var olmDir))
+            {
+                if (!string.IsNullOrEmpty(olmDir))
+                {
+                    targetDir = olmDir;
+                }
+            }
+
             targetDir = targetDir.TrimEnd('\\');
 
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.OlmChannels", out var olmChannels);
@@ -127,13 +135,14 @@ namespace Neon.Operator.Analyzers.Generators
             var minKubeVersion       = RoslynExtensions.GetAttribute<MinKubeVersionAttribute>(metadataLoadContext, context.Compilation, attributes);
             var defaultChannel       = RoslynExtensions.GetAttribute<DefaultChannelAttribute>(metadataLoadContext, context.Compilation, attributes);
             var webhookPortAttribute = RoslynExtensions.GetAttribute<WebhookPortAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var updateGraph          = RoslynExtensions.GetAttribute<UpdateGraphAttribute>(metadataLoadContext, context.Compilation, attributes);
             var categories           = RoslynExtensions.GetAttributes<CategoryAttribute>(metadataLoadContext, context.Compilation, attributes);
             var keywords             = RoslynExtensions.GetAttributes<KeywordAttribute>(metadataLoadContext, context.Compilation, attributes);
             var maintainers          = RoslynExtensions.GetAttributes<MaintainerAttribute>(metadataLoadContext, context.Compilation, attributes);
             var icons                = RoslynExtensions.GetAttributes<IconAttribute>(metadataLoadContext, context.Compilation, attributes);
             var installModeAttrs     = RoslynExtensions.GetAttributes<InstallModeAttribute>(metadataLoadContext, context.Compilation, attributes);
             var reviewers            = RoslynExtensions.GetAttributes<ReviewersAttribute>(metadataLoadContext, context.Compilation, attributes);
-            var updateGraph          = RoslynExtensions.GetAttribute<UpdateGraphAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var links                = RoslynExtensions.GetAttributes<LinkAttribute>(metadataLoadContext, context.Compilation, attributes);
             var almExampleJson       = GetOwnedEntityExampleJson(context,metadataLoadContext,attributes);
 
             var requiredCount = 0;
@@ -142,16 +151,14 @@ namespace Neon.Operator.Analyzers.Generators
             requiredCount = AddIfNullOrEmpty<DescriptionAttribute>(description, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<ContainerImageAttribute>(containerImage, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<CapabilitiesAttribute>(capabilities, missingRequired, requiredCount);
-            requiredCount = AddIfNullOrEmpty<RepositoryAttribute>(repository, missingRequired, requiredCount);
-            requiredCount = AddIfNullOrEmpty<MaturityAttribute>(maturity, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<ProviderAttribute>(provider, missingRequired, requiredCount);
-            requiredCount = AddIfNullOrEmpty<MinKubeVersionAttribute>(minKubeVersion, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<DefaultChannelAttribute>(defaultChannel, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<CategoryAttribute>(categories, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<KeywordAttribute>(keywords, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<MaintainerAttribute>(maintainers, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<IconAttribute>(icons, missingRequired, requiredCount);
             requiredCount = AddIfNullOrEmpty<InstallModeAttribute>(installModeAttrs, missingRequired, requiredCount);
+            requiredCount = AddIfNullOrEmpty<LinkAttribute>(links, missingRequired, requiredCount);
 
             if (string.IsNullOrEmpty(olmChannels))
             {
@@ -333,6 +340,12 @@ namespace Neon.Operator.Analyzers.Generators
             {
                 Name = m.Value.Name,
                 Email = m.Value.Email
+            }).ToList();
+            csv.Spec.Links = links?.Select(l => new Link()
+            {
+                Name = l.Value.Name,
+                Url  = l.Value.Url
+
             }).ToList();
 
             if (ownedEntities.Count() > 0)

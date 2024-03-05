@@ -84,6 +84,8 @@ namespace Neon.Operator.Analyzers
             nameof(ReviewersAttribute).Replace("Attribute", ""),
             nameof(UpdateGraphAttribute),
             nameof(UpdateGraphAttribute).Replace("Attribute", ""),
+            nameof(LinkAttribute),
+            nameof(LinkAttribute).Replace("Attribute", ""),
             ];
 
         public static class Labels

@@ -87,7 +87,7 @@ using Neon.Common;
 [assembly: InstallMode(Type = InstallModeType.MultiNamespace | InstallModeType.SingleNamespace)]
 [assembly: InstallMode(Type = InstallModeType.AllNamespaces, Supported = false)]
 [assembly: DefaultChannel(""stable"")]
-
+[assembly: Link(Name = ""GitHub"", Url = ""https://github.com/foo/bar"")]
 
 namespace TestNamespace
 {{
@@ -127,6 +127,8 @@ culpa qui officia deserunt mollit anim id est laborum."";
                 .AddAssembly(typeof(ResourceControllerAttribute).Assembly)
                 .AddAssembly(typeof(DefaultValueAttribute).Assembly)
                 .Build();
+
+            testCompilation.Diagnostics.Should().BeEmpty();
 
             var outFile = Path.Combine(temp.Path, "OperatorLifecycleManager", version,  "manifests", $"{name}.clusterserviceversion.yaml");
 
@@ -169,6 +171,59 @@ culpa qui officia deserunt mollit anim id est laborum."";
             outCsv.Spec.WebHookDefinitions.Should().HaveCount(2);
             outCsv.Spec.WebHookDefinitions.Where(wd => wd.Type == WebhookAdmissionType.ValidatingAdmissionWebhook).Should().HaveCount(1);
             outCsv.Spec.WebHookDefinitions.Where(wd => wd.Type == WebhookAdmissionType.MutatingAdmissionWebhook).Should().HaveCount(1);
+        }
+
+
+        [Fact]
+        public void TestMinimal()
+        {
+            var source = $@"
+using Neon.Operator.OperatorLifecycleManager;
+using Test.Analyzers;
+using TestNamespace;
+using Neon.Common;
+
+[assembly: Name(""my-operator"")]
+[assembly: DisplayName(""My Operator"")]
+[assembly: Version(""1.2.3"")]
+[assembly: Description(
+    ShortDescription = ""short description"",
+    FullDescription = ""This is the full description."")]
+[assembly: Keyword(""my"", ""example"", ""operator"")]
+[assembly: Category(
+    Category = Category.DeveloperTools | Category.ApplicationRuntime)]
+[assembly: Capabilities(
+    Capability = CapabilityLevel.DeepInsights)]
+[assembly: ContainerImage(
+    Repository = ""github.com/test-operator/cluster-operator"",
+    Tag =""1.2.3"")]
+[assembly: InstallMode(
+    Type = InstallModeType.OwnNamespace | InstallModeType.MultiNamespace,
+    Supported = true)]
+[assembly: Provider(Name = ""Example"")]
+[assembly: Maintainer(
+    Name = ""Some Corp"",
+    Email = ""foo@bar.com"")]
+[assembly: Icon(Path = ""nuget-icon.png"", MediaType = ""image/png"")]
+[assembly: DefaultChannel(""stable"")]
+[assembly: Link(Name = ""GitHub"", Url = ""https://github.com/foo/bar"")]
+";
+            using var temp = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<OlmGenerator>()
+                .AddOption("build_property.TargetDir", temp.Path)
+                .AddSource(source)
+                .AddAdditionalFilePath("nuget-icon.png")
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(NeonHelper).Assembly)
+                .AddAssembly(typeof(V1TestResource).Assembly)
+                .AddAssembly(typeof(CapabilitiesAttribute).Assembly)
+                .AddAssembly(typeof(ResourceControllerAttribute).Assembly)
+                .AddAssembly(typeof(DefaultValueAttribute).Assembly)
+                .Build();
+
+            testCompilation.Diagnostics.Should().BeEmpty();
         }
 
         [Fact]

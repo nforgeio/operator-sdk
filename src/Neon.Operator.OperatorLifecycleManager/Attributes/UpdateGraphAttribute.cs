@@ -32,15 +32,6 @@ namespace Neon.Operator.OperatorLifecycleManager
         public UpdateGraphAttribute() { }
 
         /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="updateGraph"></param>
-        public UpdateGraphAttribute(UpdateGraphMode updateGraph)
-        {
-            this.UpdateGraph = updateGraph;
-        }
-
-        /// <summary>
         /// Update graph 
         /// </summary>
         public UpdateGraphMode UpdateGraph { get; set; }

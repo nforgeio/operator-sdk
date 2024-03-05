@@ -42,3 +42,4 @@ using TestOperator;
 [assembly: InstallMode(Type = InstallModeType.OwnNamespace | InstallModeType.MultiNamespace | InstallModeType.SingleNamespace)]
 [assembly: InstallMode(Type = InstallModeType.AllNamespaces, Supported = false)]
 [assembly: DefaultChannel("stable")]
+[assembly: LinkAttribute(Name = "GitHub", Url = "https://github.com/foo/bar")]
