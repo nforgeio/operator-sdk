@@ -52,13 +52,13 @@ namespace TestKubernetes
                 Duration = "1h"
             };
 
-            var result = await fixture.KubernetesClient.CustomObjects.GetNamespacedCustomObjectAsync<V1Certificate>(cert.Name(), cert.Namespace());
+            var result = await fixture.KubernetesClient.CustomObjects.GetNamespacedCustomObjectAsync<V1Certificate>(cert.Name(), cert.Namespace(), throwIfNotFound: false);
 
             result.Should().BeNull();
 
             fixture.AddResource(cert);
 
-            result = await fixture.KubernetesClient.CustomObjects.GetNamespacedCustomObjectAsync<V1Certificate>(cert.Name(), cert.Namespace());
+            result = await fixture.KubernetesClient.CustomObjects.GetNamespacedCustomObjectAsync<V1Certificate>(cert.Name(), cert.Namespace(), throwIfNotFound: false);
 
             result.Should().NotBeNull();
         }
