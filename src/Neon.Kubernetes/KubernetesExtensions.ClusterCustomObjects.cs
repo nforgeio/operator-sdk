@@ -466,11 +466,13 @@ namespace Neon.K8s
         /// <typeparam name="T">The custom object type.</typeparam>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="name">Specifies the object name.</param>
+        /// <param name="throwIfNotFound">Whether to throw an <see cref="HttpOperationException"/> when not found.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
         public static async Task<T> GetClusterCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             string              name,
+            bool                throwIfNotFound = true,
             CancellationToken   cancellationToken = default) 
             
             where T : IKubernetesObject<V1ObjectMeta>, new()
@@ -492,6 +494,11 @@ namespace Neon.K8s
             }
             catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
             {
+                if (throwIfNotFound)
+                {
+                    throw;
+                }
+
                 return default(T);
             }
         }
@@ -584,7 +591,7 @@ namespace Neon.K8s
 
             T existing;
 
-            existing = await k8s.GetClusterCustomObjectAsync<T>(name, cancellationToken);
+            existing = await k8s.GetClusterCustomObjectAsync<T>(name, throwIfNotFound: false, cancellationToken: cancellationToken);
 
             if (existing == null)
             {
