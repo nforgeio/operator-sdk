@@ -45,7 +45,6 @@ namespace Neon.Operator.Cache
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="metrics">Specifies the resource metrics.</param>
         /// <param name="loggerFactory">Optionally specifies a logger factory.</param>
         public CrdCache(ILoggerFactory loggerFactory = null) 
         {

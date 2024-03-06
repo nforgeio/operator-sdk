@@ -35,7 +35,7 @@ namespace Neon.Operator.Cache
         /// <summary>
         /// Attempts to retrieve a cached resource by type.
         /// </summary>
-        /// <typeparam name="Tresource">Specifies the CRD type.</typeparam>
+        /// <typeparam name="TResource">Specifies the CRD type.</typeparam>
         /// <returns>The retrieved CRD or <c>null</c> when it's not cached.</returns>
         V1APIResource Get<TResource>()
             where TResource : IKubernetesObject<V1ObjectMeta>;

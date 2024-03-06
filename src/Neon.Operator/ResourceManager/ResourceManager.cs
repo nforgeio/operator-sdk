@@ -382,8 +382,6 @@ namespace Neon.Operator.ResourceManager
 
             logger?.LogInformationEx(() => $"Checking permissions for {typeof(TEntity)}.");
 
-            V1SelfSubjectAccessReview response;
-
             var metadata = typeof(TEntity).GetKubernetesTypeMetadata();
             var review   = new V1SelfSubjectAccessReview().Initialize();
 

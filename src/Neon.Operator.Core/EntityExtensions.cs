@@ -90,6 +90,11 @@ namespace Neon.Operator
             return new V1Patch(patchString, V1Patch.PatchType.JsonPatch);
         }
 
+        /// <summary>
+        /// Throws an exception when the review status is allowed.
+        /// </summary>
+        /// <param name="review">Specifies the review.</param>
+        /// <exception cref="UnauthorizedException">Thrown when the review status is not allowed.</exception>
         public static void ThrowIfNotAllowed(this V1SelfSubjectAccessReview review)
         {
             if (review.Status.Allowed != true)
