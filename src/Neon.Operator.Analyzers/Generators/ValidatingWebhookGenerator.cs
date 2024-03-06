@@ -1,3 +1,20 @@
+// -----------------------------------------------------------------------------
+// FILE:	    ValidatingWebhookGenerator.cs
+// CONTRIBUTOR: NEONFORGE Team
+// COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +31,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
+using Neon.Operator.Analyzers.Receivers;
+using Neon.Common;
 using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
@@ -59,8 +78,16 @@ namespace Neon.Operator.Analyzers
             logs = new Dictionary<string, StringBuilder>();
 
             var metadataLoadContext = new MetadataLoadContext(context.Compilation);
-            var ValidatingWebhooks = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
-            var namedTypeSymbols = context.Compilation.GetNamedTypeSymbols();
+            var ValidatingWebhooks  = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.ValidatingWebhooks;
+            var attributes          = ((ValidatingWebhookReceiver)context.SyntaxReceiver)?.Attributes;
+            var nameAttribute       = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
+
+            if (ValidatingWebhooks.Count == 0)
+            {
+                return;
+            }
+
+            var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
             bool certManagerDisabled      = false;
             bool autoRegisterWebhooks     = false;
             string operatorName           = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
@@ -119,6 +146,11 @@ namespace Neon.Operator.Analyzers
                 {
                     operatorName = oName;
                 }
+            }
+
+            if (nameAttribute != null)
+            {
+                operatorName = nameAttribute.Name;
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var operatorNs))
@@ -359,10 +391,10 @@ namespace Neon.Operator.Analyzers
                 Rules                   = new List<V1RuleWithOperations>(),
                 ClientConfig            = clientConfig,
                 AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions,
-                FailurePolicy           = webhookAttribute.FailurePolicy,
-                SideEffects             = webhookAttribute.SideEffects,
+                FailurePolicy           = webhookAttribute.FailurePolicy.ToMemberString(),
+                SideEffects             = webhookAttribute.SideEffects.ToMemberString(),
                 TimeoutSeconds          = webhookAttribute.TimeoutSeconds,
-                MatchPolicy             = webhookAttribute.MatchPolicy,
+                MatchPolicy             = webhookAttribute.MatchPolicy.ToMemberString(),
             };
 
             var namespaceSelectorExpressions =  webhookSystemType.GetCustomAttributes<NamespaceSelectorExpressionAttribute>();

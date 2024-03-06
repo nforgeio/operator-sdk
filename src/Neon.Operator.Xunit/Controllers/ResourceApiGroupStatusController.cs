@@ -90,7 +90,7 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var key = $"{Group}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -125,7 +125,7 @@ namespace Neon.Operator.Xunit
 
             var json = JsonSerializer.Serialize(patch, jsonSerializerOptions);
             var p0   = NeonHelper.JsonDeserialize<JsonPatchDocument>(json);
-            var key  = $"{Group}/{Version}/{Plural}";
+            var key  = ApiHelper.CreateKey(Group, Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {

@@ -476,30 +476,46 @@ namespace Neon.K8s
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
+        /// <param name="throwIfNotFound">Whether to throw an <see cref="HttpOperationException"/> when not found.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
-        public static async Task<T> ReadNamespacedCustomObjectAsync<T>(
+        public static async Task<T> GetNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
             string              name,
             string              namespaceParameter,
+            bool                throwIfNotFound   = true,
             CancellationToken   cancellationToken = default)
             
             where T : IKubernetesObject, new()
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
 
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var result       = await k8s.GetNamespacedCustomObjectAsync(
-                group:              typeMetadata.Group, 
-                version:            typeMetadata.ApiVersion, 
-                namespaceParameter: namespaceParameter, 
-                plural:             typeMetadata.PluralName, 
-                name:               name, 
-                cancellationToken:  cancellationToken);
 
-            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
+            try
+            {
+                var result = await k8s.GetNamespacedCustomObjectAsync(
+                    group:              typeMetadata.Group,
+                    version:            typeMetadata.ApiVersion,
+                    namespaceParameter: namespaceParameter,
+                    plural:             typeMetadata.PluralName,
+                    name:               name,
+                    cancellationToken:  cancellationToken);
+
+                return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
+            }
+            catch (HttpOperationException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
+            {
+                if (throwIfNotFound)
+                {
+                    throw;
+                }
+
+                return default(T);
+            }
         }
 
         /// <summary>
@@ -601,29 +617,20 @@ namespace Neon.K8s
 
             T existing;
 
-            try
+            existing = await k8s.GetNamespacedCustomObjectAsync<T>(
+                name:               name,
+                namespaceParameter: namespaceParameter,
+                cancellationToken:  cancellationToken);
+
+            if (existing == null)
             {
-                existing = await k8s.ReadNamespacedCustomObjectAsync<T>(
-                    name:               name,
-                    namespaceParameter: namespaceParameter,
-                    cancellationToken:  cancellationToken);
-            }
-            catch (HttpOperationException e)
-            {
-                if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return await k8s.CreateNamespacedCustomObjectAsync<T>(
-                        body:               body,
-                        name:               name,
+                return await k8s.CreateNamespacedCustomObjectAsync<T>(
+                        body: body,
+                        name: name,
                         namespaceParameter: namespaceParameter,
-                        dryRun:             dryRun, 
-                        fieldManager:       fieldManager, 
-                        cancellationToken:  cancellationToken);
-                }
-                else
-                {
-                    throw;
-                }
+                        dryRun: dryRun,
+                        fieldManager: fieldManager,
+                        cancellationToken: cancellationToken);
             }
 
             body.Metadata.ResourceVersion   = existing.Metadata.ResourceVersion;

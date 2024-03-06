@@ -28,7 +28,7 @@ namespace Neon.Operator.Controllers
     /// <summary>
     /// Base resource controller class.
     /// </summary>
-    [OperatorComponent(OperatorComponentType.Controller)]
+    [OperatorComponent(ComponentType = OperatorComponentType.Controller)]
     public class ResourceControllerBase<T> : IResourceController<T>
         where T : IKubernetesObject<V1ObjectMeta>
     {

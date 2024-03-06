@@ -3,6 +3,7 @@
         <CompilerVisibleProperty Include="NeonOperatorCrdOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorManifestOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorRbacOutputDir" />
+        <CompilerVisibleProperty Include="NeonOperatorOlmOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorGenerateRbac" />
         <CompilerVisibleProperty Include="NeonOperatorGenerateCrds" />
         <CompilerVisibleProperty Include="NeonOperatorWebhookOutputDir" />
@@ -13,5 +14,10 @@
         <CompilerVisibleProperty Include="NeonOperatorCertManagerDisabled" />
         <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingEnabled" />
         <CompilerVisibleProperty Include="NeonOperatorAnalyzerLoggingDir" />
+        <CompilerVisibleProperty Include="NeonOperatorVersion" />
+        <CompilerVisibleProperty Include="NeonOperatorImageTag" />
+        <CompilerVisibleProperty Include="TargetDir" />
+        <CompilerVisibleProperty Include="Configuration" />
+        <CompilerVisibleProperty Include="IsTestProject" />
     </ItemGroup>
 </Project>

@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Neon.Common;
 using Neon.K8s;
+using Neon.K8s.Core;
 using Neon.Tasks;
 
 using OpenTelemetry.Resources;
@@ -96,7 +97,7 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var key = $"{string.Empty}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -146,7 +147,7 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            var key = $"{string.Empty}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -173,7 +174,7 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            var key = $"{string.Empty}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -214,7 +215,7 @@ namespace Neon.Operator.Xunit
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(patchDoc != null, nameof(patchDoc));
 
-            var key = $"{string.Empty}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -250,7 +251,7 @@ namespace Neon.Operator.Xunit
         {
             await SyncContext.Clear;
 
-            var key = $"{string.Empty}/{Version}/{Plural}";
+            var key = ApiHelper.CreateKey(Version, Plural);
 
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
@@ -284,7 +285,21 @@ namespace Neon.Operator.Xunit
                 status.Status = "deleted";
                 status.Code = 200;
 
-                return Content(NeonHelper.JsonSerialize(status), "application/json");
+                if (type == typeof(V1Service)
+                    || type == typeof(V1Pod)
+                    || type == typeof(V1ResourceQuota)
+                    || type == typeof(V1Service)
+                    || type == typeof(V1PodTemplate)
+                    || type == typeof(V1PersistentVolume)
+                    || type == typeof(V1PersistentVolumeClaim)
+                    || type == typeof(V1ResourceQuota)
+                    || type == typeof(V1ServiceAccount)
+                    )
+                {
+                    return Ok(existing);
+                }
+
+                return Content(KubernetesHelper.JsonSerialize(status), "application/json");
             }
 
             return NotFound();

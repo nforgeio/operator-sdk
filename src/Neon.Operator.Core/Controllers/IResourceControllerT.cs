@@ -29,7 +29,7 @@ namespace Neon.Operator.Controllers
     /// Describes the interface used to implement Neon based operator controllers.
     /// </summary>
     /// <typeparam name="TEntity">Specifies the Kubernetes entity being managed.</typeparam>
-    [OperatorComponent(OperatorComponentType.Controller)]
+    [OperatorComponent(ComponentType = OperatorComponentType.Controller)]
     [ResourceController]
     public interface IResourceController<TEntity> : IResourceController
         where TEntity : IKubernetesObject<V1ObjectMeta>

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -34,9 +35,9 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Operator.Rbac;
 using Neon.K8s;
 using Neon.K8s.Resources.CertManager;
+using Neon.Operator.Rbac;
 using Neon.Tasks;
 
 namespace Neon.Operator
@@ -117,6 +118,10 @@ namespace Neon.Operator
                 {
                     CheckCertificateAsync().RunSynchronously();
                 }
+                else
+                {
+                    CheckOlmCertificateAsync().RunSynchronously();
+                }
 
                 Host.Start();
 
@@ -155,6 +160,10 @@ namespace Neon.Operator
                 {
                     await CheckCertificateAsync();
                 }
+                else
+                {
+                    await CheckOlmCertificateAsync();
+                }
 
                 await Host.RunAsync();
 
@@ -164,13 +173,29 @@ namespace Neon.Operator
             return;
         }
 
+        private async Task CheckOlmCertificateAsync()
+        {
+            using var activity = TraceContext.ActivitySource?.StartActivity();
+
+            if (File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.cert")
+                && File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.key"))
+            {
+                logger?.LogInformationEx(() => "Loading OLM Certificate.");
+
+                var cert = await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.cert");
+                var key  = await File.ReadAllTextAsync("/tmp/k8s-webhook-server/serving-certs/tls.key");
+
+                Certificate = X509Certificate2.CreateFromPem(certPem: cert, keyPem: key);
+            }
+        }
+
         private async Task CheckCertificateAsync()
         {
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
             logger?.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.DeployedNamespace, labelSelector: $"{KubernetesLabel.ManagedBy}={OperatorSettings.Name}");
+            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.PodNamespace, labelSelector: $"{KubernetesLabel.ManagedBy}={OperatorSettings.Name}");
 
             if (!cert.Items.Any())
             {
@@ -181,7 +206,7 @@ namespace Neon.Operator
                     Metadata = new V1ObjectMeta()
                     {
                         Name              = OperatorSettings.Name,
-                        NamespaceProperty = OperatorSettings.DeployedNamespace,
+                        NamespaceProperty = OperatorSettings.PodNamespace,
                         Labels            = new Dictionary<string, string>()
                         {
                             { KubernetesLabel.ManagedBy, OperatorSettings.Name }
@@ -192,9 +217,9 @@ namespace Neon.Operator
                         DnsNames = new List<string>()
                         {
                             $"{OperatorSettings.Name}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}",
-                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc",
-                            $"{OperatorSettings.Name}.{OperatorSettings.DeployedNamespace}.svc.cluster.local",
+                            $"{OperatorSettings.Name}.{OperatorSettings.PodNamespace}",
+                            $"{OperatorSettings.Name}.{OperatorSettings.PodNamespace}.svc",
+                            $"{OperatorSettings.Name}.{OperatorSettings.PodNamespace}.svc.cluster.local",
                         },
                         Duration   = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
                         IssuerRef  = NeonHelper.JsonDeserialize<Neon.K8s.Resources.CertManager.IssuerRef>(NeonHelper.JsonSerialize(CertManagerOptions.IssuerRef)),
@@ -223,7 +248,7 @@ namespace Neon.Operator
 
                     logger?.LogInformationEx("Updated webhook certificate");
                 },
-                namespaceParameter: OperatorSettings.DeployedNamespace,
+                namespaceParameter: OperatorSettings.PodNamespace,
                 fieldSelector:      $"metadata.name={OperatorSettings.Name}-webhook-tls",
                 retryDelay:         OperatorSettings.WatchRetryDelay,
                 logger:             logger);
@@ -251,7 +276,7 @@ namespace Neon.Operator
 
         private async Task ConfigureRbacAsync()
         {
-            var rbac = new RbacBuilder(Host.Services, @namespace: OperatorSettings.DeployedNamespace);
+            var rbac = new RbacBuilder(Host.Services, @namespace: OperatorSettings.PodNamespace);
 
             rbac.Build();
 

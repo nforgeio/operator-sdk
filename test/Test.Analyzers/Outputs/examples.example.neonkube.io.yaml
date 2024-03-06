@@ -92,6 +92,9 @@ spec:
                 required:
                 - name
                 type: object
+              enabled:
+                description: Indicates whether this job is enabled or disabled.  This defaults to false.
+                type: boolean
             type: object
           status:
             properties:
@@ -101,6 +104,6 @@ spec:
             type: object
         type: object
     served: true
-    storage: false
+    storage: true
     subresources:
       status: {}

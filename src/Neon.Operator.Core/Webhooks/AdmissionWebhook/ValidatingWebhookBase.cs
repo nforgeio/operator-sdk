@@ -39,7 +39,7 @@ namespace Neon.Operator.Webhooks
     /// Describes a Validating webhook.
     /// </summary>
     /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
-    [OperatorComponent(OperatorComponentType.ValidationWebhook)]
+    [OperatorComponent(ComponentType = OperatorComponentType.ValidationWebhook)]
     [ValidatingWebhook]
     public class ValidatingWebhookBase<TEntity> : IValidatingWebhook<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
@@ -60,7 +60,7 @@ namespace Neon.Operator.Webhooks
                 Service = new Admissionregistrationv1ServiceReference()
                 {
                     Name              = operatorSettings.Name,
-                    NamespaceProperty = operatorSettings.DeployedNamespace,
+                    NamespaceProperty = operatorSettings.PodNamespace,
                     Path              = WebhookHelper.CreateEndpoint<TEntity>(this.GetType(), WebhookType.Mutating)
                 }
             };
@@ -83,7 +83,7 @@ namespace Neon.Operator.Webhooks
 
                 webhookConfig.Metadata.Annotations = webhookConfig.Metadata.EnsureAnnotations();
 
-                webhookConfig.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorSettings.DeployedNamespace}/{operatorSettings.Name}");
+                webhookConfig.Metadata.Annotations.Add("cert-manager.io/inject-ca-from", $"{operatorSettings.PodNamespace}/{operatorSettings.Name}");
             }
 
             webhookConfig.Webhooks = new List<V1ValidatingWebhook>()
@@ -94,11 +94,11 @@ namespace Neon.Operator.Webhooks
                     Rules                   = new List<V1RuleWithOperations>(),
                     ClientConfig            = clientConfig,
                     AdmissionReviewVersions = hook.AdmissionReviewVersions,
-                    FailurePolicy           = hook.FailurePolicy,
-                    SideEffects             = hook.SideEffects,
+                    FailurePolicy           = hook.FailurePolicy.ToMemberString(),
+                    SideEffects             = hook.SideEffects.ToMemberString(),
                     TimeoutSeconds          = useTunnel ? DevTimeoutSeconds : hook.TimeoutSeconds,
                     NamespaceSelector       = NamespaceSelector,
-                    MatchPolicy             = hook.MatchPolicy,
+                    MatchPolicy             = hook.MatchPolicy.ToMemberString(),
                     ObjectSelector          = ObjectSelector,
                 }
             };

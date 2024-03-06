@@ -23,6 +23,7 @@ using FluentAssertions;
 using k8s;
 using k8s.Models;
 
+using Neon.K8s;
 using Neon.Operator.Util;
 using Neon.Operator.Xunit;
 
@@ -253,6 +254,46 @@ namespace TestKubeOperator
             deleted.Should().BeNull();
 
             fixture.Resources.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task TestDeleteServiceAsync()
+        {
+            fixture.ClearResources();
+
+            var service = new V1Service()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "test",
+                    NamespaceProperty = "test",
+                },
+                Spec = new V1ServiceSpec()
+                {
+                    Ports = [
+                        new V1ServicePort()
+                        {
+                            Name = "foo",
+                            Port = 1000
+                        }
+                    ]
+                }
+            };
+
+            fixture.AddResource<V1Service>(service);
+
+            var service2 = new V1Service().Initialize();
+            service2.Metadata.Name = "test-2";
+            service2.Metadata.NamespaceProperty = "test";
+
+            fixture.AddResource(service2);
+
+            await fixture.KubernetesClient.CoreV1.DeleteNamespacedServiceAsync(service.Metadata.Name, service.Metadata.NamespaceProperty);
+
+            var deleted = fixture.GetResource<V1Service>(service.Metadata.Name,service.Metadata.NamespaceProperty);
+            deleted.Should().BeNull();
+
+            fixture.Resources.Should().HaveCount(1);
         }
     }
 }

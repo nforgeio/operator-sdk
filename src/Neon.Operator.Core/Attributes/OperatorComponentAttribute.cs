@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    OperatorComponentAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -20,7 +20,7 @@ using System;
 namespace Neon.Operator.Attributes
 {
     /// <summary>
-    /// Used to tag a type implementing an operatgor component.
+    /// Used to tag a type implementing an operator component.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class)]
     public class OperatorComponentAttribute : Attribute
@@ -28,15 +28,11 @@ namespace Neon.Operator.Attributes
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="componentType">Specifies the component type.</param>
-        public OperatorComponentAttribute(OperatorComponentType componentType)
-        {
-            ComponentType = componentType;
-        }
+        public OperatorComponentAttribute() { }
 
         /// <summary>
         /// Returns the component type.
         /// </summary>
-        public OperatorComponentType ComponentType { get; }
+        public OperatorComponentType ComponentType { get; set; }
     }
 }

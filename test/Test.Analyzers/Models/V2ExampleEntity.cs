@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 using k8s;
@@ -11,18 +13,18 @@ using RangeAttribute = Neon.Operator.Attributes.RangeAttribute;
 namespace Test_Analyzers
 {
     /// <summary>
-    /// This is an example description. A <see cref="V1ExampleEntity"/> is a <see cref="IKubernetesObject{V1ObjectMeta}"/>
-    /// with a <see cref="V1ExampleEntity.V1ExampleSpec"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
+    /// This is an example description. A <see cref="V2ExampleEntity"/> is a <see cref="IKubernetesObject{V2ObjectMeta}"/>
+    /// with a <see cref="V2ExampleEntity.V2ExampleSpec"/> and a <see cref="V2ExampleEntity.V2ExampleStatus"/>.
     /// </summary>
-    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    [EntityVersion(Served = true, Storage = false)]
+    [KubernetesEntity(Group = "example.neonkube.io", Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [EntityVersion(Served = true, Storage = true)]
     [ShortName("ex")]
-    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec>, IStatus<V1ExampleEntity.V1ExampleStatus>
+    public class V2ExampleEntity : IKubernetesObject<V2ObjectMeta>, ISpec<V2ExampleEntity.V2ExampleSpec>, IStatus<V2ExampleEntity.V2ExampleStatus>
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha1";
+        public const string KubeApiVersion = "V2alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
@@ -42,7 +44,7 @@ namespace Test_Analyzers
         /// <summary>
         /// Constructor.
         /// </summary>
-        public V1ExampleEntity()
+        public V2ExampleEntity()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -55,26 +57,27 @@ namespace Test_Analyzers
         public string Kind { get; set; }
 
         /// <inheritdoc/>
-        public V1ObjectMeta Metadata { get; set; }
+        public V2ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// This is the description for the spec.
         /// </summary>
-        public V1ExampleSpec Spec { get; set; }
+        public V2ExampleSpec Spec { get; set; }
 
         /// <inheritdoc/>
-        public V1ExampleStatus Status { get; set; }
+        public V2ExampleStatus Status { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public class V1ExampleSpec
+        public class V2ExampleSpec
         {
             /// <summary>
             /// The message
             /// </summary>
             [Pattern("^(\\d+|\\*)(/\\d+)?(\\s+(\\d+|\\*)(/\\d+)?){4}$")]
+            [DefaultValue("default message")]
             public string Message { get; set; }
 
             /// <summary>
@@ -85,15 +88,21 @@ namespace Test_Analyzers
             public int? Count { get; set; }
 
             /// <summary>
-            /// The <see cref="V1ExampleEntity.Person"/>
+            /// The <see cref="V2ExampleEntity.Person"/>
             /// </summary>
             public Person Person { get; set; }
+
+            /// <summary>
+            /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
+            /// </summary>
+            [DefaultValue(false)]
+            public bool Enabled { get; set; } = false;
         }
 
         /// <summary>
         /// The status.
         /// </summary>
-        public class V1ExampleStatus
+        public class V2ExampleStatus
         {
             /// <summary>
             /// Status message.

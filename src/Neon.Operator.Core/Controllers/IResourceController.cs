@@ -25,7 +25,7 @@ namespace Neon.Operator.Controllers
     /// <summary>
     /// Describes the interface used to implement Neon based operator controllers.
     /// </summary>
-    [OperatorComponent(OperatorComponentType.Controller)]
+    [OperatorComponent(ComponentType = OperatorComponentType.Controller)]
     public interface IResourceController
     {
         /// <summary>

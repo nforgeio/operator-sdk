@@ -32,7 +32,7 @@ namespace Neon.Operator.Webhooks
     /// Describes a mutating webhook.
     /// </summary>
     /// <typeparam name="TEntity">Specifies the entity type.</typeparam>
-    [OperatorComponent(OperatorComponentType.MutationWebhook)]
+    [OperatorComponent(ComponentType = OperatorComponentType.MutationWebhook)]
     [ValidatingWebhook]
     public interface IMutatingWebhook<TEntity> : IAdmissionWebhook<TEntity, MutationResult>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()
