@@ -105,6 +105,12 @@ namespace Neon.Operator.Analyzers.Generators
 
             targetDir = targetDir.TrimEnd('\\');
 
+            bool isTestProject = false;
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.IsTestProject", out var isTestProjectString))
+            {
+                bool.TryParse(isTestProjectString, out isTestProject);
+            }
+
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.OlmChannels", out var olmChannels);
 
             var metadataLoadContext    = new MetadataLoadContext(context.Compilation);
@@ -169,7 +175,7 @@ namespace Neon.Operator.Analyzers.Generators
                 olmChannels = olmChannels.Replace(";", ",");
             }
 
-            if (missingRequired.Count > 0 && missingRequired.Count < requiredCount)
+            if (missingRequired.Count > 0 && missingRequired.Count < requiredCount && !isTestProject)
             {
                 var miss = string.Join(", ", missingRequired.Select(x => x.Name));
                 context.ReportDiagnostic(
