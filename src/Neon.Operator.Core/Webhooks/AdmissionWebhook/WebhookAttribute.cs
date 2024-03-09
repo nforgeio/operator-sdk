@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    WebhookAttribute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -31,44 +31,15 @@ namespace Neon.Operator.Webhooks
         /// </summary>
         /// <param name="name">Specifies the webbhook name.</param>
         /// <param name="admissionReviewVersions">Specifies the entity versions this hook can handle.</param>
-        /// <param name="failurePolicy">Optionally specifies the failure policy.</param>
-        /// <param name="sideEffects">Optionally identifies any side effects.</param>
-        /// <param name="timeoutSeconds">Optionally specifies the maximum time in seconds that the API controller will wait for a webhook response.</param>
-        /// <param name="matchPolicy">Optionally specifies the match policy.</param>
-        /// <param name="reinvocationPolicy">Optionally specifies a reinvocation pilicy.</param>
-        /// <param name="url">Optionally specifies the webhook URL.</param>
         public WebhookAttribute(
-            string  name,
-            string  admissionReviewVersions,
-            string  failurePolicy      = "Fail", 
-            string  sideEffects        = "None", 
-            int     timeoutSeconds     = 5,
-            string  matchPolicy        = "Equivalent",
-            string  reinvocationPolicy = "Never",
-            string  url                = null)
+            string             name,
+            string             admissionReviewVersions)
         {
-            // $todo(marcusbooyah):
-            //
-            // We should define enum types for these args and then change the
-            // parameter types.  That will make it much easir for developers
-            // to know what the possible values are:
-            //
-            //      failurePolicy 
-            //      sideEffects
-            //      matchPolicy
-            //      reinvocationPolicy
-
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(admissionReviewVersions), nameof(admissionReviewVersions));
 
             Name                    = name;
             AdmissionReviewVersions = admissionReviewVersions.Split(',');
-            FailurePolicy           = failurePolicy;
-            SideEffects             = sideEffects;
-            TimeoutSeconds          = timeoutSeconds;
-            MatchPolicy             = matchPolicy;
-            ReinvocationPolicy      = reinvocationPolicy;
-            Url                     = url;
         }
 
         /// <summary>
@@ -95,7 +66,7 @@ namespace Neon.Operator.Webhooks
         /// allowed values are Ignore or Fail. Defaults to Fail.
         /// </para>
         /// </summary>
-        public string FailurePolicy { get; } = "Fail";
+        public FailurePolicy FailurePolicy { get; set; } = FailurePolicy.Fail;
 
         /// <summary>
         /// <para>
@@ -107,7 +78,7 @@ namespace Neon.Operator.Webhooks
         /// be auto-rejected if they match a webhook with sideEffects == Unknown or Some.
         /// </para>
         /// </summary>
-        public string SideEffects { get; } = "None";
+        public SideEffects SideEffects { get; set; } = SideEffects.None;
 
         /// <summary>
         /// <para>
@@ -133,7 +104,7 @@ namespace Neon.Operator.Webhooks
         /// converted to apps/v1 and sent to the webhook. Defaults to "Equivalent"
         /// </para>
         /// </summary>
-        public string MatchPolicy { get; } = "Equivalent";
+        public MatchPolicy MatchPolicy { get; set; } = MatchPolicy.Equivalent;
 
         /// <summary>
         /// <para>
@@ -151,7 +122,7 @@ namespace Neon.Operator.Webhooks
         /// </para>
         /// Defaults to "Never".
         /// </summary>
-        public string ReinvocationPolicy { get; } = "Never";
+        public ReinvocationPolicy ReinvocationPolicy { get; set; } = ReinvocationPolicy.Never;
 
         /// <summary>
         /// The external URL of the webhook.

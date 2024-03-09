@@ -67,7 +67,7 @@ namespace Neon.Operator.Xunit
 
         /// <inheritdoc/>
         public IServiceCollection Services { get; private set; } = new ServiceCollection();
-        
+
         /// <inheritdoc/>
         public IOperatorBuilder AddController<T>()
             where T : class

@@ -25,3 +25,9 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Set package version environment variable
+      run: echo "PACKAGE_VERSION=$(date -u '+%Y.%m.%d')-$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_ENV
+    - name: pack
+      run: dotnet pack --output ./artifacts -p:version=${PACKAGE_VERSION}
+    - name: publish-github
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.PACKAGES_PAT }} --source https://nuget.pkg.github.com/nforgeio/index.json --skip-duplicate

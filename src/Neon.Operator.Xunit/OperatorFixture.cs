@@ -45,7 +45,7 @@ namespace Neon.Operator.Xunit
         {
             this.testApiServerHost             = new TestApiServerBuilder().Build();
             this.KubernetesClientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(testApiServerHost.KubeConfig);
-            this.KubernetesClient              = new Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
+            this.KubernetesClient              = new k8s.Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
             this.Operator                      = new TestOperator(KubernetesClientConfiguration);
         }
 
@@ -100,7 +100,7 @@ namespace Neon.Operator.Xunit
             where T : IKubernetesObject<V1ObjectMeta>
         {
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
-            var key          = $"{typeMetadata.Group}/{typeMetadata.ApiVersion}/{typeMetadata.PluralName}";
+            var key          = ApiHelper.CreateKey(typeMetadata.Group, typeMetadata.ApiVersion, typeMetadata.PluralName);
 
             testApiServerHost.Cluster.Types.TryAdd(key, typeof(T));
         }

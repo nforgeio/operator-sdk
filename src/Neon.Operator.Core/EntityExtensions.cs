@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    EntityExtensions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -24,6 +24,8 @@ using System.Text.Json.Nodes;
 
 using k8s;
 using k8s.Models;
+
+using Neon.Operator.Core.Exceptions;
 
 namespace Neon.Operator
 {
@@ -86,6 +88,19 @@ namespace Neon.Operator
             var patchString = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubernetesJson.Serialize(diff)));
 
             return new V1Patch(patchString, V1Patch.PatchType.JsonPatch);
+        }
+
+        /// <summary>
+        /// Throws an exception when the review status is allowed.
+        /// </summary>
+        /// <param name="review">Specifies the review.</param>
+        /// <exception cref="UnauthorizedException">Thrown when the review status is not allowed.</exception>
+        public static void ThrowIfNotAllowed(this V1SelfSubjectAccessReview review)
+        {
+            if (review.Status.Allowed != true)
+            {
+                throw new UnauthorizedException(review);
+            }
         }
     }
 }

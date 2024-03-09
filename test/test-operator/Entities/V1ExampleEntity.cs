@@ -12,7 +12,7 @@ namespace TestOperator
 {
     /// <summary>
     /// This is an example description. A <see cref="V1ExampleEntity"/> is a <see cref="IKubernetesObject{V1ObjectMeta}"/>
-    /// with a <see cref="V1ExampleEntity.V1ExampleSpec"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
+    /// with a <see cref="V1ExampleEntity.V1ExampleSpec{T}"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
     /// </summary>
     [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
     [EntityVersion(Served = true, Storage = false)]

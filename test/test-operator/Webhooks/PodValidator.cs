@@ -2,15 +2,13 @@ using System.Threading.Tasks;
 
 using k8s.Models;
 
-using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 
 namespace TestOperator
 {
     [Webhook(
         name: "example-validating-hook.neonkube.io",
-        admissionReviewVersions: "v1",
-        failurePolicy: "Ignore")]
+        admissionReviewVersions: "v1")]
     [WebhookRule(
         apiGroups: V1Deployment.KubeGroup,
         apiVersions: V1Deployment.KubeApiVersion,

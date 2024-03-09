@@ -1,3 +1,20 @@
+// -----------------------------------------------------------------------------
+// FILE:	    CustomResourceDefinitionGenerator.cs
+// CONTRIBUTOR: NEONFORGE Team
+// COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -5,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -16,6 +34,7 @@ using Microsoft.CodeAnalysis;
 using Neon.Common;
 using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
+using Neon.Operator.OperatorLifecycleManager;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
@@ -26,7 +45,7 @@ namespace Neon.Operator.Analyzers
     [Generator]
     public class CustomResourceDefinitionGenerator : ISourceGenerator
     {
-        private static readonly DiagnosticDescriptor TooManyStorageVersionsError = new DiagnosticDescriptor(id: "NO10001",
+        internal static readonly DiagnosticDescriptor TooManyStorageVersionsError = new DiagnosticDescriptor(id: "NO10001",
                                                                                               title: "One and only one version must be marked as the storage version",
                                                                                               messageFormat: "'{0}' has {1} versions marked for storage",
                                                                                               category: "NeonOperatorSdk",
@@ -44,10 +63,10 @@ namespace Neon.Operator.Analyzers
             context.RegisterForSyntaxNotifications(() => new CustomResourceReceiver());
         }
 
-        public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        public System.Reflection.Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
-            var assemblyName = new AssemblyName(args.Name);
-            Assembly assembly = null;
+            var assemblyName = new System.Reflection.AssemblyName(args.Name);
+            System.Reflection.Assembly assembly = null;
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
@@ -55,7 +74,7 @@ namespace Neon.Operator.Analyzers
                     .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
-                    assembly = Assembly.LoadFrom(targetAssembly);
+                    assembly = System.Reflection.Assembly.LoadFrom(targetAssembly);
             }
             catch (Exception)
             {
@@ -126,15 +145,28 @@ namespace Neon.Operator.Analyzers
                 throw new Exception("CRD output directory not defined.");
             }
 
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetDir", out var targetDir);
+
             try
             {
                 Directory.CreateDirectory(crdOutputDirectory);
 
                 var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
                 var customResources           = ((CustomResourceReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+                var attributes                = ((CustomResourceReceiver)context.SyntaxReceiver)?.Attributes;
                 var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
                 var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
+                var operatorVersionAttribute  = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
 
+                var operatorVersion = operatorVersionAttribute?.Version ?? "";
+
+                if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorVersion", out var versionString))
+                {
+                    if (!string.IsNullOrEmpty(versionString))
+                    {
+                        operatorVersion = versionString;
+                    }
+                }
                 foreach (var cr in customResources)
                 {
                     try
@@ -247,6 +279,15 @@ namespace Neon.Operator.Analyzers
                     }
                 }
 
+                var olmOutputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
+                var olmVersionDir    = Path.Combine(olmOutputBaseDir, operatorVersion);
+                var olmManifestDir   = Path.Combine(olmVersionDir, "manifests");
+
+                if (!Directory.Exists(olmManifestDir))
+                {
+                    Directory.CreateDirectory(olmManifestDir);
+                }
+
                 foreach (var crd in customResourceDefinitions)
                 {
                     try
@@ -254,16 +295,24 @@ namespace Neon.Operator.Analyzers
                         if (crd.Value.Spec.Versions.Where(v => v.Storage).Count() > 1)
                         {
                             context.ReportDiagnostic(
-                                Diagnostic.Create(TooManyStorageVersionsError,
-                                Location.None,
-                                crd.Value.Name(),
-                                crd.Value.Spec.Versions.Where(v => v.Storage).Count().ToString()));
+                                Diagnostic.Create(
+                                    descriptor: TooManyStorageVersionsError,
+                                    location: Location.None,
+                                    crd.Value.Name(),
+                                    crd.Value.Spec.Versions.Where(v => v.Storage).Count().ToString()));
                         }
                         else
                         {
                             var yaml = KubernetesYaml.Serialize(crd.Value);
 
                             var outputPath = Path.Combine(crdOutputDirectory, crd.Value.Name() + ".yaml");
+
+                            if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
+                            {
+                                File.WriteAllText(outputPath, yaml);
+                            }
+
+                            outputPath = Path.Combine(olmManifestDir, crd.Value.Name() + ".yaml");
 
                             if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
                             {
@@ -319,7 +368,7 @@ namespace Neon.Operator.Analyzers
 
         private V1JSONSchemaProps MapProperty(
             IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
-            PropertyInfo                            info,
+            System.Reflection.PropertyInfo          info,
             IList<V1CustomResourceColumnDefinition> additionalColumns,
             string                                  jsonPath)
         {
@@ -431,7 +480,6 @@ namespace Neon.Operator.Analyzers
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                     additionalColumns,
                     jsonPath);
-                props.Description ??= typeSymbol.GetSummary();
             }
             else if (type.Equals(typeof(IntstrIntOrString)))
             {
@@ -479,8 +527,11 @@ namespace Neon.Operator.Analyzers
                 catch { }
                 props.Type         = Constants.StringTypeString;
                 props.EnumProperty = type.GetMembers()
-                        .Where(static member => member.MemberType is MemberTypes.Field)
-                        .Select(static member => (object)member.Name.ToLower()).ToList();
+                        .Where(static member => member.MemberType is System.Reflection.MemberTypes.Field)
+                        .Select(static member =>
+                            (object)((RoslynFieldInfo)member).GetCustomAttribute<EnumMemberAttribute>()?.Value
+                            ?? (object)member.Name.ToLower())
+                        .ToList();
             }
             else 
             {
@@ -509,8 +560,6 @@ namespace Neon.Operator.Analyzers
                 }
             }
 
-            props.Description ??= typeSymbol.GetSummary();
-
             return props;
         }
 
@@ -522,7 +571,7 @@ namespace Neon.Operator.Analyzers
             props.XKubernetesEmbeddedResource      = true;
         }
         
-        private static string GetPropertyName(PropertyInfo property)
+        private static string GetPropertyName(System.Reflection.PropertyInfo property)
         {
             var attribute    = property.GetCustomAttribute<JsonPropertyNameAttribute>();
             var propertyName = attribute?.Name ?? property.Name;

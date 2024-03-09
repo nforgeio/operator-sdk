@@ -70,12 +70,14 @@ namespace Neon.Operator.Analyzers
         public void Execute(GeneratorExecutionContext context)
         {
             var metadataLoadContext   = new MetadataLoadContext(context.Compilation);
-            var rbacRules             = ((RbacRuleReceiver)context.SyntaxReceiver)?.AttributesToRegister;
+            var rbacRules             = ((RbacRuleReceiver)context.SyntaxReceiver)?.RbacAttributesToRegister;
             var classesWithRbac       = ((RbacRuleReceiver)context.SyntaxReceiver)?.ClassesToRegister;
             var controllers           = ((RbacRuleReceiver)context.SyntaxReceiver)?.ControllersToRegister;
             var hasMutatingWebhooks   = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasMutatingWebhooks ?? false;
             var hasValidatingWebhooks = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasValidatingWebhooks ?? false;
+            var assemblyAttributes    = ((RbacRuleReceiver)context.SyntaxReceiver)?.AssemblyAttributes;
             var namedTypeSymbols      = context.Compilation.GetNamedTypeSymbols();
+
 
             var serviceAccounts     = new List<V1ServiceAccount>();
             var clusterRoles        = new List<V1ClusterRole>();
@@ -83,8 +85,9 @@ namespace Neon.Operator.Analyzers
             var roles               = new List<V1Role>();
             var roleBindings        = new List<V1RoleBinding>();
             var attributes          = new List<IRbacRule>();
+            var nameAttribute       = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, assemblyAttributes);
 
-            string operatorName        = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower(); 
+            string operatorName        = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
             string operatorNamespace   = string.Empty;
             string rbacOutputDirectory = null;
 
@@ -176,6 +179,11 @@ namespace Neon.Operator.Analyzers
                 }
             }
 
+            if (nameAttribute != null)
+            {
+                operatorName = nameAttribute.Name;
+            }
+
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var operatorNs))
             {
                 if (!string.IsNullOrEmpty(operatorNs))
@@ -239,20 +247,13 @@ namespace Neon.Operator.Analyzers
                             verbs: RbacVerb.All,
                             scope: EntityScope.Cluster));
                 }
-                else
-                {
-                    attributes.Add(
-                        new RbacRule<V1CustomResourceDefinition>(
-                            verbs: RbacVerb.Get | RbacVerb.List | RbacVerb.Watch,
-                            scope: EntityScope.Cluster));
-                }
 
                 if (!leaderElectionDisabled)
                 {
                     attributes.Add(
                         new RbacRule<V1Lease>(
                             verbs: RbacVerb.All,
-                            scope: EntityScope.Cluster));
+                            scope: EntityScope.Namespaced));
                 }
 
                 if (hasMutatingWebhooks && autoRegisterWebhooks)

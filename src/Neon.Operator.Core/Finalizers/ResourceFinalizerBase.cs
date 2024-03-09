@@ -30,7 +30,7 @@ namespace Neon.Operator.Finalizers
     /// Describes a ginalizer manager.
     /// </summary>
     /// <typeparam name="TEntity">The type of the k8s entity.</typeparam>
-    [OperatorComponent(OperatorComponentType.Finalizer)]
+    [OperatorComponent(ComponentType = OperatorComponentType.Finalizer)]
     [ResourceFinalizer]
     public class ResourceFinalizerBase<TEntity> : IResourceFinalizer<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>, new()

@@ -122,6 +122,64 @@ namespace Neon.K8s
             }
         }
 
+        /// <summary>
+        /// Sets an annotation within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The annotation name.</param>
+        /// <param name="value">Optionally specifies a annotation value. This defaults to an empty string.</param>
+        public static void SetAnnotation(this V1ObjectMeta metadata, string name, string value = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Annotations == null)
+            {
+                metadata.Annotations = new Dictionary<string, string>();
+            }
+
+            metadata.Annotations[name] = value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Sets a collection of annotations within the metadata, constructing the label dictionary when necessary.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="annotations">The dictionary of annotations to set.</param>
+        public static void SetAnnotations(this V1ObjectMeta metadata, Dictionary<string, string> annotations)
+        {
+            Covenant.Requires<ArgumentNullException>(annotations != null, nameof(annotations));
+
+            foreach (var annotation in annotations)
+            {
+                metadata.SetAnnotation(annotation.Key, annotation.Value);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the value of a annotation from the metadata.
+        /// </summary>
+        /// <param name="metadata">The metadata instance.</param>
+        /// <param name="name">The annotation name.</param>
+        /// <returns>The label value or <c>null</c> when the label doesn't exist.</returns>
+        public static string GetAnnotation(this V1ObjectMeta metadata, string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (metadata.Annotations == null)
+            {
+                return null;
+            }
+
+            if (metadata.Annotations.TryGetValue(name, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Deployment extensions
 
@@ -1117,32 +1175,6 @@ namespace Neon.K8s
             var configmap = new TypedConfigMap<TConfigMapData>(name, namespaceParameter, data);
 
             return TypedConfigMap<TConfigMapData>.From(await k8sCoreV1.ReplaceNamespacedConfigMapAsync(configmap.UntypedConfigMap, name, namespaceParameter, cancellationToken: cancellationToken));
-        }
-
-        /// <summary>
-        /// Deletes a namespaced typed configmap.
-        /// </summary>
-        /// <param name="k8sCoreV1">The <see cref="Kubernetes"/> client's <see cref="ICoreV1Operations"/>.</param>
-        /// <param name="name">Specifies the object name.</param>
-        /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
-        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <remarks>
-        /// Typed configmaps are <see cref="V1ConfigMap"/> objects that wrap a strongly typed
-        /// object formatted using the <see cref="TypedConfigMap{TConfigMap}"/> class.  This
-        /// makes it easy to persist and retrieve typed data to a Kubernetes cluster.
-        /// </remarks>
-        public static async Task DeleteNamespacedTypedConfigMapAsync(
-            this ICoreV1Operations  k8sCoreV1,
-            string                  name,
-            string                  namespaceParameter,
-            CancellationToken       cancellationToken = default)
-        {
-            await SyncContext.Clear;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
-
-            await k8sCoreV1.DeleteNamespacedConfigMapAsync(name, namespaceParameter, cancellationToken: cancellationToken);
         }
     }
 }

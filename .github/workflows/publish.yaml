@@ -5,7 +5,7 @@ name: .NET Publish
 
 on:
   release:
-    types: [released]
+    types: [published]
 
 jobs:
   build:

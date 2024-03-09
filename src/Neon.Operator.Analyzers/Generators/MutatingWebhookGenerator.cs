@@ -1,3 +1,20 @@
+// -----------------------------------------------------------------------------
+// FILE:	    MutatingWebhookGenerator.cs
+// CONTRIBUTOR: NEONFORGE Team
+// COPYRIGHT:   Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +23,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 using k8s;
 using k8s.Models;
@@ -14,6 +32,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
+using Neon.Operator.Analyzers.Receivers;
+using Neon.Common;
 using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
@@ -26,6 +46,11 @@ namespace Neon.Operator.Analyzers
     public class MutatingWebhookGenerator : ISourceGenerator
     {
         private Dictionary<string, StringBuilder> logs;
+
+        public void Initialize(GeneratorInitializationContext context)
+        {
+            context.RegisterForSyntaxNotifications(() => new MutatingWebhookReceiver());
+        }
 
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
@@ -59,6 +84,14 @@ namespace Neon.Operator.Analyzers
 
             var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
             var mutatingWebhooks          = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.MutatingWebhooks;
+            var attributes                = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.Attributes;
+            var nameAttribute             = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
+
+            if (mutatingWebhooks.Count == 0)
+            {
+                return;
+            }
+
             var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
 
             bool certManagerDisabled      = false;
@@ -118,6 +151,11 @@ namespace Neon.Operator.Analyzers
                 {
                     operatorName = oName;
                 }
+            }
+
+            if (nameAttribute != null)
+            {
+                operatorName = nameAttribute.Name;
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var operatorNs))
@@ -280,11 +318,6 @@ namespace Neon.Operator.Analyzers
             Log(context, e.StackTrace);
         }
 
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new MutatingWebhookReceiver());
-        }
-
         private string CreateEndpoint(Type entityType, Type webhookImplementation)
         {
             var metadata = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
@@ -367,11 +400,11 @@ namespace Neon.Operator.Analyzers
                 Rules                   = new List<V1RuleWithOperations>(),
                 ClientConfig            = clientConfig,
                 AdmissionReviewVersions = webhookAttribute.AdmissionReviewVersions,
-                FailurePolicy           = webhookAttribute.FailurePolicy,
-                SideEffects             = webhookAttribute.SideEffects,
+                FailurePolicy           = webhookAttribute.FailurePolicy.ToMemberString(),
+                SideEffects             = webhookAttribute.SideEffects.ToMemberString(),
                 TimeoutSeconds          = webhookAttribute.TimeoutSeconds,
-                MatchPolicy             = webhookAttribute.MatchPolicy,
-                ReinvocationPolicy      = webhookAttribute.ReinvocationPolicy,
+                MatchPolicy             = webhookAttribute.MatchPolicy.ToMemberString(),
+                ReinvocationPolicy      = webhookAttribute.ReinvocationPolicy.ToMemberString(),
             };
 
             var namespaceSelectorExpressions =  webhookSystemType.GetCustomAttributes<NamespaceSelectorExpressionAttribute>();

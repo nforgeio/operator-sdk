@@ -21,6 +21,7 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
+using Neon.Operator.Attributes;
 using Neon.Operator.ResourceManager;
 
 using Prometheus;
@@ -45,12 +46,20 @@ namespace Neon.Operator
         {
             if (string.IsNullOrEmpty(Name))
             {
-                name = Assembly.GetEntryAssembly().GetName().Name;
+                var nameAttribute = Assembly.GetEntryAssembly().GetCustomAttribute<NameAttribute>();
+                if (nameAttribute != null)
+                {
+                    name = nameAttribute.Name;
+                }
+                else
+                {
+                    name = Assembly.GetEntryAssembly().GetName().Name;
+                }
             }
         }
 
         /// <summary>
-        /// The Operator name.  This defaults to a Kubernetes safe version of the entry assembly name.
+        /// The Operator name. This defaults to a Kubernetes safe version of the entry assembly name.
         /// </summary>
         public string Name
         {
@@ -74,7 +83,7 @@ namespace Neon.Operator
         /// <summary>
         /// The namespace where the operator is deployed.
         /// </summary>
-        public string DeployedNamespace { get; set; } = "";
+        public string PodNamespace { get; set; } = "";
 
         /// <summary>
         /// The IP address to listen on.
@@ -92,7 +101,7 @@ namespace Neon.Operator
         /// be scanned and added automatically. Defaults to true.
         /// </para>
         /// </summary>
-        public bool AssemblyScanningEnabled { get; set; } = true;
+        public bool AssemblyScanningEnabled { get; set; } = false;
 
         /// <summary>
         /// The size of the pool to use for async locks.

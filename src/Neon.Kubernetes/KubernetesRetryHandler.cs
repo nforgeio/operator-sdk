@@ -156,9 +156,17 @@ namespace Neon.K8s
 
         private static HttpOperationException GetEnhancedHttpOperationException(HttpOperationException e)
         {
-            return new HttpOperationException($"{e.Message}\r\n\r\nRESPONSE.CONTENT:\r\n\r\n{e.Response.Content}", e.InnerException)
+            var sb = new StringBuilder();
+
+            sb.AppendLine(e.Message);
+            sb.AppendLine();
+            sb.AppendLine("RESPONSE.CONTENT:");
+            sb.AppendLine();
+            sb.AppendLine(e.Response.Content);
+
+            return new HttpOperationException(sb.ToString(), e.InnerException)
             {
-                Response = e.Response
+                Response = e.Response,
             };
         }
     }

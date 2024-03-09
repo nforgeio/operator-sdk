@@ -15,7 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 
@@ -23,9 +22,11 @@ using FluentAssertions;
 
 using k8s.Models;
 
+using Neon.Common;
 using Neon.IO;
 using Neon.Operator.Analyzers;
 using Neon.Operator.Attributes;
+using Neon.Roslyn.Xunit;
 
 namespace Test.Analyzers
 {
@@ -60,7 +61,7 @@ namespace TestOperator.Foo.Bar
                .ConfigureOperator(configure =>
                {{
                    configure.AssemblyScanningEnabled = false;
-                   configure.DeployedNamespace       = ""default"";
+                   configure.PodNamespace            = ""default"";
                }})
                .ConfigureNeonKube()
                .UseStartup<Startup>().Build();
@@ -70,35 +71,28 @@ namespace TestOperator.Foo.Bar
     }}
 }}";
 
-            var outFile = "role-test-operator.yaml";
 
             using var tempFile = new TempFolder();
 
-            var optionsProvider = new OperatorAnalyzerConfigOptionsProvider();
-            optionsProvider.SetOptions(new OperatorAnalyzerConfigOptions()
-            {
-                Options = new Dictionary<string, string>()
-                {
-                    {"build_property.NeonOperatorName", "test-operator" },
-                    {"build_property.NeonOperatorGenerateCrds", "true" },
-                    {"build_property.NeonOperatorRbacOutputDir", tempFile.Path }
-                }
-            });
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<RbacRuleGenerator>()
+                .AddOption("build_property.NeonOperatorName", "test-operator")
+                .AddOption("build_property.NeonOperatorGenerateRbac", true)
+                .AddOption("build_property.NeonOperatorRbacOutputDir", tempFile.Path)
+                .AddOption("build_property.TargetDir", tempFile.Path)
+                .AddSource(classDefinition)
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
+                .AddAssembly(typeof(V1Condition).Assembly)
+                .AddAssembly(typeof(RequiredAttribute).Assembly)
+                .Build();
 
-            var generatedCode = CompilationHelper.GetGeneratedOutput<RbacRuleGenerator>(
-                source: classDefinition,
-                additionalAssemblies: [
-                    typeof(KubernetesEntityAttribute).Assembly,
-                    typeof(AdditionalPrinterColumnAttribute).Assembly,
-                    typeof(V1Pod).Assembly,
-                    typeof(RequiredAttribute).Assembly,
-                ],
-                optionsProvider: optionsProvider);
+            var outFile = "role-test-operator.yaml";
 
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
 
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
-            output.Should().BeEquivalentTo(expectedCrd.TrimEnd());
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+            output.Should().Be(expectedCrd);
         }
     }
 }
