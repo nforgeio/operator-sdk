@@ -34,6 +34,7 @@ namespace TestKubeOperator
     public class TestCoreResources : IClassFixture<TestOperatorFixture>
     {
         private TestOperatorFixture fixture;
+
         public TestCoreResources(TestOperatorFixture fixture)
         {
             this.fixture = fixture;
