@@ -620,6 +620,7 @@ namespace Neon.K8s
             existing = await k8s.GetNamespacedCustomObjectAsync<T>(
                 name:               name,
                 namespaceParameter: namespaceParameter,
+                throwIfNotFound:    false,
                 cancellationToken:  cancellationToken);
 
             if (existing == null)
