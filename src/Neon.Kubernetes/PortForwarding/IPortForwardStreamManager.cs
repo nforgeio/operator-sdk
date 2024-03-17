@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IPortForwardStreamManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -34,7 +34,7 @@ namespace Neon.K8s.PortForward
         /// a pod running in the cluster.
         /// </summary>
         /// <param name="localConnection">Specifies the local workstation side of the connection.</param>
-        /// <param name="remoteConnectionFactory">Specfies the factory to be used to establish the remote side of the connection.</param>
+        /// <param name="remoteConnectionFactory">Specifies the factory to be used to establish the remote side of the connection.</param>
         /// <param name="remotePort">Specifies the remote port.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         void Start(

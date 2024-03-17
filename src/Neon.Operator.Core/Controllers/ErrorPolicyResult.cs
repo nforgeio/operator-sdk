@@ -28,7 +28,7 @@ namespace Neon.Operator.Controllers
         /// Constructor.
         /// </summary>
         /// <param name="delay">Optionally override the default requruing delay.</param>
-        /// <param name="eventType">Optionally specfies the event type (defaults to <see cref="WatchEventType.Modified"/>.</param>
+        /// <param name="eventType">Optionally specifies the event type (defaults to <see cref="WatchEventType.Modified"/>.</param>
         /// <param name="requeue">Optionally disable requeuing (defaults to <c>true</c>).</param>
         internal ErrorPolicyResult(
             TimeSpan?       delay     = null,
