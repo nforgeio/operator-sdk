@@ -161,7 +161,7 @@ namespace TestNamespace
             var testCompilation = new TestCompilationBuilder()
                 .AddSourceGenerator<CustomResourceDefinitionGenerator>()
                 .AddSource(source)
-                .AddAssembly($@"C:\src\operator-sdk\test\Test.Analyzers\bin\Debug\net8.0\KubernetesClient.Models.dll")
+                .AddAssembly(typeof(V1Condition).Assembly)
                 .AddOption("build_property.NeonOperatorGenerateCrds", true)
                 .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
                 .Build();
