@@ -39,6 +39,7 @@ using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
 namespace Neon.Operator.Analyzers
 {
@@ -154,6 +155,7 @@ namespace Neon.Operator.Analyzers
                 var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
                 var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
                 var operatorVersionAttribute  = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+                var docProvider              = new XmlDocumentationProvider(context.Compilation);
 
                 var operatorVersion = operatorVersionAttribute?.Version ?? "";
 
@@ -204,11 +206,11 @@ namespace Neon.Operator.Analyzers
                         }
                         var additionalPrinterColumns = new List<V1CustomResourceColumnDefinition>();
 
-                        var schema           = new V1CustomResourceValidation(MapType(namedTypeSymbols, crSystemType, additionalPrinterColumns, string.Empty));
+                        var schema           = new V1CustomResourceValidation(MapType(namedTypeSymbols, crSystemType, additionalPrinterColumns, string.Empty, docProvider));
                         var pluralNameGroup  = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
                         var implementsStatus = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
 
-                        schema.OpenAPIV3Schema.Description = crTypeIdentifier.GetSummary();
+                        schema.OpenAPIV3Schema.Description = crTypeIdentifier.GetSummary(docProvider);
 
                         var version = new V1CustomResourceDefinitionVersion(
                         name:         k8sAttr.ApiVersion,
@@ -360,19 +362,20 @@ namespace Neon.Operator.Analyzers
             IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
             System.Reflection.PropertyInfo          info,
             IList<V1CustomResourceColumnDefinition> additionalColumns,
-            string                                  jsonPath)
+            string                                  jsonPath,
+            XmlDocumentationProvider                docProvider)
         {
             V1JSONSchemaProps props = null;
             try
             {
-                props = MapType(namedTypeSymbols, info.PropertyType, additionalColumns, jsonPath);
+                props = MapType(namedTypeSymbols, info.PropertyType, additionalColumns, jsonPath, docProvider);
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
 
-            props.Description ??= info.GetPropertySymbol().GetSummary();
+            props.Description ??= info.GetPropertySymbol().GetSummary(docProvider);
 
             // get additional printer column information
             var additionalColumn = info.GetCustomAttribute<AdditionalPrinterColumnAttribute>();
@@ -417,7 +420,8 @@ namespace Neon.Operator.Analyzers
             IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
             Type                                    type,
             IList<V1CustomResourceColumnDefinition> additionalColumns,
-            string                                  jsonPath)
+            string                                  jsonPath,
+            XmlDocumentationProvider                docProvider)
         {
             var typeSymbol = namedTypeSymbols.Where(nts => nts.GetFullMetadataName() == type.FullName).FirstOrDefault();
             
@@ -438,7 +442,7 @@ namespace Neon.Operator.Analyzers
             else if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)))
             {
                 props.Type = Constants.ObjectTypeString;
-                props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments[1], additionalColumns, jsonPath);
+                props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments[1], additionalColumns, jsonPath, docProvider);
             }
             else if (type.IsGenericType &&
                 type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>)) &&
@@ -447,12 +451,12 @@ namespace Neon.Operator.Analyzers
                 type.GenericTypeArguments.Single().GetGenericTypeDefinition().Equals(typeof(KeyValuePair<,>)))
             {
                 props.Type = Constants.ObjectTypeString;
-                props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments.Single().GenericTypeArguments[1], additionalColumns, jsonPath);
+                props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments.Single().GenericTypeArguments[1], additionalColumns, jsonPath, docProvider);
             }
             else if (type.IsGenericType && type.IsEnumerableType(out Type typeParameter))
             {
                 props.Type = Constants.ArrayTypeString;
-                props.Items = MapType(namedTypeSymbols, typeParameter, additionalColumns, jsonPath);
+                props.Items = MapType(namedTypeSymbols, typeParameter, additionalColumns, jsonPath, docProvider);
             }
 
             else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
@@ -469,7 +473,8 @@ namespace Neon.Operator.Analyzers
                     namedTypeSymbols,
                     type.GetElementType() ?? throw new NullReferenceException("No Array Element Type found"),
                     additionalColumns,
-                    jsonPath);
+                    jsonPath,
+                    docProvider);
             }
             else if (type.Equals(typeof(IntstrIntOrString)))
             {
@@ -537,7 +542,7 @@ namespace Neon.Operator.Analyzers
                         continue;
                     }
 
-                    props.Properties.Add(GetPropertyName(prop), MapProperty(namedTypeSymbols, prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"));
+                    props.Properties.Add(GetPropertyName(prop), MapProperty(namedTypeSymbols, prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}", docProvider));
                 };
 
                 props.Required = type.GetProperties()
