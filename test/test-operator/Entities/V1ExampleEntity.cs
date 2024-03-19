@@ -88,6 +88,11 @@ namespace TestOperator
             /// The <see cref="V1ExampleEntity.Person"/>
             /// </summary>
             public Person Person { get; set; }
+
+            /// <summary>
+            /// Resources
+            /// </summary>
+            public V1ResourceRequirements Resources { get; set; }
         }
 
         /// <summary>

@@ -147,7 +147,7 @@ namespace TestNamespace
     /// <summary>
     /// The status.
     /// </summary>
-    [KubernetesEntity(Group = ""example.neonkube.io"", Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [KubernetesEntity(Group = ""example.neonkube.io"", Kind = ""Example"", ApiVersion = ""v1alpha1"", PluralName = ""examples"")]
     public class V1Example
     {{
         /// <summary>
@@ -163,6 +163,7 @@ namespace TestNamespace
                 .AddSource(source)
                 .AddAssembly(typeof(V1Condition).Assembly)
                 .AddOption("build_property.NeonOperatorGenerateCrds", true)
+                .AddOption("build_property.TargetDir", tempFile.Path)
                 .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
                 .Build();
 

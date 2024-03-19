@@ -494,7 +494,7 @@ namespace Neon.Operator.Analyzers
                         saNameString.Append($"-{sa.Namespace()}");
                     }
 
-                    saNameString.Append(".yaml");
+                    saNameString.Append(Constants.YamlExtension);
 
                     File.WriteAllText(Path.Combine(rbacOutputDirectory, saNameString.ToString()), saString);
                 }
@@ -523,7 +523,7 @@ namespace Neon.Operator.Analyzers
                         rNameString.Append($"-{r.Namespace()}");
                     }
 
-                    rNameString.Append(".yaml");
+                    rNameString.Append(Constants.YamlExtension);
 
                     File.WriteAllText(Path.Combine(rbacOutputDirectory, rNameString.ToString()), rString);
                 }
@@ -540,7 +540,7 @@ namespace Neon.Operator.Analyzers
                         rbNameString.Append($"-{rb.Namespace()}");
                     }
 
-                    rbNameString.Append(".yaml");
+                    rbNameString.Append(Constants.YamlExtension);
 
                     var outputPath = Path.Combine(rbacOutputDirectory, rbNameString.ToString());
 

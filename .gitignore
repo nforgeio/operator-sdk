@@ -159,3 +159,4 @@ KubernetesWithRetry.cs
 /test/test-operator/CRDs
 /test/test-operator/Manifests
 /test/test-operator/RBAC
+*.binlog

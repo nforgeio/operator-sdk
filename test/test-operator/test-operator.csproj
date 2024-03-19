@@ -11,6 +11,7 @@
         <NeonOperatorCrdOutputDir>CRDs</NeonOperatorCrdOutputDir>
         <NeonOperatorRbacOutputDir>RBAC</NeonOperatorRbacOutputDir>
         <NeonOperatorWebhookOutputDir>Manifests</NeonOperatorWebhookOutputDir>
+        <ReportAnalyzer>true</ReportAnalyzer>
     </PropertyGroup>
 
     <ItemGroup>

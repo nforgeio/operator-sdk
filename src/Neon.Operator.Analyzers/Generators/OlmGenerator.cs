@@ -664,7 +664,11 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
-            var outputString  = KubernetesHelper.YamlSerialize(csv);
+            var sb = new StringBuilder();
+            sb.AppendLine(Constants.YamlCsvHeader);
+            sb.AppendLine(KubernetesHelper.YamlSerialize(csv));
+
+            var outputString  = sb.ToString();
             var outputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
             var versionDir    = Path.Combine(outputBaseDir, version);
             var manifestDir   = Path.Combine(versionDir, "manifests");
@@ -675,7 +679,7 @@ namespace Neon.Operator.Analyzers.Generators
             Directory.CreateDirectory(manifestDir);
             Directory.CreateDirectory(metadataDir);
 
-            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion.yaml");
+            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion{Constants.YamlExtension}");
             File.WriteAllText(csvPath, outputString);
 
             if (maintainers?.Any(m => m.Value.Reviewer) == true
