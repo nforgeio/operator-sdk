@@ -61,8 +61,6 @@ namespace Neon.Operator.Analyzers
 
         public static XmlDocumentationProvider DocumentationProvider { get; set; } = new XmlDocumentationProvider();
 
-        private static readonly string[] allowedProcesses = { "VBCSCompiler", "testhost", "dotnet" };
-
         public void Initialize(GeneratorInitializationContext context)
         {
             AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
@@ -95,7 +93,9 @@ namespace Neon.Operator.Analyzers
 
             var processName = System.Diagnostics.Process.GetCurrentProcess().MainModule.ModuleName;
 
-            if (!allowedProcesses.Contains(processName))
+            var shouldRunLive = processName.Contains("VBCSCompiler") || processName.Contains("testhost") || processName.Contains("dotnet");
+
+            if (!shouldRunLive)
             {
                 // this is a hack to disable the analyzer during live editing
 
