@@ -87,7 +87,6 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            System.Diagnostics.Debugger.Launch();
             logs = new Dictionary<string, StringBuilder>();
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrds", out var generateCrds))
