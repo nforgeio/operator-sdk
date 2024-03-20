@@ -38,6 +38,8 @@ using Neon.Operator.OperatorLifecycleManager;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
+using Microsoft.CodeAnalysis;
+
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
@@ -58,6 +60,8 @@ namespace Neon.Operator.Analyzers
         private Dictionary<string, StringBuilder> logs;
 
         public static XmlDocumentationProvider DocumentationProvider { get; set; } = new XmlDocumentationProvider();
+
+        private static readonly string[] allowedProcesses = { "VBCSCompiler", "testhost", "dotnet" };
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -88,6 +92,32 @@ namespace Neon.Operator.Analyzers
         public void Execute(GeneratorExecutionContext context)
         {
             logs = new Dictionary<string, StringBuilder>();
+
+            var processName = System.Diagnostics.Process.GetCurrentProcess().MainModule.ModuleName;
+
+            if (!allowedProcesses.Contains(processName))
+            {
+                // this is a hack to disable the analyzer during live editing
+
+                if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrdsLive", out var generateCrdsLive))
+                {
+                    if (bool.TryParse(generateCrdsLive, out bool generateCrdsLiveBool))
+                    {
+                        if (!generateCrdsLiveBool)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrds", out var generateCrds))
             {

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
@@ -27,6 +28,8 @@ namespace Neon.Operator.Analyzers.Receivers
     internal class AppExtensionsReceiver : ISyntaxReceiver
     {
         public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();
+        public bool DoesAddOperator { get; private set; } = false;
+
         private static string[] classAttributes = new string[] 
         {
             "Webhook"
@@ -34,6 +37,22 @@ namespace Neon.Operator.Analyzers.Receivers
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
+            if (syntaxNode is InvocationExpressionSyntax)
+            {
+                try
+                {
+                    InvocationExpressionSyntax methodSyntax = (InvocationExpressionSyntax)syntaxNode;
+                    if (((MemberAccessExpressionSyntax)methodSyntax.Expression).Name.Identifier.ValueText == "UseKubernetesOperator")
+                    {
+                        DoesAddOperator = true;
+                    }
+                }
+                catch
+                {
+                    // pass
+                }
+            }
+
             if (syntaxNode is ClassDeclarationSyntax)
             {
                 var attributeSyntaxes = syntaxNode.DescendantNodes().OfType<AttributeSyntax>();
