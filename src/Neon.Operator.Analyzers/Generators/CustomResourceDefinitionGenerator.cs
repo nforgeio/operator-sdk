@@ -57,7 +57,6 @@ namespace Neon.Operator.Analyzers
         private Dictionary<string, StringBuilder> logs;
         public void Initialize(GeneratorInitializationContext context)
         {
-            //System.Diagnostics.Debugger.Launch();
             AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
 
             context.RegisterForSyntaxNotifications(() => new CustomResourceReceiver());
