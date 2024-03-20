@@ -31,7 +31,7 @@ using Xunit;
 
 namespace TestKubeOperator
 {
-    public class TestCoreResources : IClassFixture<OperatorFixture>
+    public class TestCoreResources : IClassFixture<TestOperatorFixture>
     {
         private TestOperatorFixture fixture;
 

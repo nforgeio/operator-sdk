@@ -69,7 +69,7 @@ namespace TestKubeOperator
         }
     }
 
-    public class Test_DependencyInjection : IClassFixture<OperatorFixture>, IDisposable
+    public class Test_DependencyInjection : IClassFixture<TestOperatorFixture>, IDisposable
     {
         private TestOperatorFixture fixture;
 

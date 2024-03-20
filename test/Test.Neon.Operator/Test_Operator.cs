@@ -28,11 +28,11 @@ using Xunit;
 
 namespace Test.Neon.Operator
 {
-    public class TestOperator : IClassFixture<OperatorFixture>
+    public class TestOperator : IClassFixture<TestOperatorFixture>
     {
-        private OperatorFixture fixture;
+        private TestOperatorFixture fixture;
 
-        public TestOperator(OperatorFixture fixture)
+        public TestOperator(TestOperatorFixture fixture)
         {
             this.fixture = fixture;
             fixture.Operator.AddController<TestResourceController>();
