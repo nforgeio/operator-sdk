@@ -374,8 +374,8 @@ namespace Neon.Operator.Analyzers
                             ApiGroups:     group.Select(attr => attr.ApiGroup).ToList(),
                             Resources:     group.Select(attr => attr.Resource).ToList(),
                             SubResources:  group.SelectMany(attr => (attr.SubResources?.Split(',')
-                                                .Distinct()
-                                                .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())
+                                                                            .Distinct()
+                                                                            .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())
                             ))
                     .Select(
                         group => new V1PolicyRule

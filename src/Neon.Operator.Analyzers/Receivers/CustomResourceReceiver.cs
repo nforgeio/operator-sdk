@@ -19,11 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using k8s.Models;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using k8s.Models;
 using Neon.Operator.Attributes;
 
 namespace Neon.Operator.Analyzers.Receivers

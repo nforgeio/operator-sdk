@@ -17,28 +17,25 @@
 
 using System.Text;
 
-using Neon.Common;
-
 namespace Neon.Operator.Xunit
 {
-    /// <summary>
-    /// Operator test helpers.
-    /// </summary>
     internal static class ApiHelper
     {
-        /// <summary>
-        /// Creates a key by appending the argument strings passed, seperated
-        /// by forward slashes.
-        /// </summary>
-        /// <param name="args">The argument strings.</param>
-        /// <returns>The key string.</returns>
         public static string CreateKey(params string[] args)
         {
             var sb = new StringBuilder();
 
-            foreach (var arg in args)
+            for (int i = 0; i < args.Length; i++)
             {
-                sb.AppendWithSeparator(arg, "/");
+                if (!string.IsNullOrEmpty(args[i]))
+                {
+                    sb.Append(args[i]);
+
+                    if (i < args.Length - 1)
+                    {
+                        sb.Append('/');
+                    }
+                }
             }
 
             return sb.ToString();

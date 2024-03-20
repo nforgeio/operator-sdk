@@ -105,8 +105,7 @@ namespace Neon.Operator.Analyzers.Generators
 
             targetDir = targetDir.TrimEnd('\\');
 
-            var isTestProject = false;
-
+            bool isTestProject = false;
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.IsTestProject", out var isTestProjectString))
             {
                 bool.TryParse(isTestProjectString, out isTestProject);

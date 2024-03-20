@@ -32,6 +32,11 @@ namespace Neon.Operator.Xunit
     /// <inheritdoc/>
     public class TestOperator : ITestOperator
     {
+        /// <summary>
+        /// The services collection.
+        /// </summary>
+        public IServiceCollection Services { get; set; } = new ServiceCollection();
+        
         private KubernetesOperatorTestHost          host;
         private KubernetesOperatorTestHostBuilder   hostBuilder;
         private IOperatorBuilder                    operatorBuilder;
@@ -64,9 +69,6 @@ namespace Neon.Operator.Xunit
 
             operatorBuilder = new OperatorBuilder(hostBuilder.Services).AddOperatorBase();
         }
-
-        /// <inheritdoc/>
-        public IServiceCollection Services { get; private set; } = new ServiceCollection();
 
         /// <inheritdoc/>
         public IOperatorBuilder AddController<T>()

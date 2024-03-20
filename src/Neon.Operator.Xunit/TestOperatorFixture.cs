@@ -35,6 +35,10 @@ namespace Neon.Operator.Xunit
     /// </summary>
     public class TestOperatorFixture : TestFixture
     {
+        /// <summary>
+        /// The services collection.
+        /// </summary>
+        public IServiceCollection    Services => Operator.Services;
         private ITestApiServerHost   testApiServerHost;
         private bool                 started;
 
@@ -48,11 +52,6 @@ namespace Neon.Operator.Xunit
             this.KubernetesClient              = new k8s.Kubernetes(KubernetesClientConfiguration, new KubernetesRetryHandler());
             this.Operator                      = new TestOperator(KubernetesClientConfiguration);
         }
-
-        /// <summary>
-        /// Returns the services collection.
-        /// </summary>
-        public IServiceCollection    Services => Operator.Services;
 
         /// <summary>
         /// Returns the operator under test.

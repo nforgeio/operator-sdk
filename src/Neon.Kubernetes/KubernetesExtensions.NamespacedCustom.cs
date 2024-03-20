@@ -476,7 +476,7 @@ namespace Neon.K8s
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="name">Specifies the object name.</param>
         /// <param name="namespaceParameter">The target Kubernetes namespace.</param>
-        /// <param name="throwIfNotFound">Indicates that a <see cref="HttpOperationException"/> should be thrown when the object is not found.</param>
+        /// <param name="throwIfNotFound">Whether to throw an <see cref="HttpOperationException"/> when not found.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The deserialized object.</returns>
         public static async Task<T> GetNamespacedCustomObjectAsync<T>(

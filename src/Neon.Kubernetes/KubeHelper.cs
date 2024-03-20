@@ -103,7 +103,8 @@ namespace Neon.K8s
                 retryHandler = new KubernetesRetryHandler(new LoggingHttpMessageHandler(loggerFactory.CreateLogger<IKubernetes>()));
             }
 
-            return new k8s.Kubernetes(config, retryHandler);
+            var k8s = new k8s.Kubernetes(config, retryHandler);
+            return k8s;
         }
     }
 }

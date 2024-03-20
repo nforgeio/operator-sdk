@@ -158,9 +158,9 @@ namespace Neon.Operator.Analyzers
                 var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
                 var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
                 var operatorVersionAttribute  = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
-                var operatorVersion           = operatorVersionAttribute?.Version ?? "";
-
                 DocumentationProvider.AddMetadataReferences(context.Compilation.ExternalReferences);
+
+                var operatorVersion = operatorVersionAttribute?.Version ?? "";
 
                 if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorVersion", out var versionString))
                 {

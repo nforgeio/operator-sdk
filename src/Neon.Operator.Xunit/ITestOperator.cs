@@ -30,7 +30,7 @@ namespace Neon.Operator.Xunit
     public interface ITestOperator
     {
         /// <summary>
-        /// Returns the <see cref="IServiceCollection"/> for the operator.
+        /// The <see cref="IServiceCollection"/> for the operator.
         /// </summary>
         IServiceCollection Services { get; }
 
