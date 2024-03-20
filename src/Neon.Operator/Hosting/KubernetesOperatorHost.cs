@@ -36,6 +36,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
+using Neon.K8s.Core;
 using Neon.K8s.Resources.CertManager;
 using Neon.Operator.Rbac;
 using Neon.Tasks;
@@ -195,44 +196,53 @@ namespace Neon.Operator
 
             logger?.LogInformationEx(() => "Checking webhook certificate.");
 
-            var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.PodNamespace, labelSelector: $"{KubernetesLabel.ManagedBy}={OperatorSettings.Name}");
-
-            if (!cert.Items.Any())
+            try
             {
-                logger?.LogInformationEx(() => "Webhook certificate does not exist, creating...");
+                var cert = await k8s.CustomObjects.ListNamespacedCustomObjectAsync<V1Certificate>(OperatorSettings.PodNamespace, labelSelector: $"{KubernetesLabel.ManagedBy}={OperatorSettings.Name}");
 
-                var certificate = new V1Certificate()
+                if (!cert.Items.Any())
                 {
-                    Metadata = new V1ObjectMeta()
+                    logger?.LogInformationEx(() => "Webhook certificate does not exist, creating...");
+
+                    var certificate = new V1Certificate()
                     {
-                        Name              = OperatorSettings.Name,
-                        NamespaceProperty = OperatorSettings.PodNamespace,
-                        Labels            = new Dictionary<string, string>()
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name              = OperatorSettings.Name,
+                            NamespaceProperty = OperatorSettings.PodNamespace,
+                            Labels            = new Dictionary<string, string>()
                         {
                             { KubernetesLabel.ManagedBy, OperatorSettings.Name }
                         }
-                    },
-                    Spec = new V1CertificateSpec()
-                    {
-                        DnsNames = new List<string>()
+                        },
+                        Spec = new V1CertificateSpec()
+                        {
+                            DnsNames = new List<string>()
                         {
                             $"{OperatorSettings.Name}",
                             $"{OperatorSettings.Name}.{OperatorSettings.PodNamespace}",
                             $"{OperatorSettings.Name}.{OperatorSettings.PodNamespace}.svc",
                             $"{OperatorSettings.Name}.{OperatorSettings.PodNamespace}.svc.cluster.local",
                         },
-                        Duration   = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
-                        IssuerRef  = NeonHelper.JsonDeserialize<Neon.K8s.Resources.CertManager.IssuerRef>(NeonHelper.JsonSerialize(CertManagerOptions.IssuerRef)),
-                        SecretName = $"{OperatorSettings.Name}-webhook-tls"
-                    }
-                };
+                            Duration   = $"{CertManagerOptions.CertificateDuration.TotalHours}h{CertManagerOptions.CertificateDuration.Minutes}m{CertManagerOptions.CertificateDuration.Seconds}s",
+                            IssuerRef  = NeonHelper.JsonDeserialize<Neon.K8s.Resources.CertManager.IssuerRef>(NeonHelper.JsonSerialize(CertManagerOptions.IssuerRef)),
+                            SecretName = $"{OperatorSettings.Name}-webhook-tls"
+                        }
+                    };
 
-                await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
-                    body:               certificate, 
-                    name:               certificate.Name(),
-                    namespaceParameter: certificate.Namespace());
+                    logger?.LogDebugEx(() => KubernetesHelper.JsonSerialize(certificate));
 
-                logger?.LogInformationEx(() => "Webhook certificate created.");
+                    await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
+                        body: certificate,
+                        name: certificate.Name(),
+                        namespaceParameter: certificate.Namespace());
+
+                    logger?.LogInformationEx(() => "Webhook certificate created.");
+                }
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e, () => e.Message);
             }
 
             _ = k8s.WatchAsync<V1Secret>(

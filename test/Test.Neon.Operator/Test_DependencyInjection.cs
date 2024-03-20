@@ -47,6 +47,7 @@ namespace TestKubeOperator
     {
         public IKubernetes K8s;
         public Foo Foo;
+
         public TestDiController(
             IKubernetes k8s,
             Foo         foo)
@@ -70,8 +71,9 @@ namespace TestKubeOperator
 
     public class Test_DependencyInjection : IClassFixture<OperatorFixture>, IDisposable
     {
-        private OperatorFixture fixture;
-        public Test_DependencyInjection(OperatorFixture fixture)
+        private TestOperatorFixture fixture;
+
+        public Test_DependencyInjection(TestOperatorFixture fixture)
         {
             this.fixture = fixture;
             this.fixture.Services.AddSingleton<Foo>(new Foo("bar"));
@@ -86,6 +88,7 @@ namespace TestKubeOperator
             var controller = fixture.Operator.GetController<TestDiController>();
 
             var config = new V1ConfigMap().Initialize();
+
             config.Metadata.Name = "foo";
             config.Metadata.NamespaceProperty = "bar";
             config.Data = new Dictionary<string, string>();
@@ -100,6 +103,7 @@ namespace TestKubeOperator
             };
 
             var result = await controller.ReconcileAsync(resource);
+
             result.Should().Be(null);
             controller.Foo.Should().NotBeNull();
             controller.Foo.Bar.Should().Be("bar");

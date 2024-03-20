@@ -39,6 +39,7 @@ using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
 namespace Neon.Operator.Analyzers
 {
@@ -55,6 +56,9 @@ namespace Neon.Operator.Analyzers
         private static readonly string[] IgnoredProperties = { "metadata", "apiversion", "kind" };
 
         private Dictionary<string, StringBuilder> logs;
+
+        public static XmlDocumentationProvider DocumentationProvider { get; set; } = new XmlDocumentationProvider();
+
         public void Initialize(GeneratorInitializationContext context)
         {
             //System.Diagnostics.Debugger.Launch();
@@ -84,7 +88,6 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            //System.Diagnostics.Debugger.Launch();
             logs = new Dictionary<string, StringBuilder>();
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrds", out var generateCrds))
@@ -125,8 +128,6 @@ namespace Neon.Operator.Analyzers
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorCrdOutputDir", out var crdOutDir))
             {
-                crdOutputDirectory = crdOutDir;
-
                 if (!string.IsNullOrEmpty(crdOutDir))
                 {
                     if (Path.IsPathRooted(crdOutDir))
@@ -157,8 +158,9 @@ namespace Neon.Operator.Analyzers
                 var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
                 var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
                 var operatorVersionAttribute  = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+                var operatorVersion           = operatorVersionAttribute?.Version ?? "";
 
-                var operatorVersion = operatorVersionAttribute?.Version ?? "";
+                DocumentationProvider.AddMetadataReferences(context.Compilation.ExternalReferences);
 
                 if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorVersion", out var versionString))
                 {
@@ -189,16 +191,9 @@ namespace Neon.Operator.Analyzers
 
                         var crSystemType = metadataLoadContext.ResolveType(crTypeIdentifier);
 
-                        try
+                        if (crSystemType.GetCustomAttribute<IgnoreAttribute>() != null)
                         {
-                            if (crSystemType.GetCustomAttribute<IgnoreAttribute>() != null)
-                            {
-                                continue;
-                            }
-                        }
-                        catch
-                        {
-                            // not ignoring
+                            continue;
                         }
 
                         var k8sAttr     = crSystemType.GetCustomAttribute<KubernetesEntityAttribute>();
@@ -218,26 +213,26 @@ namespace Neon.Operator.Analyzers
                         var pluralNameGroup  = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
                         var implementsStatus = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
 
-                        schema.OpenAPIV3Schema.Description = crTypeIdentifier.GetSummary();
+                        schema.OpenAPIV3Schema.Description = crTypeIdentifier.GetSummary(DocumentationProvider);
 
                         var version = new V1CustomResourceDefinitionVersion(
-                        name:         k8sAttr.ApiVersion,
-                        served:       versionAttr?.Served ?? true,
-                        storage:      versionAttr?.Storage ?? true,
-                        schema:       schema,
-                        subresources: new V1CustomResourceSubresources()
-                        {
-                            Status = implementsStatus ? new object() : null,
-                            Scale  = scaleAttr != null
-                                ? new V1CustomResourceSubresourceScale()
-                                {
-                                    LabelSelectorPath  = scaleAttr.LabelSelectorPath,
-                                    SpecReplicasPath   = scaleAttr.SpecReplicasPath,
-                                    StatusReplicasPath = scaleAttr.StatusReplicasPath,
-                                }
-                            : null
-                        },
-                        additionalPrinterColumns: additionalPrinterColumns);
+                            name:         k8sAttr.ApiVersion,
+                            served:       versionAttr?.Served ?? true,
+                            storage:      versionAttr?.Storage ?? true,
+                            schema:       schema,
+                            subresources: new V1CustomResourceSubresources()
+                            {
+                                Status = implementsStatus ? new object() : null,
+                                Scale  = scaleAttr != null
+                                    ? new V1CustomResourceSubresourceScale()
+                                    {
+                                        LabelSelectorPath  = scaleAttr.LabelSelectorPath,
+                                        SpecReplicasPath   = scaleAttr.SpecReplicasPath,
+                                        StatusReplicasPath = scaleAttr.StatusReplicasPath,
+                                    }
+                                : null
+                            },
+                            additionalPrinterColumns: additionalPrinterColumns);
 
                         if (customResourceDefinitions.ContainsKey(pluralNameGroup))
                         {
@@ -253,22 +248,22 @@ namespace Neon.Operator.Analyzers
                         else
                         {
                             var crd = new V1CustomResourceDefinition(
-                                apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
-                                kind:       V1CustomResourceDefinition.KubeKind,
-                                metadata:   new V1ObjectMeta(name: pluralNameGroup),
-                                spec:       new V1CustomResourceDefinitionSpec(
-                                    group:      k8sAttr.Group,
-                                    names:      new V1CustomResourceDefinitionNames(
-                                        kind:       k8sAttr.Kind,
-                                        plural:     k8sAttr.PluralName,
-                                        singular:   k8sAttr.Kind.ToLowerInvariant(),
-                                        shortNames: shortNames
-                                    ),
-                                    scope:      scope.ToMemberString(),
-                                    versions:   new List<V1CustomResourceDefinitionVersion>
-                                    {
-                                        version,
-                                    }));
+                            apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
+                            kind:       V1CustomResourceDefinition.KubeKind,
+                            metadata:   new V1ObjectMeta(name: pluralNameGroup),
+                            spec:       new V1CustomResourceDefinitionSpec(
+                                group:      k8sAttr.Group,
+                                names:      new V1CustomResourceDefinitionNames(
+                                    kind:       k8sAttr.Kind,
+                                    plural:     k8sAttr.PluralName,
+                                    singular:   k8sAttr.Kind.ToLowerInvariant(),
+                                    shortNames: shortNames
+                                ),
+                                scope:      scope.ToMemberString(),
+                                versions:   new List<V1CustomResourceDefinitionVersion>
+                                {
+                                    version,
+                                }));
 
                             customResourceDefinitions.Add(pluralNameGroup, crd);
                         }
@@ -288,6 +283,8 @@ namespace Neon.Operator.Analyzers
                     Directory.CreateDirectory(olmManifestDir);
                 }
 
+                var fileNames = new List<string>();
+
                 foreach (var crd in customResourceDefinitions)
                 {
                     try
@@ -303,16 +300,22 @@ namespace Neon.Operator.Analyzers
                         }
                         else
                         {
-                            var yaml = KubernetesYaml.Serialize(crd.Value);
+                            var sb = new StringBuilder();
+                            sb.AppendLine(Constants.YamlCrdHeader);
+                            sb.AppendLine(KubernetesYaml.Serialize(crd.Value));
+                            var yaml = sb.ToString();
 
-                            var outputPath = Path.Combine(crdOutputDirectory, crd.Value.Name() + ".yaml");
+                            var fileName = crd.Value.Name() + Constants.YamlExtension;
+                            fileNames.Add(fileName);
+
+                            var outputPath = Path.Combine(crdOutputDirectory, fileName);
 
                             if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
                             {
                                 File.WriteAllText(outputPath, yaml);
                             }
 
-                            outputPath = Path.Combine(olmManifestDir, crd.Value.Name() + ".yaml");
+                            outputPath = Path.Combine(olmManifestDir, fileName);
 
                             if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
                             {
@@ -326,6 +329,8 @@ namespace Neon.Operator.Analyzers
                     }
                 }
 
+                CleanDirectory(fileNames, crdOutputDirectory);
+                CleanDirectory(fileNames, olmManifestDir);
             }
             catch (Exception e)
             {
@@ -366,6 +371,34 @@ namespace Neon.Operator.Analyzers
             }
         }
 
+        private void CleanDirectory(List<string> fileNames, string path)
+        {
+            foreach (var filePath in Directory.GetFiles(path))
+            {
+                var fileName = Path.GetFileName(filePath);
+                if (fileNames.Contains(fileName)
+                    || Path.GetExtension(fileName) != Constants.YamlExtension)
+                {
+                    continue;
+                }
+
+                var shouldDelete = false;
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    var line = reader.ReadLine();
+                    if (line == Constants.YamlCrdHeader)
+                    {
+                        shouldDelete = true;
+                    }
+                }
+
+                if (shouldDelete)
+                {
+                    File.Delete(filePath);
+                }
+            }
+        }
+
         private V1JSONSchemaProps MapProperty(
             IEnumerable<INamedTypeSymbol>           namedTypeSymbols,
             System.Reflection.PropertyInfo          info,
@@ -382,7 +415,7 @@ namespace Neon.Operator.Analyzers
                 throw new Exception(ex.Message);
             }
 
-            props.Description ??= info.GetPropertySymbol().GetSummary();
+            props.Description ??= info.GetPropertySymbol().GetSummary(DocumentationProvider);
 
             // get additional printer column information
             var additionalColumn = info.GetCustomAttribute<AdditionalPrinterColumnAttribute>();

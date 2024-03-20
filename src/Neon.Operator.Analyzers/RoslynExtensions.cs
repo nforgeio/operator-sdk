@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -29,6 +28,7 @@ using Neon.Operator.Analyzers.Generators;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
 namespace Neon.Operator.Analyzers
 {
@@ -148,7 +148,7 @@ namespace Neon.Operator.Analyzers
                 _ => GetNamespace(s.Parent)
             };
 
-        public static string GetSummary(this ISymbol typeSymbol)
+        public static string GetSummary(this ISymbol typeSymbol, XmlDocumentationProvider xmlDocumentationProvider = null)
         {
             if (typeSymbol == null)
             {
@@ -156,6 +156,11 @@ namespace Neon.Operator.Analyzers
             }
 
             var xml = typeSymbol.GetDocumentationCommentXml();
+
+            if (string.IsNullOrEmpty(xml))
+            {
+                xml = xmlDocumentationProvider?.GetDocumentationForSymbol(typeSymbol);
+            }
 
             var description = DocumentationComment.From(xml, Environment.NewLine).SummaryText.Trim();
 

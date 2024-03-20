@@ -21,6 +21,8 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+using Neon.Operator.Attributes;
+
 namespace Neon.Operator.Analyzers
 {
     public class ValidatingWebhookReceiver : ISyntaxReceiver
@@ -41,13 +43,19 @@ namespace Neon.Operator.Analyzers
             {
                 try
                 {
+                    var attributeSyntaxes = syntaxNode.DescendantNodes().OfType<AttributeSyntax>();
+
+                    if (attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute)
+                        || attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute).Replace("Attribute", ""))))
+                    {
+                        return;
+                    }
+
                     var bases = syntaxNode
                         .DescendantNodes()
                         .OfType<BaseListSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
                                 .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
-
-
                     if (bases.Count() > 0)
                     {
                         ValidatingWebhooks.Add((ClassDeclarationSyntax)syntaxNode);

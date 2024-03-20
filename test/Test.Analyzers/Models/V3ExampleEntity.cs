@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 using k8s;
@@ -8,21 +10,22 @@ using Neon.Operator.Attributes;
 
 using RangeAttribute = Neon.Operator.Attributes.RangeAttribute;
 
-namespace TestOperator
+namespace Test_Analyzers
 {
     /// <summary>
-    /// This is an example description. A <see cref="V1ExampleEntity"/> is a <see cref="IKubernetesObject{V1ObjectMeta}"/>
-    /// with a <see cref="V1ExampleEntity.V1ExampleSpec{T}"/> and a <see cref="V1ExampleEntity.V1ExampleStatus"/>.
+    /// This is an example description. A <see cref="V3ExampleEntity"/> is a <see cref="IKubernetesObject{V3ObjectMeta}"/>
+    /// with a <see cref="V3ExampleEntity.V3ExampleSpec"/> and a <see cref="V3ExampleEntity.V3ExampleStatus"/>.
     /// </summary>
-    [KubernetesEntity(Group = KubeGroup, Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
-    [EntityVersion(Served = true, Storage = false)]
+    [KubernetesEntity(Group = "example.neonkube.io", Kind = KubeKind, ApiVersion = KubeApiVersion, PluralName = KubePlural)]
+    [EntityVersion(Served = true, Storage = true)]
     [ShortName("ex")]
-    public class V1ExampleEntity : IKubernetesObject<V1ObjectMeta>, ISpec<V1ExampleEntity.V1ExampleSpec<string>>, IStatus<V1ExampleEntity.V1ExampleStatus>
+    [Ignore]
+    public class V3ExampleEntity : IKubernetesObject<V3ObjectMeta>, ISpec<V3ExampleEntity.V3ExampleSpec>, IStatus<V3ExampleEntity.V3ExampleStatus>
     {
         /// <summary>
         /// The API version this Kubernetes type belongs to.
         /// </summary>
-        public const string KubeApiVersion = "v1alpha1";
+        public const string KubeApiVersion = "V3alpha1";
 
         /// <summary>
         /// The Kubernetes named schema this object is based on.
@@ -42,7 +45,7 @@ namespace TestOperator
         /// <summary>
         /// Constructor.
         /// </summary>
-        public V1ExampleEntity()
+        public V3ExampleEntity()
         {
             ApiVersion = $"{KubeGroup}/{KubeApiVersion}";
             Kind = KubeKind;
@@ -55,26 +58,27 @@ namespace TestOperator
         public string Kind { get; set; }
 
         /// <inheritdoc/>
-        public V1ObjectMeta Metadata { get; set; }
+        public V3ObjectMeta Metadata { get; set; }
 
         /// <summary>
         /// This is the description for the spec.
         /// </summary>
-        public V1ExampleSpec<string> Spec { get; set; }
+        public V3ExampleSpec Spec { get; set; }
 
         /// <inheritdoc/>
-        public V1ExampleStatus Status { get; set; }
+        public V3ExampleStatus Status { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public class V1ExampleSpec<T>
+        public class V3ExampleSpec
         {
             /// <summary>
             /// The message
             /// </summary>
             [Pattern("^(\\d+|\\*)(/\\d+)?(\\s+(\\d+|\\*)(/\\d+)?){4}$")]
+            [DefaultValue("default message")]
             public string Message { get; set; }
 
             /// <summary>
@@ -85,20 +89,21 @@ namespace TestOperator
             public int? Count { get; set; }
 
             /// <summary>
-            /// The <see cref="V1ExampleEntity.Person"/>
+            /// The <see cref="V3ExampleEntity.Person"/>
             /// </summary>
             public Person Person { get; set; }
 
             /// <summary>
-            /// Resources
+            /// Indicates whether this job is enabled or disabled.  This defaults to <c>false</c>.
             /// </summary>
-            public V1ResourceRequirements Resources { get; set; }
+            [DefaultValue(false)]
+            public bool Enabled { get; set; } = false;
         }
 
         /// <summary>
         /// The status.
         /// </summary>
-        public class V1ExampleStatus
+        public class V3ExampleStatus
         {
             /// <summary>
             /// Status message.

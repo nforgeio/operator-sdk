@@ -19,10 +19,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using k8s.Models;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using k8s.Models;
+using Neon.Operator.Attributes;
 
 namespace Neon.Operator.Analyzers.Receivers
 {
@@ -35,7 +37,6 @@ namespace Neon.Operator.Analyzers.Receivers
         {
             nameof(KubernetesEntityAttribute),
             nameof(KubernetesEntityAttribute).Replace("Attribute", ""),
-
         };
 
 
@@ -47,11 +48,14 @@ namespace Neon.Operator.Analyzers.Receivers
 
                 foreach (var attribute in attributeSyntaxes)
                 {
-                    var name = attribute.Name;
-                    var nameString = name.ToFullString();
-
-                    if (classAttributes.Contains(nameString))
+                    if (classAttributes.Contains(attribute.Name.ToFullString()))
                     {
+                        if (attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute)
+                            || attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute).Replace("Attribute", ""))))
+                        {
+                            continue;
+                        }
+
                         ClassesToRegister.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }

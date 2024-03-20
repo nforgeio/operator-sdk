@@ -105,6 +105,13 @@ namespace Neon.Operator.Analyzers.Generators
 
             targetDir = targetDir.TrimEnd('\\');
 
+            var isTestProject = false;
+
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.IsTestProject", out var isTestProjectString))
+            {
+                bool.TryParse(isTestProjectString, out isTestProject);
+            }
+
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.OlmChannels", out var olmChannels);
 
             var metadataLoadContext    = new MetadataLoadContext(context.Compilation);
@@ -169,7 +176,7 @@ namespace Neon.Operator.Analyzers.Generators
                 olmChannels = olmChannels.Replace(";", ",");
             }
 
-            if (missingRequired.Count > 0 && missingRequired.Count < requiredCount)
+            if (missingRequired.Count > 0 && missingRequired.Count < requiredCount && !isTestProject)
             {
                 var miss = string.Join(", ", missingRequired.Select(x => x.Name));
                 context.ReportDiagnostic(
@@ -658,7 +665,11 @@ namespace Neon.Operator.Analyzers.Generators
                 }
             }
 
-            var outputString  = KubernetesHelper.YamlSerialize(csv);
+            var sb = new StringBuilder();
+            sb.AppendLine(Constants.YamlCsvHeader);
+            sb.AppendLine(KubernetesHelper.YamlSerialize(csv));
+
+            var outputString  = sb.ToString();
             var outputBaseDir = Path.Combine(targetDir, "OperatorLifecycleManager");
             var versionDir    = Path.Combine(outputBaseDir, version);
             var manifestDir   = Path.Combine(versionDir, "manifests");
@@ -669,7 +680,7 @@ namespace Neon.Operator.Analyzers.Generators
             Directory.CreateDirectory(manifestDir);
             Directory.CreateDirectory(metadataDir);
 
-            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion.yaml");
+            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion{Constants.YamlExtension}");
             File.WriteAllText(csvPath, outputString);
 
             if (maintainers?.Any(m => m.Value.Reviewer) == true

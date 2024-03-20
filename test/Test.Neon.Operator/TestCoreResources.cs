@@ -33,8 +33,9 @@ namespace TestKubeOperator
 {
     public class TestCoreResources : IClassFixture<OperatorFixture>
     {
-        private OperatorFixture fixture;
-        public TestCoreResources(OperatorFixture fixture)
+        private TestOperatorFixture fixture;
+
+        public TestCoreResources(TestOperatorFixture fixture)
         {
             this.fixture = fixture;
             fixture.RegisterType<V1ConfigMap>();

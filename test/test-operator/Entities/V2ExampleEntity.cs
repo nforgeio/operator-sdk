@@ -31,7 +31,7 @@ namespace TestOperator
         /// <summary>
         /// The plural name of the entity.
         /// </summary>
-        public const string KubePlural = "examples";
+        public const string KubePlural = V1ExampleEntity.KubePlural;
 
         /// <summary>
         /// Constructor.
