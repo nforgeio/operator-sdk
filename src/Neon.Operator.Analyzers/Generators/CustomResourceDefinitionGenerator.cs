@@ -61,7 +61,7 @@ namespace Neon.Operator.Analyzers
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            //System.Diagnostics.Debugger.Launch();
+            System.Diagnostics.Debugger.Launch();
             AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
 
             context.RegisterForSyntaxNotifications(() => new CustomResourceReceiver());
