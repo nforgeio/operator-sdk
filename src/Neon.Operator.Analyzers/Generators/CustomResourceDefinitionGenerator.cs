@@ -38,8 +38,6 @@ using Neon.Operator.OperatorLifecycleManager;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
-using Microsoft.CodeAnalysis;
-
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
