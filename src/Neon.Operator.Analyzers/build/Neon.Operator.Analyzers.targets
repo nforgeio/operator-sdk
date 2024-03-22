@@ -6,6 +6,7 @@
         <CompilerVisibleProperty Include="NeonOperatorOlmOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorGenerateRbac" />
         <CompilerVisibleProperty Include="NeonOperatorGenerateCrds" />
+        <CompilerVisibleProperty Include="NeonOperatorGenerateCrdsLive" />
         <CompilerVisibleProperty Include="NeonOperatorWebhookOutputDir" />
         <CompilerVisibleProperty Include="NeonOperatorLeaderElectionDisabled" />
         <CompilerVisibleProperty Include="NeonOperatorAutoRegisterWebhooks" />

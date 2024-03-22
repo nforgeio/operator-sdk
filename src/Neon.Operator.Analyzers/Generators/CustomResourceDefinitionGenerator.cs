@@ -89,6 +89,34 @@ namespace Neon.Operator.Analyzers
         {
             logs = new Dictionary<string, StringBuilder>();
 
+            var processName = System.Diagnostics.Process.GetCurrentProcess().MainModule.ModuleName;
+
+            var shouldRunLive = processName.Contains("VBCSCompiler") || processName.Contains("testhost") || processName.Contains("dotnet");
+
+            if (!shouldRunLive)
+            {
+                // this is a hack to disable the analyzer during live editing
+
+                if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrdsLive", out var generateCrdsLive))
+                {
+                    if (bool.TryParse(generateCrdsLive, out bool generateCrdsLiveBool))
+                    {
+                        if (!generateCrdsLiveBool)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorGenerateCrds", out var generateCrds))
             {
                 if (bool.TryParse(generateCrds, out bool generateCrdsBool))
