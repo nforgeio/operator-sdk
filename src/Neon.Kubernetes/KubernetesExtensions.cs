@@ -557,8 +557,9 @@ namespace Neon.K8s
                             return false;
                         }
 
-                        return deployments.Items.All(deployment => deployment.Status.AvailableReplicas == deployment.Spec.Replicas
-                                                            && deployment.Status.ReadyReplicas == deployment.Status.Replicas);
+                        return deployments.Items.All(deployment =>
+                            deployment.Status.AvailableReplicas == deployment.Spec.Replicas &&
+                            deployment.Status.ReadyReplicas == deployment.Spec.Replicas);
                     }
                     catch
                     {
@@ -635,8 +636,9 @@ namespace Neon.K8s
                             return false;
                         }
 
-                        return statefulsets.Items.All(@set => @set.Status.AvailableReplicas == @set.Spec.Replicas
-                                                            && @set.Status.ReadyReplicas == @set.Status.Replicas);
+                        return statefulsets.Items.All(@set =>
+                            @set.Status.ReadyReplicas == @set.Spec.Replicas &&
+                            @set.Status.ReadyReplicas == @set.Spec.Replicas);
                     }
                     catch
                     {
@@ -712,8 +714,9 @@ namespace Neon.K8s
                             return false;
                         }
 
-                        return daemonsets.Items.All(@set => @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled
-                                                            && @set.Status.NumberReady == @set.Status.DesiredNumberScheduled);
+                        return daemonsets.Items.All(@set =>
+                            @set.Status.NumberAvailable == @set.Status.DesiredNumberScheduled &&
+                            @set.Status.NumberReady == @set.Status.DesiredNumberScheduled);
                     }
                     catch
                     {
@@ -764,8 +767,7 @@ namespace Neon.K8s
                     {
                         var pod = await k8sCoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
 
-                        return pod.Status.Phase == "Running" &&
-                                pod.Status.Conditions.Any(c => c.Type == "Ready" && c.Status == "True");
+                        return pod.Status.Phase == "Running" && pod.Status.ContainerStatuses.All(status => status.Ready);
                     }
                     catch
                     {
