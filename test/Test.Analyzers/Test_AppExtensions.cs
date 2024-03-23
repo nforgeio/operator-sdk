@@ -39,6 +39,8 @@ namespace Test.Analyzers
         [Fact]
         public async Task TestUseKubernetesOperator()
         {
+            await Task.CompletedTask;
+
             var source = @"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -88,6 +90,8 @@ namespace TestNamespace
         [Fact]
         public async Task TestDontUseKubernetesOperator()
         {
+            await Task.CompletedTask;
+
             var source = @"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
