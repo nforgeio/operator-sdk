@@ -27,6 +27,7 @@
 
     <ItemGroup>
       <None Remove="nuget-icon.png" />
+      <None Remove="Outputs\dict.example.neonkube.io.yaml" />
     </ItemGroup>
 
     <ItemGroup>
@@ -91,6 +92,7 @@
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+        <ProjectReference Include="..\..\..\neonSDK\Lib\Neon.Xunit\Neon.Xunit.csproj" />
     </ItemGroup>
 
 

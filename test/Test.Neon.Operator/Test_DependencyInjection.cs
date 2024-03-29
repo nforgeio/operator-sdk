@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Operator.Controllers;
 using Neon.Operator.Xunit;
+using Neon.Xunit;
 
 using Test.Neon.Operator;
 
@@ -69,6 +70,7 @@ namespace TestKubeOperator
         }
     }
 
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_DependencyInjection : IClassFixture<TestOperatorFixture>, IDisposable
     {
         private TestOperatorFixture fixture;

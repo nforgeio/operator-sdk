@@ -25,9 +25,11 @@ using k8s.Models;
 using Neon.K8s;
 using Neon.K8s.Resources.CertManager;
 using Neon.Operator.Xunit;
+using Neon.Xunit;
 
 namespace TestKubernetes
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_Kubernetes : IClassFixture<TestOperatorFixture>
     {
         private TestOperatorFixture fixture;

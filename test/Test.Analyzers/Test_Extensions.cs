@@ -15,26 +15,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using FluentAssertions;
 
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Operator.Analyzers;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn;
 using Neon.Roslyn.Xunit;
-
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using Neon.Xunit;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_Extensions
     {
         [Fact]

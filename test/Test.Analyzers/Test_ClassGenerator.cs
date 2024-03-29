@@ -17,8 +17,6 @@
 
 using System;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
 using FluentAssertions;
@@ -29,9 +27,11 @@ using k8s.Models;
 using Neon.Operator.Analyzers;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn.Xunit;
+using Neon.Xunit;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     [Collection("Analyzers")]
     public class Test_ClassGenerator
     {

@@ -110,7 +110,7 @@ namespace Neon.Operator.Xunit
                 return Ok(o);
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace Neon.Operator.Xunit
                 return Ok(resource);
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
     }
 }
