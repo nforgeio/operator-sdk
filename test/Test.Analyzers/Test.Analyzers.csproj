@@ -74,6 +74,7 @@
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Roslyn" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Roslyn.Xunit" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
@@ -81,6 +82,7 @@
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn.Xunit\Neon.Roslyn.Xunit.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
             </ItemGroup>
         </Otherwise>
     </Choose>
@@ -92,7 +94,6 @@
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-        <ProjectReference Include="..\..\..\neonSDK\Lib\Neon.Xunit\Neon.Xunit.csproj" />
     </ItemGroup>
 
 

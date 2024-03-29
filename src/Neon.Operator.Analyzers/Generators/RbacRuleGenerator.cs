@@ -69,6 +69,17 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
+            bool isTestProject = false;
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.IsTestProject", out var isTestProjectString))
+            {
+                bool.TryParse(isTestProjectString, out isTestProject);
+
+                if (isTestProject == true)
+                {
+                    return;
+                }
+            }
+
             var metadataLoadContext   = new MetadataLoadContext(context.Compilation);
             var rbacRules             = ((RbacRuleReceiver)context.SyntaxReceiver)?.RbacAttributesToRegister;
             var classesWithRbac       = ((RbacRuleReceiver)context.SyntaxReceiver)?.ClassesToRegister;
