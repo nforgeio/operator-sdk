@@ -330,12 +330,18 @@ namespace Neon.Operator.ResourceManager
 
             try
             {
-                var resource = @event.Value;
-                var old      = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+                var resource       = @event.Value;
+                var existingEvents = queue.Keys
+                    .Where(key => key.Value.Uid() == @event.Value.Uid());
 
-                if (old != null)
+                foreach (var existingEvent in existingEvents)
                 {
-                    await DequeueAsync(old);
+                    await DequeueAsync(existingEvent);
+
+                    if (existingEvent.CreatedAt > @event.CreatedAt)
+                    {
+                        @event.Value = existingEvent.Value;
+                    }
                 }
 
                 if (delay == null && @event.Attempt > 0)
