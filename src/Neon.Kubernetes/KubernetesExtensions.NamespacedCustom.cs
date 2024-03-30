@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using IdentityModel.OidcClient;
+
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
@@ -829,14 +831,14 @@ namespace Neon.K8s
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task DeleteNamespacedCustomObjectAsync<T>(
             this ICustomObjectsOperations k8s,
-            string              namespaceParameter,
-            T                   @object,
-            V1DeleteOptions     body               = null,
-            int?                gracePeriodSeconds = null,
-            bool?               orphanDependents   = null,
-            string              propagationPolicy  = null,
-            string              dryRun             = null,
-            CancellationToken   cancellationToken  = default)
+            string namespaceParameter,
+            T @object,
+            V1DeleteOptions body = null,
+            int? gracePeriodSeconds = null,
+            bool? orphanDependents = null,
+            string propagationPolicy = null,
+            string dryRun = null,
+            CancellationToken cancellationToken = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -849,17 +851,17 @@ namespace Neon.K8s
                 var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
                 await k8s.DeleteNamespacedCustomObjectAsync(
-                    group:              typeMetadata.Group, 
-                    version:            typeMetadata.ApiVersion, 
-                    namespaceParameter: namespaceParameter, 
-                    plural:             typeMetadata.PluralName, 
-                    name:               @object.Name(),
-                    body:               body,
+                    group: typeMetadata.Group,
+                    version: typeMetadata.ApiVersion,
+                    namespaceParameter: namespaceParameter,
+                    plural: typeMetadata.PluralName,
+                    name: @object.Name(),
+                    body: body,
                     gracePeriodSeconds: gracePeriodSeconds,
-                    orphanDependents:   orphanDependents,
-                    propagationPolicy:  propagationPolicy,
-                    dryRun:             dryRun,
-                    cancellationToken:  cancellationToken);
+                    orphanDependents: orphanDependents,
+                    propagationPolicy: propagationPolicy,
+                    dryRun: dryRun,
+                    cancellationToken: cancellationToken);
             }
             catch (HttpOperationException e)
             {
@@ -872,6 +874,53 @@ namespace Neon.K8s
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Replaces the status of a namespaced custom object.
+        /// </summary>
+        /// <typeparam name="T">The type of the custom object.</typeparam>
+        /// <param name="k8s">The <see cref="ICustomObjectsOperations"/> instance.</param>
+        /// <param name="object">The custom object to replace the status for.</param>
+        /// <param name="namespaceParameter">The namespace of the custom object.</param>
+        /// <param name="gracePeriodSeconds">The duration in seconds before the object should be deleted.</param>
+        /// <param name="orphanDependents">Determines whether to orphan the dependents of the object.</param>
+        /// <param name="propagationPolicy">The propagation policy for the object.</param>
+        /// <param name="dryRun">The dry run option for the operation.</param>
+        /// <param name="fieldManager">The field manager for the operation.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The replaced custom object.</returns>
+        public static async Task<T> ReplaceNamespacedCustomObjectStatusAsync<T>(
+            this ICustomObjectsOperations k8s,
+            T @object,
+            string namespaceParameter,
+            int? gracePeriodSeconds = null,
+            bool? orphanDependents = null,
+            string propagationPolicy = null,
+            string dryRun = null,
+            string fieldManager = null,
+            CancellationToken cancellationToken = default)
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(@object != null, nameof(@object));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+            var result = await k8s.ReplaceNamespacedCustomObjectStatusAsync(
+                            group:              typeMetadata.Group,
+                            version:            typeMetadata.ApiVersion,
+                            namespaceParameter: namespaceParameter,
+                            plural:             typeMetadata.PluralName,
+                            name:               @object.Name(),
+                            body:               @object,
+                            fieldManager:       fieldManager,
+                            dryRun:             dryRun,
+                            cancellationToken:  cancellationToken);
+
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
     }
 }

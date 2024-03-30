@@ -16,23 +16,17 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Threading;
-
-using Neon.Common;
-using Neon.Tasks;
+using System.Threading.Tasks;
 
 using k8s;
 using k8s.Autorest;
 using k8s.Models;
+
+using Neon.Tasks;
 
 namespace Neon.K8s
 {
@@ -880,6 +874,52 @@ namespace Neon.K8s
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Replaces the status of a cluster custom object.
+        /// </summary>
+        /// <typeparam name="T">The type of the cluster custom object.</typeparam>
+        /// <param name="k8s">The <see cref="ICustomObjectsOperations"/> instance.</param>
+        /// <param name="object">The cluster custom object to replace the status for.</param>
+        /// <param name="namespaceParameter">The namespace of the cluster custom object.</param>
+        /// <param name="gracePeriodSeconds">The duration in seconds before the object should be deleted.</param>
+        /// <param name="orphanDependents">Determines whether to orphan the dependents of the object.</param>
+        /// <param name="propagationPolicy">The propagation policy for the object deletion.</param>
+        /// <param name="dryRun">The dry run option for the operation.</param>
+        /// <param name="fieldManager">The field manager for the operation.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The replaced cluster custom object.</returns>
+        public static async Task<T> ReplaceClusterCustomObjectStatusAsync<T>(
+            this ICustomObjectsOperations k8s,
+            T @object,
+            string namespaceParameter,
+            int? gracePeriodSeconds = null,
+            bool? orphanDependents = null,
+            string propagationPolicy = null,
+            string dryRun = null,
+            string fieldManager = null,
+            CancellationToken cancellationToken = default)
+
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(@object != null, nameof(@object));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
+
+            var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
+
+            var result = await k8s.ReplaceClusterCustomObjectStatusAsync(
+                            body:              @object,
+                            group:             typeMetadata.Group,
+                            version:           typeMetadata.ApiVersion,
+                            plural:            typeMetadata.PluralName,
+                            name:              @object.Name(),
+                            dryRun:            dryRun,
+                            fieldManager:      fieldManager,
+                            cancellationToken: cancellationToken);
+
+            return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }
     }
 }

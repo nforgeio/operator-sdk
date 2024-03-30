@@ -26,6 +26,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.K8s;
+using Neon.K8s.Core;
 using Neon.Operator.Util;
 using Neon.Operator.Xunit;
 using Neon.Xunit;
@@ -159,6 +160,8 @@ namespace Test.Neon.Operator
 
             fixture.AddResource<V1TestDatabase>(resource);
 
+            resource = KubernetesHelper.JsonClone(resource);
+
             resource.Status ??= new TestDatabaseStatus();
             resource.Status.Conditions ??= new List<V1Condition>();
 
@@ -209,6 +212,8 @@ namespace Test.Neon.Operator
 
             fixture.AddResource<V1TestDatabase>(resource);
 
+            resource = KubernetesHelper.JsonClone(resource);
+
             var patch = OperatorHelper.CreatePatch<V1TestDatabase>();
 
             if (resource.Status == null)
@@ -241,7 +246,7 @@ namespace Test.Neon.Operator
         }
 
         [Fact]
-        public async Task TechTatchDictionary()
+        public async Task TechPatchDictionary()
         {
             fixture.ClearResources();
 
@@ -263,6 +268,8 @@ namespace Test.Neon.Operator
             };
 
             fixture.AddResource<V1TestDatabase>(resource);
+
+            resource = KubernetesHelper.JsonClone(resource);
 
             var patch = OperatorHelper.CreatePatch<V1TestDatabase>();
 
@@ -289,8 +296,6 @@ namespace Test.Neon.Operator
             resource.Status.DictValues["foo"] = condition;
 
             patch.Replace(path => path.Status.DictValues, resource.Status.DictValues);
-            //patch.Add(path => path.Status.DictValues["foo"], condition);
-            //patch.Replace(path => path.Status.DictValues["foo"], condition);
 
             resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(
                 patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
@@ -298,7 +303,62 @@ namespace Test.Neon.Operator
                 namespaceParameter: resource.Namespace());
 
             resource.Status.DictValues.Should().HaveCount(1);
+        }
 
+        [Fact]
+        public async Task TestStatusUpdate()
+        {
+            fixture.ClearResources();
+
+            var co = new V1TestDatabase().Initialize();
+            co.Metadata.Name = "test";
+            co.Metadata.NamespaceProperty = "test";
+            co.Spec = new TestDatabaseSpec()
+            {
+                Image = "",
+                Servers = 1,
+            };
+            co.Status = new TestDatabaseStatus()
+            {
+                Status = "foo"
+            };
+
+            fixture.AddResource(co);
+
+            co = KubernetesHelper.JsonClone(co);
+            co.Status.Status = "bar";
+
+            var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
+            await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace());
+
+            fixture.GetResource<V1TestDatabase>(co.Name(), co.Namespace()).Status.Status.Should().Be("bar");
+        }
+
+        [Fact]
+        public async Task TestNullStatusUpdate()
+        {
+            fixture.ClearResources();
+
+            var co = new V1TestDatabase().Initialize();
+            co.Metadata.Name = "test";
+            co.Metadata.NamespaceProperty = "test";
+            co.Spec = new TestDatabaseSpec()
+            {
+                Image = "",
+                Servers = 1,
+            };
+
+            fixture.AddResource(co);
+
+            co = KubernetesHelper.JsonClone(co);
+            co.Status = new TestDatabaseStatus();
+
+            co.Status.Status = "bar";
+
+            var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
+            await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace());
+
+            fixture.GetResource<V1TestDatabase>(co.Name(), co.Namespace()).Status.Status.Should().Be("bar");
         }
     }
 }

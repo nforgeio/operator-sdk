@@ -23,6 +23,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using k8s;
+using k8s.Models;
 
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -82,6 +83,12 @@ namespace Neon.Operator.Xunit
         public string Name { get; set; }
 
         /// <summary>
+        /// The namespace name of the <see cref="IKubernetesObject"/>.
+        /// </summary>
+        [FromRoute]
+        public string Namespace { get; set; }
+
+        /// <summary>
         /// Get the list of resources
         /// </summary>
         /// <returns>An action result containing the resources.</returns>
@@ -130,10 +137,56 @@ namespace Neon.Operator.Xunit
             if (testApiServer.Types.TryGetValue(key, out Type type))
             {
                 var typeMetadata = type.GetKubernetesTypeMetadata();
-                var resource     = testApiServer.Resources.Where(r => r.Kind == typeMetadata.Kind && r.Metadata.Name == Name)
-                    .Single();
+                var resourceQuery     = testApiServer.Resources.Where(r => r.Kind == typeMetadata.Kind && r.Metadata.Name == Name);
+
+                if (!string.IsNullOrEmpty(Namespace))
+                {
+                    resourceQuery = resourceQuery.Where(r => r.EnsureMetadata().NamespaceProperty == Namespace);
+                }
+
+                var resource = resourceQuery.Single();
 
                 p0.ApplyTo(resource);
+
+                return Ok(resource);
+            }
+
+            throw new TypeNotRegisteredException(Group, Version, Plural);
+        }
+
+        /// <summary>
+        /// Replaces a resource and stores it in <see cref="TestApiServer.Resources"/>
+        /// </summary>
+        /// <param name="resource">Specifies the replacement resource.</param>
+        /// <returns>An action result containing the resource.</returns>
+        [HttpPut]
+        public async Task<ActionResult<ResourceObject>> UpdateAsync([FromBody] object resource)
+        {
+            await SyncContext.Clear;
+            Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
+
+            var key = ApiHelper.CreateKey(Group, Version, Plural);
+
+            if (testApiServer.Types.TryGetValue(key, out Type type))
+            {
+                var typeMetadata  = type.GetKubernetesTypeMetadata();
+                var json          = JsonSerializer.Serialize(resource, jsonSerializerOptions);
+                var instance      = JsonSerializer.Deserialize(json, type, jsonSerializerOptions);
+                var resourceQuery = testApiServer.Resources.Where(resource => resource.Kind == typeMetadata.Kind && resource.Metadata.Name == Name);
+
+                if (!string.IsNullOrEmpty(Namespace))
+                {
+                    resourceQuery = resourceQuery.Where(r => r.EnsureMetadata().NamespaceProperty == Namespace);
+                }
+
+                dynamic existing = resourceQuery.SingleOrDefault();
+
+                if (existing == null)
+                {
+                    return NotFound();
+                }
+
+                existing.Status = ((dynamic)instance).Status;
 
                 return Ok(resource);
             }
