@@ -129,7 +129,6 @@ namespace Test.Neon.Operator
 
             resourceList = await fixture.KubernetesClient.CoreV1.GetAPIResourcesAsync();
             resourceList.Resources.Should().HaveCount(1);
-
         }
 
         [Fact]
@@ -184,8 +183,7 @@ namespace Test.Neon.Operator
                 name: resource.Name(),
                 namespaceParameter: resource.Namespace());
 
-            resource.Status.Conditions?.Should().HaveCount(1);
-
+            resource.Status.Conditions.Should().HaveCount(1);
         }
 
         [Fact]
