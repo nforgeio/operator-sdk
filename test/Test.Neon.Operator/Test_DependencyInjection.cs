@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -60,7 +61,7 @@ namespace TestKubeOperator
             this.Foo = foo;
         }
 
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity, CancellationToken cancellationToken = default)
         {
             var config = await K8s.CoreV1.ReadNamespacedConfigMapAsync(name: "foo", namespaceParameter: "bar");
 

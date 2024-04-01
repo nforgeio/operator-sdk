@@ -62,11 +62,12 @@ namespace Neon.Operator.ResourceManager
     /// <para>
     /// This class helps makes it easier to manage custom cluster resources.  Simply construct an
     /// instance with <see cref="ResourceManager{TResource, TController}"/> in your controller 
-    /// (passing any custom settings as parameters) and then call <see cref="StartAsync()"/>.
+    /// (passing any custom settings as parameters) and then call <see cref="StartAsync(CancellationToken)"/>.
     /// </para>
     /// <para>
-    /// After the resource manager starts, your controller's <see cref="IResourceController{TEntity}.ReconcileAsync(TEntity)"/>, 
-    /// <see cref="IResourceController{TEntity}.DeletedAsync(TEntity)"/>, and <see cref="IResourceController{TEntity}.StatusModifiedAsync(TEntity)"/> 
+    /// After the resource manager starts, your controller's <see cref="IResourceController{TEntity}.ReconcileAsync(TEntity, CancellationToken)"/>, 
+    /// <see cref="IResourceController{TEntity}.DeletedAsync(TEntity, CancellationToken)"/>, and
+    /// <see cref="IResourceController{TEntity}.StatusModifiedAsync(TEntity, CancellationToken)"/> 
     /// methods will be called as related resource related events are received.
     /// </para>
     /// <para>
@@ -212,12 +213,14 @@ namespace Neon.Operator.ResourceManager
         /// remarks for more information.
         /// </param>
         /// <param name="leaderElectionDisabled">Optionally specifies the leader election should be disabled.</param>
+        /// <param name="cancellationToken"></param>
         /// <param name="serviceProvider">Specifies the depedency injection service provider.</param>
         public ResourceManager(
             IServiceProvider        serviceProvider,
             ResourceManagerOptions  options                = null,
             LeaderElectionConfig    leaderConfig           = null,
-            bool                    leaderElectionDisabled = false)
+            bool                    leaderElectionDisabled = false,
+            CancellationToken       cancellationToken      = default)
         {
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(ServiceProvider));
             Covenant.Requires<ArgumentException>(options.WatchNamespace == null || options.WatchNamespace != string.Empty, nameof(options.WatchNamespace));
@@ -252,7 +255,7 @@ namespace Neon.Operator.ResourceManager
         /// Starts the resource manager.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when the resource manager has already been started.</exception>
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
@@ -269,7 +272,7 @@ namespace Neon.Operator.ResourceManager
             
             controller = CreateController(serviceProvider);
 
-            await controller.StartAsync(serviceProvider);
+            await controller.StartAsync(serviceProvider, cancellationToken);
 
             options.FieldSelector = options.FieldSelector ?? controller.FieldSelector;
             options.LabelSelector = options.LabelSelector ?? controller.LabelSelector;
@@ -360,7 +363,7 @@ namespace Neon.Operator.ResourceManager
         /// Ensures that the controller has been started before the operator.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when Operator is running before <see cref="StartAsync()"/> is called for this controller.
+        /// Thrown when Operator is running before <see cref="StartAsync(CancellationToken)"/> is called for this controller.
         /// </exception>
         private void EnsureStarted()
         {
@@ -374,7 +377,7 @@ namespace Neon.Operator.ResourceManager
         /// 
         /// </summary>
         /// <returns></returns>
-        private async Task EnsurePermissionsAsync()
+        private async Task EnsurePermissionsAsync(CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -506,14 +509,14 @@ namespace Neon.Operator.ResourceManager
                     {
                         await SyncContext.Clear;
 
-                        if (options.ManageCustomResourceDefinitions)
-                        {
-                            await CreateOrReplaceCustomResourceDefinitionAsync();
-                        }
-
                         watcherTcs = new CancellationTokenSource();
 
-                        await EnsurePermissionsAsync();
+                        if (options.ManageCustomResourceDefinitions)
+                        {
+                            await CreateOrReplaceCustomResourceDefinitionAsync(watcherTcs.Token);
+                        }
+
+                        await EnsurePermissionsAsync(watcherTcs.Token);
                         await StartCrdWatchersAsync(watcherTcs.Token);
 
                         // Start the watcher.
@@ -524,7 +527,7 @@ namespace Neon.Operator.ResourceManager
 
                         await using (var scope = serviceProvider.CreateAsyncScope())
                         {
-                            await CreateController(scope.ServiceProvider).OnPromotionAsync();
+                            await CreateController(scope.ServiceProvider).OnPromotionAsync(cancellationToken: watcherTcs.Token);
                         }
                     }).Wait();
             }
@@ -609,7 +612,7 @@ namespace Neon.Operator.ResourceManager
         /// Creates or updates CRDs for the controller.
         /// </summary>
         /// <returns></returns>
-        private async Task CreateOrReplaceCustomResourceDefinitionAsync()
+        private async Task CreateOrReplaceCustomResourceDefinitionAsync(CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -622,7 +625,9 @@ namespace Neon.Operator.ResourceManager
 
                 logger?.LogInformationEx(() => $"Checking CustomResourceDefinition [{crd.Name()}]");
 
-                var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={crd.Name()}");
+                var existingList = await k8s.ApiextensionsV1.ListCustomResourceDefinitionAsync(
+                    fieldSelector: $"metadata.name={crd.Name()}",
+                    cancellationToken: cancellationToken);
 
                 var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
 
@@ -632,16 +637,16 @@ namespace Neon.Operator.ResourceManager
 
                     crd.Metadata.ResourceVersion = existingCustomResourceDefinition.ResourceVersion();
 
-                    await k8s.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Name());
+                    await k8s.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Name(), cancellationToken: cancellationToken);
                 }
                 else
                 {
                     logger?.LogInformationEx(() => $"Creating CustomResourceDefinition [{crd.Name()}]");
 
-                    await k8s.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
+                    await k8s.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd, cancellationToken: cancellationToken);
                 }
 
-                await k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<TEntity>();
+                await k8s.ApiextensionsV1.WaitForCustomResourceDefinitionAsync<TEntity>(cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
@@ -699,12 +704,14 @@ namespace Neon.Operator.ResourceManager
                 {
                     using (var activity = TraceContext.ActivitySource?.StartActivity("ActionAsync"))
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         var result            = (ResourceControllerResult)null;
                         var modifiedEventType = ModifiedEventType.Other;
                         var resource          = @event.Value;
                         var resourceName      = resource.Metadata.Name;
 
-                        using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken).ConfigureAwait(false))
+                        using (await lockProvider.LockAsync(@event.Value.Uid(), cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
                             try
                             {
@@ -736,12 +743,12 @@ namespace Neon.Operator.ResourceManager
                                                 {
                                                     logger?.LogInformationEx(() => $"Registering finalizers for resource [{resource.Kind}/{resource.Namespace()}/{resourceName}]");
 
-                                                    await finalizerManager.RegisterAllFinalizersAsync(resource);
+                                                    await finalizerManager.RegisterAllFinalizersAsync(resource, cancellationToken: cancellationToken);
                                                 }
 
                                                 using (metrics.ReconcileTimeSeconds.NewTimer())
                                                 {
-                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
                                                 }
                                             }
                                             catch (Exception e)
@@ -749,7 +756,7 @@ namespace Neon.Operator.ResourceManager
                                                 metrics.ReconcileErrorsTotal.Inc();
                                                 logger?.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
 
-                                                var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e);
+                                                var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
 
                                                 if (errorPolicyResult.Requeue)
                                                 {
@@ -759,8 +766,9 @@ namespace Neon.Operator.ResourceManager
 
                                                     await eventQueue.RequeueAsync(
                                                         @event, 
-                                                        delay:          errorPolicyResult.RequeueDelay, 
-                                                        watchEventType: (k8s.WatchEventType?)errorPolicyResult.EventType);
+                                                        delay:             errorPolicyResult.RequeueDelay, 
+                                                        watchEventType:    (k8s.WatchEventType?)errorPolicyResult.EventType,
+                                                        cancellationToken: cancellationToken);
 
                                                     return;
                                                 }
@@ -776,7 +784,7 @@ namespace Neon.Operator.ResourceManager
 
                                                 using (metrics.DeleteTimeSeconds.NewTimer())
                                                 {
-                                                    await CreateController(scope.ServiceProvider).DeletedAsync(resource);
+                                                    await CreateController(scope.ServiceProvider).DeletedAsync(resource, cancellationToken: cancellationToken);
                                                 }
 
                                                 resourceCache.Remove(resource);
@@ -801,7 +809,7 @@ namespace Neon.Operator.ResourceManager
 
                                                         using (metrics.ReconcileTimeSeconds.NewTimer())
                                                         {
-                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource);
+                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
                                                         }
                                                     }
                                                     catch (Exception e)
@@ -809,7 +817,7 @@ namespace Neon.Operator.ResourceManager
                                                         metrics.ReconcileErrorsTotal?.Inc();
                                                         logger?.LogErrorEx(e, () => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
 
-                                                        var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e);
+                                                        var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
 
                                                         if (errorPolicyResult.Requeue)
                                                         {
@@ -819,8 +827,9 @@ namespace Neon.Operator.ResourceManager
 
                                                             await eventQueue.RequeueAsync(
                                                                 @event,
-                                                                delay:          errorPolicyResult.RequeueDelay,
-                                                                watchEventType: (k8s.WatchEventType?)errorPolicyResult.EventType);
+                                                                delay:             errorPolicyResult.RequeueDelay,
+                                                                watchEventType:    (k8s.WatchEventType?)errorPolicyResult.EventType,
+                                                                cancellationToken: cancellationToken);
 
                                                             return;
                                                         }
@@ -839,7 +848,7 @@ namespace Neon.Operator.ResourceManager
 
                                                             using (metrics.FinalizeTimeSeconds.NewTimer())
                                                             {
-                                                                await finalizerManager.FinalizeAsync(resource, scope);
+                                                                await finalizerManager.FinalizeAsync(resource, scope, cancellationToken: cancellationToken);
                                                             }
                                                         }
 
@@ -853,7 +862,7 @@ namespace Neon.Operator.ResourceManager
                                                         resourceCache.RemoveFinalizer(resource);
                                                         logger?.LogErrorEx(e, () => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] error [attempt={@event.Attempt}]");
 
-                                                        var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e);
+                                                        var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
 
                                                         if (errorPolicyResult.Requeue)
                                                         {
@@ -863,8 +872,9 @@ namespace Neon.Operator.ResourceManager
 
                                                             await eventQueue.RequeueAsync(
                                                                 @event,
-                                                                delay:          errorPolicyResult.RequeueDelay,
-                                                                watchEventType: (k8s.WatchEventType?)errorPolicyResult.EventType);
+                                                                delay:             errorPolicyResult.RequeueDelay,
+                                                                watchEventType:    (k8s.WatchEventType?)errorPolicyResult.EventType,
+                                                                cancellationToken: cancellationToken);
 
                                                             return;
                                                         }
@@ -893,7 +903,7 @@ namespace Neon.Operator.ResourceManager
 
                                                             using (metrics.StatusModifiedTimeSeconds.NewTimer())
                                                             {
-                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource);
+                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource, cancellationToken: cancellationToken);
                                                             }
                                                         }
                                                         catch (Exception e)
@@ -938,7 +948,7 @@ namespace Neon.Operator.ResourceManager
                                 case null:
 
                                     logger?.LogInformationEx(() => $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
-                                    await eventQueue.DequeueAsync(@event);
+                                    await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
 
                                     return;
                                 
@@ -957,7 +967,7 @@ namespace Neon.Operator.ResourceManager
                                     }
 
                                     resourceCache.Remove(resource);
-                                    await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, (k8s.WatchEventType?)requestedQueueType);
+                                    await eventQueue.RequeueAsync(@event, requeue.RequeueDelay, (k8s.WatchEventType?)requestedQueueType, cancellationToken);
                                     break;
                             }
                         }
@@ -969,6 +979,8 @@ namespace Neon.Operator.ResourceManager
                 {
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueResourceEvent", ActivityKind.Server))
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         var resource     = @event.Value;
                         var resourceName = resource.Metadata.Name;
 
@@ -984,8 +996,8 @@ namespace Neon.Operator.ResourceManager
                             case (k8s.WatchEventType)WatchEventType.Deleted:
                             case (k8s.WatchEventType)WatchEventType.Modified:
 
-                                await eventQueue.DequeueAsync(@event);
-                                await eventQueue.EnqueueAsync(@event);
+                                await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
+                                await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
                                 break;
 
                             case (k8s.WatchEventType)WatchEventType.Bookmark:
@@ -1029,6 +1041,8 @@ namespace Neon.Operator.ResourceManager
                 {
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueDependentResourceEvent", ActivityKind.Server))
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         var resource     = (IKubernetesObject<V1ObjectMeta>)@event.Value;
                         var resourceName = resource.Metadata.Name;
 
@@ -1058,8 +1072,8 @@ namespace Neon.Operator.ResourceManager
 
                                         var newWatchEvent = new WatchEvent<TEntity>((k8s.WatchEventType)WatchEventType.Modified, owner, force: true);
 
-                                        await eventQueue.DequeueAsync(newWatchEvent);
-                                        await eventQueue.EnqueueAsync(newWatchEvent);
+                                        await eventQueue.DequeueAsync(newWatchEvent, cancellationToken: cancellationToken);
+                                        await eventQueue.EnqueueAsync(newWatchEvent, cancellationToken: cancellationToken);
                                     }
                                 }
 
@@ -1077,8 +1091,8 @@ namespace Neon.Operator.ResourceManager
 
                                             var newWatchEvent = new WatchEvent<TEntity>((k8s.WatchEventType)WatchEventType.Modified, owner, force: true);
 
-                                            await eventQueue.DequeueAsync(newWatchEvent);
-                                            await eventQueue.EnqueueAsync(newWatchEvent);
+                                            await eventQueue.DequeueAsync(newWatchEvent, cancellationToken: cancellationToken);
+                                            await eventQueue.EnqueueAsync(newWatchEvent, cancellationToken: cancellationToken);
                                         }
                                     }
                                 }
@@ -1122,11 +1136,14 @@ namespace Neon.Operator.ResourceManager
                 };
 
             this.eventQueue = new EventQueue<TEntity, TController>(
-                k8s:           k8s, 
-                options:       options, 
-                eventHandler:  actionAsync, 
-                metrics:       serviceProvider.GetRequiredService<EventQueueMetrics<TEntity, TController>>(),
-                loggerFactory: loggerFactory);
+                k8s:               k8s, 
+                options:           options, 
+                eventHandler:      actionAsync, 
+                metrics:           serviceProvider.GetRequiredService<EventQueueMetrics<TEntity, TController>>(),
+                loggerFactory:     loggerFactory,
+                cancellationToken: cancellationToken);
+
+            cancellationToken.Register(() => this.eventQueue = null);
 
             //-----------------------------------------------------------------
             // Start the watcher.

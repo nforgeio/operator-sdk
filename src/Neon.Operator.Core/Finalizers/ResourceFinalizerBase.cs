@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -76,8 +77,9 @@ namespace Neon.Operator.Finalizers
         /// Called when the entity needs to be finalized.
         /// </summary>
         /// <param name="entity">Specifies the entity being finalized.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public virtual Task FinalizeAsync(TEntity entity)
+        public virtual Task FinalizeAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }

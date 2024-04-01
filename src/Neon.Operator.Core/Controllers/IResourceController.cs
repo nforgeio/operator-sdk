@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Operator.Attributes;
@@ -42,7 +43,8 @@ namespace Neon.Operator.Controllers
         /// Starts the controller.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task StartAsync(IServiceProvider serviceProvider);
+        public Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default);
     }
 }

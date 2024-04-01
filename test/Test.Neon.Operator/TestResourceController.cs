@@ -17,6 +17,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -44,7 +45,7 @@ namespace Test.Neon.Operator
         }
 
         /// <inheritdoc/>
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource resource)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource resource, CancellationToken cancellationToken = default)
         {
             var childResource = new V1TestChildResource();
             childResource.Metadata = new V1ObjectMeta()

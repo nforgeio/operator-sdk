@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -49,8 +50,9 @@ namespace Neon.Operator.Webhooks
         /// Used to create the webhook in the Kubernetes API server.
         /// </summary>
         /// <param name="serviceProvider"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task CreateAsync(IServiceProvider serviceProvider);
+        Task CreateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the webhook endpoint string.

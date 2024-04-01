@@ -72,7 +72,7 @@ namespace Neon.Operator.ResourceManager
                 {
                     var resourceManager = (IResourceManager)serviceProvider.GetRequiredService(resourceManagerType);
 
-                    await resourceManager.StartAsync();
+                    await resourceManager.StartAsync(cancellationToken);
                 }
                 catch (Exception e)
                 {

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IResourceManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neon.Operator.ResourceManager
@@ -33,6 +34,6 @@ namespace Neon.Operator.ResourceManager
         /// Starts the resource manager.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task StartAsync();
+        Task StartAsync(CancellationToken cancellationToken = default);
     }
 }

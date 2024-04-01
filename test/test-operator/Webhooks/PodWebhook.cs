@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s.Models;
@@ -20,7 +21,7 @@ namespace TestOperator
     {
         private bool modified = false;
 
-        public override async Task<MutationResult> CreateAsync(V1ExampleEntity entity, bool dryRun)
+        public override async Task<MutationResult> CreateAsync(V1ExampleEntity entity, bool dryRun, CancellationToken cancellationToken = default)
         {
             if (modified)
             {
@@ -30,7 +31,7 @@ namespace TestOperator
             return await Task.FromResult(MutationResult.NoChanges());
         }
 
-        public override async Task<MutationResult> UpdateAsync(V1ExampleEntity entity, V1ExampleEntity oldEntity, bool dryRun)
+        public override async Task<MutationResult> UpdateAsync(V1ExampleEntity entity, V1ExampleEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             if (modified)
             {

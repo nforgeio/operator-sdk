@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -24,7 +25,7 @@ namespace TestOperator
             this.logger = logger;
         }
 
-        public override async Task FinalizeAsync(V1ExampleEntity resource)
+        public override async Task FinalizeAsync(V1ExampleEntity resource, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 

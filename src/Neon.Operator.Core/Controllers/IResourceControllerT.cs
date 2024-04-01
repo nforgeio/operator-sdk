@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -44,45 +45,51 @@ namespace Neon.Operator.Controllers
         /// is modified.
         /// </summary>
         /// <param name="entity">The new or modified resource.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>
         /// A <see cref="ResourceControllerResult"/> indicating the the current event or possibly a new event is 
         /// to be requeue with a possible delay.  <c>null</c> may also bne returned, indicating that
         /// the event is not to be requeued.
         /// </returns>
-        public Task<ResourceControllerResult> ReconcileAsync(TEntity entity);
+        public Task<ResourceControllerResult> ReconcileAsync(TEntity entity, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Called when the status part of a resource has been modified.
         /// </summary>
         /// <param name="entity">The modified resource.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task StatusModifiedAsync(TEntity entity);
+        public Task StatusModifiedAsync(TEntity entity, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Called when a resource has been deleted.
         /// </summary>
         /// <param name="entity">The deleted resource.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task DeletedAsync(TEntity entity);
+        public Task DeletedAsync(TEntity entity, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Called when the instance has a Leader Elector and this instance has
         /// assumed leadership.
         /// </summary>
-        public Task OnPromotionAsync();
+        /// <param name="cancellationToken"></param>
+        public Task OnPromotionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Called when the instance has a Leader Elector this instance has
         /// been demoted.
         /// </summary>
-        public Task OnDemotionAsync();
+        /// <param name="cancellationToken"></param>
+        public Task OnDemotionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Called when the instance has a Leader Elector and a new leader has
         /// been elected.
         /// </summary>
         /// <param name="identity">Identifies the new leader.</param>
-        public Task OnNewLeaderAsync(string identity);
+        /// <param name="cancellationToken"></param>
+        public Task OnNewLeaderAsync(string identity, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Called when an exception is thrown. This allows the operator to define the retry policy.
@@ -90,7 +97,8 @@ namespace Neon.Operator.Controllers
         /// <param name="entity">Specifies the type of the entity.</param>
         /// <param name="attempt">Specifies the number of times the operation has been attempted.</param>
         /// <param name="exception">Specifies the exception.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The <see cref="ErrorPolicyResult"/>.</returns>
-        public Task<ErrorPolicyResult> ErrorPolicyAsync(TEntity entity, int attempt, Exception exception);
+        public Task<ErrorPolicyResult> ErrorPolicyAsync(TEntity entity, int attempt, Exception exception, CancellationToken cancellationToken = default);
     }
 }

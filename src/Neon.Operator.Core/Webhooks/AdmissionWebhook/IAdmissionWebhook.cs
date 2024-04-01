@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -70,7 +71,7 @@ namespace Neon.Operator.Webhooks
         public TResult Create(TEntity newEntity, bool dryRun);
 
         /// <inheritdoc cref="Create"/>
-        public Task<TResult> CreateAsync(TEntity newEntity, bool dryRun);
+        public Task<TResult> CreateAsync(TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Operation for <see cref="AdmissionOperations.Update"/>.
@@ -82,7 +83,7 @@ namespace Neon.Operator.Webhooks
         public TResult Update(TEntity oldEntity, TEntity newEntity, bool dryRun);
 
         /// <inheritdoc cref="Update"/>
-        public Task<TResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun);
+        public Task<TResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Operation for <see cref="AdmissionOperations.Delete"/>.
@@ -93,7 +94,7 @@ namespace Neon.Operator.Webhooks
         public TResult Delete(TEntity oldEntity, bool dryRun);
 
         /// <inheritdoc cref="Delete"/>
-        public Task<TResult> DeleteAsync(TEntity oldEntity, bool dryRun);
+        public Task<TResult> DeleteAsync(TEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// $todo(marcusbooyah): documentation

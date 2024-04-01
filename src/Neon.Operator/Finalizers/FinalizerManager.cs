@@ -65,7 +65,7 @@ namespace Neon.Operator.Finalizers
         /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
         public FinalizerManager(
             IKubernetes               k8s,
-            ComponentRegister     componentRegistration,
+            ComponentRegister         componentRegistration,
             IFinalizerBuilder         finalizerInstanceBuilder,
             IServiceProvider          serviceProvider,
             OperatorSettings          operatorSettings = null,
@@ -94,7 +94,7 @@ namespace Neon.Operator.Finalizers
         }
 
         /// <inheritdoc/>
-        public Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
+        public Task RegisterFinalizerAsync<TFinalizer>(TEntity entity, CancellationToken cancellationToken = default)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
             using var activity = TraceContext.ActivitySource?.StartActivity();
@@ -105,7 +105,7 @@ namespace Neon.Operator.Finalizers
         }
 
         /// <inheritdoc/>
-        public async Task RegisterAllFinalizersAsync(TEntity entity)
+        public async Task RegisterAllFinalizersAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -116,7 +116,7 @@ namespace Neon.Operator.Finalizers
         }
 
         /// <inheritdoc/>
-        public async Task RemoveFinalizerAsync<TFinalizer>(TEntity entity)
+        public async Task RemoveFinalizerAsync<TFinalizer>(TEntity entity, CancellationToken cancellationToken = default)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
             await SyncContext.Clear;
@@ -163,7 +163,7 @@ namespace Neon.Operator.Finalizers
             }
         }
 
-        private async Task RemoveFinalizerAsync(TEntity entity, IResourceFinalizer<TEntity> finalizer)
+        private async Task RemoveFinalizerAsync(TEntity entity, IResourceFinalizer<TEntity> finalizer, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -227,7 +227,7 @@ namespace Neon.Operator.Finalizers
         }
 
         /// <inheritdoc/>
-        async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity, IServiceScope scope)
+        async Task IFinalizerManager<TEntity>.FinalizeAsync(TEntity entity, IServiceScope scope, CancellationToken cancellationToken)
         {
             await SyncContext.Clear;
 
@@ -252,8 +252,9 @@ namespace Neon.Operator.Finalizers
         /// <typeparam name="TFinalizer"></typeparam>
         /// <param name="entity">Specifies the entity.</param>
         /// <param name="finalizer">Specifies the finalizer.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer)
+        private async Task RegisterFinalizerInternalAsync<TFinalizer>(TEntity entity, TFinalizer finalizer, CancellationToken cancellationToken = default)
             where TFinalizer : IResourceFinalizer<TEntity>
         {
             await SyncContext.Clear;
@@ -274,8 +275,9 @@ namespace Neon.Operator.Finalizers
         /// Updates an entiry.
         /// </summary>
         /// <param name="entity">Specifies the entity.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>THe tracking <see cref="Task"/>.</returns>
-        private async Task UpdateEntityAsync(TEntity entity)
+        private async Task UpdateEntityAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(entity != null, nameof(entity));
