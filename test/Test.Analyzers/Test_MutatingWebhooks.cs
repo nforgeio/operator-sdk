@@ -6,11 +6,13 @@ using k8s.Models;
 
 using Neon.Operator.Analyzers;
 using Neon.Roslyn.Xunit;
+using Neon.Xunit;
 
 using Xunit.Abstractions;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_MutatingWebhooks
     {
         private readonly ITestOutputHelper output;

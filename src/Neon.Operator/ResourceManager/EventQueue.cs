@@ -66,12 +66,14 @@ namespace Neon.Operator.ResourceManager
         /// <param name="options">Optionally specifies custom resource manager options.</param>
         /// <param name="eventHandler">Optionally specifies a watched event handler.</param>
         /// <param name="loggerFactory">Optionally specifies the logger factory.</param>
+        /// <param name="cancellationToken"></param>
         public EventQueue(
             IKubernetes                             k8s,
-            ResourceManagerOptions                  options       = null,
-            EventQueueMetrics<TEntity, TController> metrics       = null,
-            Func<WatchEvent<TEntity>, Task>         eventHandler  = null,
-            ILoggerFactory                          loggerFactory = null)
+            ResourceManagerOptions                  options           = null,
+            EventQueueMetrics<TEntity, TController> metrics           = null,
+            Func<WatchEvent<TEntity>, Task>         eventHandler      = null,
+            ILoggerFactory                          loggerFactory     = null,
+            CancellationToken                       cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(metrics != null, nameof(metrics));
@@ -107,17 +109,19 @@ namespace Neon.Operator.ResourceManager
                     await Task.CompletedTask;
                 });
 
-            _ = StartReconcileConsumersAsync();
-            _ = StartFinalizerConsumersAsync();
+            _ = StartReconcileConsumersAsync(cancellationToken);
+            _ = StartFinalizerConsumersAsync(cancellationToken);
         }
 
         /// <summary>
         /// Starts task consumers.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task StartReconcileConsumersAsync()
+        private async Task StartReconcileConsumersAsync(CancellationToken cancellationToken = default)
         {
-            while (true)
+            await SyncContext.Clear;
+
+            while (!cancellationToken.IsCancellationRequested)
             {
                 for (int i = 0; i < reconcileTasks.Length; i++)
                 {
@@ -125,7 +129,7 @@ namespace Neon.Operator.ResourceManager
 
                     if (task == null || !task.Status.Equals(TaskStatus.Running))
                     {
-                        reconcileTasks[i] = ReconcileConsumerAsync();
+                        reconcileTasks[i] = ReconcileConsumerAsync(cancellationToken);
                     }
                 }
 
@@ -137,9 +141,11 @@ namespace Neon.Operator.ResourceManager
         /// Starts task consumers.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task StartFinalizerConsumersAsync()
+        private async Task StartFinalizerConsumersAsync(CancellationToken cancellationToken = default)
         {
-            while (true)
+            await SyncContext.Clear;
+
+            while (!cancellationToken.IsCancellationRequested)
             {
                 for (int i = 0; i < finalizeTasks.Length; i++)
                 {
@@ -147,7 +153,7 @@ namespace Neon.Operator.ResourceManager
 
                     if (task == null || !task.Status.Equals(TaskStatus.Running))
                     {
-                        finalizeTasks[i] = FinalizerConsumerAsync();
+                        finalizeTasks[i] = FinalizerConsumerAsync(cancellationToken);
                     }
                 }
 
@@ -159,11 +165,14 @@ namespace Neon.Operator.ResourceManager
         /// Implements an event consumer for reconcile tasks.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ReconcileConsumerAsync()
+        private async Task ReconcileConsumerAsync(CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
-            while (await eventChannel.Reader.WaitToReadAsync())
+            while (!cancellationToken.IsCancellationRequested
+                && await eventChannel.Reader.WaitToReadAsync())
             {
                 if (eventChannel.Reader.TryRead(out var uid))
                 {
@@ -198,11 +207,14 @@ namespace Neon.Operator.ResourceManager
         /// Implements an event consumer for finalizers.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task FinalizerConsumerAsync()
+        private async Task FinalizerConsumerAsync(CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
-            while (await finalizeChannel.Reader.WaitToReadAsync())
+            while (!cancellationToken.IsCancellationRequested
+                && await finalizeChannel.Reader.WaitToReadAsync())
             {
                 if (finalizeChannel.Reader.TryRead(out var uid))
                 {
@@ -238,10 +250,15 @@ namespace Neon.Operator.ResourceManager
         /// requeue requests are cancelled, since they are no longer valid.
         /// </summary>
         /// <param name="event">The watch event being queued.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task NotifyAsync(WatchEvent<TEntity> @event)
+        public async Task NotifyAsync(WatchEvent<TEntity> @event, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 
@@ -249,7 +266,7 @@ namespace Neon.Operator.ResourceManager
             {
                 if (@event.Value.Generation() > queuedEvent.Value.Generation())
                 {
-                    await DequeueAsync(queuedEvent);
+                    await DequeueAsync(queuedEvent, cancellationToken);
                 }
             }
         }
@@ -259,11 +276,18 @@ namespace Neon.Operator.ResourceManager
         /// </summary>
         /// <param name="event">Specifies the watch event being queued.</param>
         /// <param name="watchEventType">Optionally specifies the event type.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task EnqueueAsync(WatchEvent<TEntity>  @event,  WatchEventType? watchEventType = null)
+        public async Task EnqueueAsync(
+            WatchEvent<TEntity> @event,
+            WatchEventType?     watchEventType    = null,
+            CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             var resource = @event.Value;
 
@@ -294,13 +318,13 @@ namespace Neon.Operator.ResourceManager
             {
                 case Controllers.ModifiedEventType.Finalizing:
 
-                    await finalizeChannel.Writer.WriteAsync(@event.Value.Uid());
+                    await finalizeChannel.Writer.WriteAsync(@event.Value.Uid(), cancellationToken);
 
                     break;
 
                 default:
 
-                    await eventChannel.Writer.WriteAsync(@event.Value.Uid());
+                    await eventChannel.Writer.WriteAsync(@event.Value.Uid(), cancellationToken);
 
                     break;
             }
@@ -316,13 +340,19 @@ namespace Neon.Operator.ResourceManager
         /// been attempted.
         /// </param>
         /// <param name="watchEventType">Optionally specifies the watch event type.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task RequeueAsync(
             WatchEvent<TEntity> @event,
-            TimeSpan?           delay          = null, 
-            WatchEventType?     watchEventType = null)
+            TimeSpan?           delay             = null, 
+            WatchEventType?     watchEventType    = null,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             logger?.LogDebugEx(() => $"Requeuing resource [{@event.Value.Kind}/{@event.Value.Name()}]. Attempt [{@event.Attempt}]");
 
@@ -330,12 +360,18 @@ namespace Neon.Operator.ResourceManager
 
             try
             {
-                var resource = @event.Value;
-                var old      = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+                var resource       = @event.Value;
+                var existingEvents = queue.Keys
+                    .Where(key => key.Value.Uid() == @event.Value.Uid());
 
-                if (old != null)
+                foreach (var existingEvent in existingEvents)
                 {
-                    await DequeueAsync(old);
+                    await DequeueAsync(existingEvent, cancellationToken);
+
+                    if (existingEvent.CreatedAt > @event.CreatedAt)
+                    {
+                        @event.Value = existingEvent.Value;
+                    }
                 }
 
                 if (delay == null && @event.Attempt > 0)
@@ -347,7 +383,7 @@ namespace Neon.Operator.ResourceManager
 
                 if (delay > TimeSpan.Zero)
                 {
-                    _ = EnqueueAfterSleepAsync(@event, delay.Value, watchEventType);
+                    _ = EnqueueAfterSleepAsync(@event, delay.Value, watchEventType, cancellationToken);
 
                     return;
                 }
@@ -359,7 +395,7 @@ namespace Neon.Operator.ResourceManager
 
             @event.CreatedAt = DateTime.UtcNow;
 
-            await EnqueueAsync(@event, watchEventType);
+            await EnqueueAsync(@event, watchEventType, cancellationToken);
         }
 
         /// <summary>
@@ -368,11 +404,20 @@ namespace Neon.Operator.ResourceManager
         /// <param name="event">Specifies the watch event.</param>
         /// <param name="delay">Specifies the delay.</param>
         /// <param name="watchEventType">Optionally specifies the watch event type.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task EnqueueAfterSleepAsync(WatchEvent<TEntity> @event, TimeSpan delay, WatchEventType? watchEventType = null)
+        private async Task EnqueueAfterSleepAsync(
+            WatchEvent<TEntity> @event,
+            TimeSpan            delay,
+            WatchEventType?     watchEventType    = null,
+            CancellationToken   cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
             Covenant.Requires<ArgumentNullException>(delay >= TimeSpan.Zero, nameof(delay));
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
@@ -380,18 +425,22 @@ namespace Neon.Operator.ResourceManager
 
             @event.CreatedAt = DateTime.UtcNow;
 
-            await EnqueueAsync(@event, watchEventType);
+            await EnqueueAsync(@event, watchEventType, cancellationToken);
         }
 
         /// <summary>
         /// Dequeues an event.
         /// </summary>
         /// <param name="event">Specifies the watch event being dequeued.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task DequeueAsync(WatchEvent<TEntity> @event)
+        public async Task DequeueAsync(WatchEvent<TEntity> @event, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
 

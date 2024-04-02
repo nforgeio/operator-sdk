@@ -16,26 +16,22 @@
 // limitations under the License.
 
 using System;
-using System.Buffers.Binary;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using k8s;
+
 using Microsoft.Extensions.Logging;
 
+using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
-
-using k8s;
-using System.Diagnostics.Contracts;
 using Neon.Retry;
 
 namespace Neon.K8s.PortForward
@@ -100,7 +96,7 @@ namespace Neon.K8s.PortForward
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
 
-            var key = $"{@namespace}/{string.Join(',', names)}";
+            var key = $"{@namespace}/{string.Join(',', names)}-{NeonHelper.CreateBase36Uuid()}";
 
             if (containerPortForwards.ContainsKey(key))
             {
@@ -190,13 +186,6 @@ namespace Neon.K8s.PortForward
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
-
-            var key = $"{@namespace}/{name}";
-
-            if (containerPortForwards.ContainsKey(key))
-            {
-                return;
-            }
 
             if (localAddress == null)
             {

@@ -505,7 +505,10 @@ namespace Neon.Operator.Analyzers
             {
                 props.Type = Constants.ObjectTypeString;
             }
-            else if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)))
+            else if (type.IsGenericType && (
+                type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>))
+                || type.GetGenericTypeDefinition().Equals(typeof(Dictionary<,>))
+                ))
             {
                 props.Type = Constants.ObjectTypeString;
                 props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments[1], additionalColumns, jsonPath);

@@ -26,6 +26,9 @@ using k8s.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
+using Neon.Common;
+using Neon.K8s.Core;
+
 namespace Neon.Operator.Xunit
 {
     /// <inheritdoc/>
@@ -82,6 +85,7 @@ namespace Neon.Operator.Xunit
                     k8sObj.Metadata.NamespaceProperty = namespaceParameter;
                 }
             }
+
             Resources.Add(k8sObj);
         }
 

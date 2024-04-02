@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -28,6 +29,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Operator.Controllers;
 using Neon.Operator.Xunit;
+using Neon.Xunit;
 
 using Test.Neon.Operator;
 
@@ -59,7 +61,7 @@ namespace TestKubeOperator
             this.Foo = foo;
         }
 
-        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity)
+        public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity, CancellationToken cancellationToken = default)
         {
             var config = await K8s.CoreV1.ReadNamespacedConfigMapAsync(name: "foo", namespaceParameter: "bar");
 
@@ -69,6 +71,7 @@ namespace TestKubeOperator
         }
     }
 
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_DependencyInjection : IClassFixture<TestOperatorFixture>, IDisposable
     {
         private TestOperatorFixture fixture;

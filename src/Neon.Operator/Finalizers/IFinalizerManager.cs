@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    IFinalizerManager.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -36,24 +37,27 @@ namespace Neon.Operator.Finalizers
         /// </summary>
         /// <typeparam name="TFinalizer"></typeparam>
         /// <param name="entity">Specifies the entity type.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task RegisterFinalizerAsync<TFinalizer>(TEntity entity)
+        Task RegisterFinalizerAsync<TFinalizer>(TEntity entity, CancellationToken cancellationToken = default)
             where TFinalizer : IResourceFinalizer<TEntity>;
 
         /// <summary>
         /// Registers all <see cref="IResourceFinalizer{TEntity}"/> to an entity.
         /// </summary>
         /// <param name="entity">Specifies the target entity.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task RegisterAllFinalizersAsync(TEntity entity);
+        Task RegisterAllFinalizersAsync(TEntity entity, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes a <see cref="IResourceFinalizer{TEntity}"/> from an entity.
         /// </summary>
         /// <typeparam name="TFinalizer">Specifies the finalizer type.</typeparam>
         /// <param name="entity">Specifies the target entity.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task RemoveFinalizerAsync<TFinalizer>(TEntity entity)
+        Task RemoveFinalizerAsync<TFinalizer>(TEntity entity, CancellationToken cancellationToken = default)
             where TFinalizer : IResourceFinalizer<TEntity>;
 
         /// <summary>
@@ -61,7 +65,8 @@ namespace Neon.Operator.Finalizers
         /// </summary>
         /// <param name="entity">Specifies the target entity.</param>
         /// <param name="scope">Specifies the service scope.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal Task FinalizeAsync(TEntity entity, IServiceScope scope);
+        internal Task FinalizeAsync(TEntity entity, IServiceScope scope, CancellationToken cancellationToken = default);
     }
 }

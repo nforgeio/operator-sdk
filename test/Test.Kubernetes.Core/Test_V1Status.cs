@@ -20,9 +20,11 @@ using FluentAssertions;
 using k8s.Models;
 
 using Neon.K8s.Core;
+using Neon.Xunit;
 
 namespace TestKubernetesCore
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_V1Status
     {
         [Fact]

@@ -136,7 +136,7 @@ namespace Neon.Operator.Xunit
                 }
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace Neon.Operator.Xunit
                 return Ok(resource);
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace Neon.Operator.Xunit
                 return Ok(resource);
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace Neon.Operator.Xunit
                 return Ok(resource);
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace Neon.Operator.Xunit
                 return Content(KubernetesHelper.JsonSerialize(status), "application/json");
             }
 
-            return NotFound();
+            throw new TypeNotRegisteredException(Group, Version, Plural);
         }
     }
 }

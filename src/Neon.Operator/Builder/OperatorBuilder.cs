@@ -144,7 +144,12 @@ namespace Neon.Operator.Builder
 
                 var k8s = new k8s.Kubernetes(k8sClientConfig, retryHandler);
 
-                if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
+                if (!operatorSettings.UserImpersonationEnabled.HasValue)
+                {
+                    operatorSettings.UserImpersonationEnabled = NeonHelper.IsDevWorkstation || Debugger.IsAttached;
+                }
+
+                if (operatorSettings.UserImpersonationEnabled == true)
                 {
                     k8s.HttpClient.DefaultRequestHeaders.Add("Impersonate-User", $"system:serviceaccount:{operatorSettings.PodNamespace}:{operatorSettings.Name}");
                 }

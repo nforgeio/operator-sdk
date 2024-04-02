@@ -23,14 +23,18 @@ using FluentAssertions;
 using k8s;
 using k8s.Models;
 
-using Neon.K8s;
+using Neon.K8s.Core;
 using Neon.Operator.Util;
 using Neon.Operator.Xunit;
+using Neon.Xunit;
+
+using Test.Neon.Operator;
 
 using Xunit;
 
 namespace TestKubeOperator
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class TestCoreResources : IClassFixture<TestOperatorFixture>
     {
         private TestOperatorFixture fixture;
@@ -41,6 +45,7 @@ namespace TestKubeOperator
             fixture.RegisterType<V1ConfigMap>();
             fixture.RegisterType<V1Service>();
             fixture.RegisterType<V1StatefulSet>();
+            fixture.RegisterType<V1Job>();
             fixture.Start();
         }
 
@@ -295,6 +300,35 @@ namespace TestKubeOperator
             deleted.Should().BeNull();
 
             fixture.Resources.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task TestCreateJob()
+        {
+            fixture.ClearResources();
+
+            var job = new V1Job().Initialize();
+            job.Metadata.Name = "test";
+            job.Metadata.NamespaceProperty = "test";
+            job.Spec = new V1JobSpec()
+            {
+                Template = new V1PodTemplateSpec()
+                {
+                    Spec = new V1PodSpec()
+                    {
+                        Containers =
+                        [
+                            new V1Container()
+                            {
+                                Name  = "foo",
+                                Image = "bar"
+                            }
+                        ]
+                    }
+                }
+            };
+
+            await fixture.KubernetesClient.BatchV1.CreateNamespacedJobAsync(job, job.Metadata.NamespaceProperty);
         }
     }
 }

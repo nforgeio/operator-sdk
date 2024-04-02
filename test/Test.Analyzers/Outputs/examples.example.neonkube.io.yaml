@@ -58,16 +58,11 @@ spec:
                       type: string
                     type: array
                   bar:
-                    description: Bar
-                    items:
-                      properties:
-                        key:
-                          type: string
-                        value:
-                          properties: {}
-                          type: object
+                    additionalProperties:
+                      properties: {}
                       type: object
-                    type: array
+                    description: Bar
+                    type: object
                     x-kubernetes-preserve-unknown-fields: true
                   baz:
                     description: Baz

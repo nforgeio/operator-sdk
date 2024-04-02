@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -146,7 +147,7 @@ namespace Neon.Operator.Webhooks
         WebhookType IAdmissionWebhook<TEntity, ValidationResult>.WebhookType => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public async Task CreateAsync(IServiceProvider serviceProvider)
+        public async Task CreateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             var operatorSettings   = serviceProvider.GetRequiredService<OperatorSettings>();
             var certManagerOptions = serviceProvider.GetService<CertManagerOptions>();
@@ -200,7 +201,7 @@ namespace Neon.Operator.Webhooks
         }
 
         /// <inheritdoc/>
-        public virtual async Task<ValidationResult> CreateAsync(TEntity newEntity, bool dryRun)
+        public virtual async Task<ValidationResult> CreateAsync(TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(ValidationResult.Success());
         }
@@ -212,7 +213,7 @@ namespace Neon.Operator.Webhooks
         }
 
         /// <inheritdoc/>
-        public virtual async Task<ValidationResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun)
+        public virtual async Task<ValidationResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(ValidationResult.Success());
         }
@@ -224,7 +225,7 @@ namespace Neon.Operator.Webhooks
         }
 
         /// <inheritdoc/>
-        public virtual async Task<ValidationResult> DeleteAsync(TEntity oldEntity, bool dryRun)
+        public virtual async Task<ValidationResult> DeleteAsync(TEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(ValidationResult.Success());
         }

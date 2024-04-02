@@ -155,6 +155,11 @@ namespace Neon.Operator
         }
 
         /// <summary>
+        /// Whether to add the "Impersonate-User" header to requests to the Kubernetes API.
+        /// </summary>
+        public bool? UserImpersonationEnabled { get; set; }
+
+        /// <summary>
         /// Specifies the default <see cref="Prometheus.ExemplarBehavior"/>.
         /// </summary>
         public ExemplarBehavior ExemplarBehavior { get; set; } = new ExemplarBehavior()

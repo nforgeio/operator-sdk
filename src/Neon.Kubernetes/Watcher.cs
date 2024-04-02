@@ -103,7 +103,7 @@ namespace Neon.K8s
     /// A generic Kubernetes watcher.
     /// </summary>
     /// <typeparam name="T">Specifies the Kubernetes entity type being watched.</typeparam>
-    public sealed class Watcher<T> : IDisposable
+    public sealed class Watcher<T> : IAsyncDisposable, IDisposable
         where T : IKubernetesObject<V1ObjectMeta>
     {
         private string                  resourceVersion;
@@ -128,6 +128,14 @@ namespace Neon.K8s
         /// <inheritdoc/>
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        /// <inheritdoc/>
+        public async ValueTask DisposeAsync()
+        {
+            await SyncContext.Clear;
+
             Dispose(true);
         }
 

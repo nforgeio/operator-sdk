@@ -982,18 +982,18 @@ namespace Neon.K8s
         /// <param name="logger">Optionally specifies a <see cref="ILogger"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WatchAsync<T>(
-            this IKubernetes            k8s,
-            Func<WatchEvent<T>, Task>   actionAsync,
-            string                      namespaceParameter   = null,
-            string                      fieldSelector        = null,
-            string                      labelSelector        = null,
-            string                      resourceVersion      = null,
-            string                      resourceVersionMatch = null,
-            int?                        timeoutSeconds       = null,
-            TimeSpan?                   retryDelay           = null,
-            CancellationToken           cancellationToken    = default,
-            ILogger                     logger               = null) 
-            
+            this IKubernetes           k8s,
+            Func<WatchEvent<T> , Task> actionAsync,
+            string                     namespaceParameter   = null,
+            string                     fieldSelector        = null,
+            string                     labelSelector        = null,
+            string                     resourceVersion      = null,
+            string                     resourceVersionMatch = null,
+            int?                       timeoutSeconds       = null,
+            TimeSpan?                  retryDelay           = null,
+            CancellationToken          cancellationToken    = default,
+            ILogger                    logger               = null)
+
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
             using (var watcher = new Watcher<T>(k8s, logger))
@@ -1008,6 +1008,22 @@ namespace Neon.K8s
                     retryDelay:           retryDelay,
                     cancellationToken:    cancellationToken);
             }
+        }
+
+        /// <summary>
+        /// This is a convenience method that creates a new <see cref="Watcher{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">The type parameter.</typeparam>
+        /// <param name="k8s">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="logger">Optionally specifies a <see cref="ILogger"/>.</param>
+        /// <returns></returns>
+        public static Watcher<T> CreateWatcher<T>(
+            this IKubernetes k8s,
+            ILogger          logger = null) 
+            
+            where T : IKubernetesObject<V1ObjectMeta>, new()
+        {
+            return new Watcher<T>(k8s, logger);
         }
 
         /// <summary>

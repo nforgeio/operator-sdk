@@ -20,7 +20,6 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 using FluentAssertions;
 
@@ -37,9 +36,11 @@ using Neon.Operator.Analyzers.Generators;
 using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn.Xunit;
+using Neon.Xunit;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_Olm
     {
         [Fact]

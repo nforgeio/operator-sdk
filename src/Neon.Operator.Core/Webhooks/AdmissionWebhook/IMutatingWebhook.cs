@@ -17,6 +17,7 @@
 
 using System;
 using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -55,8 +56,9 @@ namespace Neon.Operator.Webhooks
         /// $todo(marcusbooyah): Documentation
         /// </summary>
         /// <param name="serviceProvider"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task CreateAsync(IServiceProvider serviceProvider);
+        Task CreateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the webhook endpoint string.

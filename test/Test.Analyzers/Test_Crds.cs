@@ -13,11 +13,13 @@ using Neon.IO;
 using Neon.Operator.Analyzers;
 using Neon.Operator.Attributes;
 using Neon.Roslyn.Xunit;
+using Neon.Xunit;
 
 using Xunit.Abstractions;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_Crds
     {
         private readonly ITestOutputHelper output;
@@ -45,11 +47,12 @@ namespace Test.Analyzers
 
             var outFile = "examples.example.neonkube.io.yaml";
 
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
 
-            output.Should().Be(expectedCrd);
+            output.GetHashCodeIgnoringWhitespace().Should().Be(expectedCrd.GetHashCodeIgnoringWhitespace());
+
             testCompilation.Diagnostics.Should().BeEmpty();
         }
 
@@ -73,11 +76,12 @@ namespace Test.Analyzers
 
             var outFile = "examples.example.neonkube.io.yaml";
 
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
 
-            output.Should().Be(expectedCrd);
+            output.GetHashCodeIgnoringWhitespace().Should().Be(expectedCrd.GetHashCodeIgnoringWhitespace());
+
             testCompilation.Diagnostics.Should().BeEmpty();
         }
 
@@ -100,11 +104,11 @@ namespace Test.Analyzers
 
             var outFile = "generics.example.neonkube.io.yaml";
 
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
 
-            output.Should().Be(expectedCrd);
+            output.GetHashCodeIgnoringWhitespace().Should().Be(expectedCrd.GetHashCodeIgnoringWhitespace());
             testCompilation.Diagnostics.Should().BeEmpty();
         }
 
@@ -168,6 +172,33 @@ namespace TestNamespace
                 .Build();
 
             testCompilation.Should().NotBeNull();
+            testCompilation.Diagnostics.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void TestDictionary()
+        {
+            using var tempFile = new TempFolder();
+
+            var testCompilation = new TestCompilationBuilder()
+                .AddSourceGenerator<CustomResourceDefinitionGenerator>()
+                .AddOption("build_property.NeonOperatorGenerateCrds", true)
+                .AddOption("build_property.NeonOperatorCrdOutputDir", tempFile.Path)
+                .AddOption("build_property.TargetDir", tempFile.Path)
+                .AddSourceFile("Models/ExampleDictEntity.cs")
+                .AddAssembly(typeof(KubernetesEntityAttribute).Assembly)
+                .AddAssembly(typeof(AdditionalPrinterColumnAttribute).Assembly)
+                .AddAssembly(typeof(V1Condition).Assembly)
+                .AddAssembly(typeof(RequiredAttribute).Assembly)
+                .Build();
+
+            var outFile = "dict.example.neonkube.io.yaml";
+
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
+
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
+
+            output.GetHashCodeIgnoringWhitespace().Should().Be(expectedCrd.GetHashCodeIgnoringWhitespace());
             testCompilation.Diagnostics.Should().BeEmpty();
         }
     }

@@ -27,9 +27,11 @@ using Neon.IO;
 using Neon.Operator.Analyzers;
 using Neon.Operator.Attributes;
 using Neon.Roslyn.Xunit;
+using Neon.Xunit;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_Rbac
     {
 

@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.Json.JsonDiffPatch;
 using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -181,7 +182,7 @@ namespace Neon.Operator.Webhooks
 
         
         /// <inheritdoc/>
-        public virtual async Task CreateAsync(IServiceProvider serviceProvider)
+        public virtual async Task CreateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
             var operatorSettings   = serviceProvider.GetRequiredService<OperatorSettings>();
             var certManagerOptions = serviceProvider.GetService<CertManagerOptions>();
@@ -235,7 +236,7 @@ namespace Neon.Operator.Webhooks
         }
 
         /// <inheritdoc/>
-        public async virtual Task<MutationResult> CreateAsync(TEntity newEntity, bool dryRun)
+        public async virtual Task<MutationResult> CreateAsync(TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(MutationResult.NoChanges());
         }
@@ -247,7 +248,7 @@ namespace Neon.Operator.Webhooks
         }
 
         /// <inheritdoc/>
-        public async virtual Task<MutationResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun)
+        public async virtual Task<MutationResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(MutationResult.NoChanges());
         }
@@ -259,7 +260,7 @@ namespace Neon.Operator.Webhooks
         }
 
         /// <inheritdoc/>
-        public async virtual Task<MutationResult> DeleteAsync(TEntity oldEntity, bool dryRun)
+        public async virtual Task<MutationResult> DeleteAsync(TEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(MutationResult.NoChanges());
         }

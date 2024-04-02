@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:	    IResourceManager.cs
+// FILE:	    AssemblyInfo.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -15,25 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
-namespace Neon.Operator.ResourceManager
-{
-    /// <summary>
-    /// Describes a resource manager.
-    /// </summary>
-    internal interface IResourceManager
-    {
-        /// <summary>
-        /// Returns the resource manager's options.
-        /// </summary>
-        ResourceManagerOptions Options();
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
 
-        /// <summary>
-        /// Starts the resource manager.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task StartAsync(CancellationToken cancellationToken = default);
-    }
-}
+[assembly: InternalsVisibleTo("Test.Neon.Kube")]
+[assembly: InternalsVisibleTo("Test.Neon.Operator")]
+[assembly: InternalsVisibleTo("Neon.Operator")]
+[assembly: InternalsVisibleTo("Neon.Operator.XUnit")]
+[assembly: InternalsVisibleTo("Neon.Kube.Xunit")]
+

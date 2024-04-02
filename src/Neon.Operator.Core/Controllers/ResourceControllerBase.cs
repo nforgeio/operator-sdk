@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
@@ -59,15 +60,51 @@ namespace Neon.Operator.Controllers
         private string leaseName;
 
         /// <inheritdoc/>
-        public virtual Task DeletedAsync(T entity)
+        public virtual Task DeletedAsync(T entity, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public virtual Task<ErrorPolicyResult> ErrorPolicyAsync(T entity, int attempt, Exception exception)
+        public virtual Task<ErrorPolicyResult> ErrorPolicyAsync(T entity, int attempt, Exception exception, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(new ErrorPolicyResult());
+        }
+
+        /// <inheritdoc/>
+        public virtual Task OnDemotionAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public virtual Task OnNewLeaderAsync(string identity, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public virtual Task OnPromotionAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public virtual Task<ResourceControllerResult> ReconcileAsync(T entity, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<ResourceControllerResult>(null);
+        }
+
+        /// <inheritdoc/>
+        public virtual Task StartAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public virtual Task StatusModifiedAsync(T entity, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -75,30 +112,6 @@ namespace Neon.Operator.Controllers
         /// </summary>
         /// <returns></returns>
         public ResourceControllerResult Ok() => null;
-
-        /// <inheritdoc/>
-        public virtual Task OnDemotionAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public virtual Task OnNewLeaderAsync(string identity)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public virtual Task OnPromotionAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public virtual Task<ResourceControllerResult> ReconcileAsync(T entity)
-        {
-            return Task.FromResult<ResourceControllerResult>(null);
-        }
 
         /// <summary>
         /// Returns <see cref="ResourceControllerResult.RequeueEvent(TimeSpan)"/>
@@ -111,17 +124,5 @@ namespace Neon.Operator.Controllers
         /// </summary>
         /// <returns></returns>
         public ResourceControllerResult RequeueEvent(TimeSpan delay, WatchEventType eventType) => ResourceControllerResult.RequeueEvent(delay, eventType);
-
-        /// <inheritdoc/>
-        public virtual Task StartAsync(IServiceProvider serviceProvider)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public virtual Task StatusModifiedAsync(T entity)
-        {
-            return Task.CompletedTask;
-        }
     }
 }

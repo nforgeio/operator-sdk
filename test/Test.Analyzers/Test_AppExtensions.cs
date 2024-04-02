@@ -15,25 +15,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 
 using k8s.Models;
-using Neon.IO;
+
 using Neon.Operator.Analyzers;
 
 using Neon.Operator.Attributes;
 
 using Neon.Roslyn.Xunit;
+using Neon.Xunit;
 
 namespace Test.Analyzers
 {
+    [Trait(TestTrait.Category, TestArea.NeonOperator)]
     public class Test_AppExtensions
     {
         [Fact]

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using k8s.Models;
@@ -17,12 +18,12 @@ namespace TestOperator
         scope: "*")]
     public class PodValidator : ValidatingWebhookBase<V1ExampleEntity>
     {
-        public override async Task<ValidationResult> CreateAsync(V1ExampleEntity entity, bool dryRun)
+        public override async Task<ValidationResult> CreateAsync(V1ExampleEntity entity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(ValidationResult.Success());
         }
 
-        public override async Task<ValidationResult> UpdateAsync(V1ExampleEntity entity, V1ExampleEntity oldEntity, bool dryRun)
+        public override async Task<ValidationResult> UpdateAsync(V1ExampleEntity entity, V1ExampleEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
             return await Task.FromResult(ValidationResult.Success());
         }

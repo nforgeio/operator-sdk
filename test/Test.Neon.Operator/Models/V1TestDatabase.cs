@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 using k8s;
@@ -111,5 +112,9 @@ namespace Test.Neon.Operator
     public class TestDatabaseStatus
     {
         public string Status { get; set; }
+
+        public List<V1Condition> Conditions { get; set; }
+
+        public Dictionary<string, V1Condition> DictValues { get; set; }
     }
 }
