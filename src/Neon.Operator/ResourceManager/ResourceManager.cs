@@ -41,6 +41,7 @@ using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Operator.Cache;
 using Neon.Operator.Controllers;
+using Neon.Operator.Core.Exceptions;
 using Neon.Operator.Entities;
 using Neon.Operator.EventQueue;
 using Neon.Operator.Finalizers;
@@ -751,6 +752,36 @@ namespace Neon.Operator.ResourceManager
                                                     result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
                                                 }
                                             }
+                                            catch (RequeueException e)
+                                            {
+                                                metrics.ReconcileErrorsTotal.Inc();
+                                                logger?.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
+
+                                                var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
+
+                                                @event.Attempt += 1;
+
+                                                resourceCache.Remove(resource);
+
+                                                if (!e.Delay.HasValue)
+                                                {
+                                                    e.Delay = errorPolicyResult.RequeueDelay;
+                                                }
+
+                                                if (!e.EventType.HasValue)
+                                                {
+                                                    e.EventType = errorPolicyResult.EventType;
+                                                }
+
+                                                await eventQueue.RequeueAsync(
+                                                        @event,
+                                                        delay:             e.Delay,
+                                                        watchEventType:    (k8s.WatchEventType?)e.EventType,
+                                                        cancellationToken: cancellationToken);
+
+                                                return;
+
+                                            }
                                             catch (Exception e)
                                             {
                                                 metrics.ReconcileErrorsTotal.Inc();
@@ -811,6 +842,35 @@ namespace Neon.Operator.ResourceManager
                                                         {
                                                             result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
                                                         }
+                                                    }
+                                                    catch (RequeueException e)
+                                                    {
+                                                        metrics.ReconcileErrorsTotal?.Inc();
+                                                        logger?.LogErrorEx(e, () => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
+
+                                                        var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
+
+                                                        @event.Attempt += 1;
+
+                                                        resourceCache.Remove(resource);
+
+                                                        if (!e.Delay.HasValue)
+                                                        {
+                                                            e.Delay = errorPolicyResult.RequeueDelay;
+                                                        }
+
+                                                        if (!e.EventType.HasValue)
+                                                        {
+                                                            e.EventType = errorPolicyResult.EventType;
+                                                        }
+
+                                                        await eventQueue.RequeueAsync(
+                                                        @event,
+                                                        delay:             e.Delay,
+                                                        watchEventType:    (k8s.WatchEventType?)e.EventType,
+                                                        cancellationToken: cancellationToken);
+
+                                                        return;
                                                     }
                                                     catch (Exception e)
                                                     {
