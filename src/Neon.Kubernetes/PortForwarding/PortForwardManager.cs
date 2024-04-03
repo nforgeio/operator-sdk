@@ -117,8 +117,10 @@ namespace Neon.K8s.PortForward
 
                         try
                         {
-                            while (!cancellationToken.IsCancellationRequested)
+                            while (true)
                             {
+                                cancellationToken.ThrowIfCancellationRequested();
+
                                 podName = names.ElementAt(Random.Shared.Next(0, names.Count()));
 
                                 logger?.LogDebugEx(() => $"Starting listener for forwarding: {localPort} --> {remotePort}");
@@ -138,8 +140,10 @@ namespace Neon.K8s.PortForward
                                                     @namespace:           @namespace,
                                                     ports:                new int[] { remotePort },
                                                     webSocketSubProtocol: WebSocketProtocol.V4BinaryWebsocketProtocol,
-                                                    customHeaders:        customHeaders);
-                                            });
+                                                    customHeaders:        customHeaders,
+                                                    cancellationToken:    cancellationToken);
+                                            },
+                                            cancellationToken: cancellationToken);
                                     };
 
                                     var localConnection = await portListener.Listener.AcceptTcpClientAsync();
