@@ -63,7 +63,6 @@ jobs:
           OUTPUT: CHANGES.md
           
       - name: update release
-        id: update_release
         uses: tubone24/update_release@v1.0
         if: "!github.event.release.prerelease"
         env:
@@ -72,7 +71,6 @@ jobs:
           body: ${{ steps.git-cliff.outputs.content }}
           
       - name: update prerelease
-        id: update_release
         uses: tubone24/update_release@v1.0
         if: "github.event.release.prerelease"
         env:
