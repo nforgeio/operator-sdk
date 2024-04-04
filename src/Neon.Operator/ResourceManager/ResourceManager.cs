@@ -1039,59 +1039,67 @@ namespace Neon.Operator.ResourceManager
                 {
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueResourceEvent", ActivityKind.Server))
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        var resource     = @event.Value;
-                        var resourceName = resource.Metadata.Name;
-
-                        logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
-
-                        resourceCache.Compare(resource, out var modifiedEventType);
-
-                        @event.ModifiedEventType = modifiedEventType;
-
-                        switch (@event.Type)
+                        try
                         {
-                            case (k8s.WatchEventType)WatchEventType.Added:
-                            case (k8s.WatchEventType)WatchEventType.Deleted:
-                            case (k8s.WatchEventType)WatchEventType.Modified:
+                            cancellationToken.ThrowIfCancellationRequested();
 
-                                await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
-                                await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
-                                break;
+                            var resource     = @event.Value;
+                            var resourceName = resource.Metadata.Name;
 
-                            case (k8s.WatchEventType)WatchEventType.Bookmark:
+                            logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
 
-                                break;  // We don't care about these.
+                            resourceCache.Compare(resource, out var modifiedEventType);
 
-                            case (k8s.WatchEventType)WatchEventType.Error:
+                            @event.ModifiedEventType = modifiedEventType;
 
-                                // I believe we're only going to see this for extreme scenarios, like:
-                                //
-                                //      1. The CRD we're watching was deleted and recreated.
-                                //      2. The watcher is so far behind that part of the
-                                //         history is no longer available.
-                                //
-                                // We're going to log this and terminate the application, expecting
-                                // that Kubernetes will reschedule it so we can start over.
+                            switch (@event.Type)
+                            {
+                                case (k8s.WatchEventType)WatchEventType.Added:
+                                case (k8s.WatchEventType)WatchEventType.Deleted:
+                                case (k8s.WatchEventType)WatchEventType.Modified:
 
-                                var stub = new TEntity();
+                                    await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
+                                    await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
+                                    break;
 
-                                if (!string.IsNullOrEmpty(resource.Namespace()))
-                                {
-                                    logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
-                                }
-                                else
-                                {
-                                    logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
-                                }
+                                case (k8s.WatchEventType)WatchEventType.Bookmark:
 
-                                logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
-                                Environment.Exit(1);
-                                break;
+                                    break;  // We don't care about these.
 
-                            default:
-                                break;
+                                case (k8s.WatchEventType)WatchEventType.Error:
+
+                                    // I believe we're only going to see this for extreme scenarios, like:
+                                    //
+                                    //      1. The CRD we're watching was deleted and recreated.
+                                    //      2. The watcher is so far behind that part of the
+                                    //         history is no longer available.
+                                    //
+                                    // We're going to log this and terminate the application, expecting
+                                    // that Kubernetes will reschedule it so we can start over.
+
+                                    var stub = new TEntity();
+
+                                    if (!string.IsNullOrEmpty(resource.Namespace()))
+                                    {
+                                        logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    }
+                                    else
+                                    {
+                                        logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    }
+
+                                    logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                    Environment.Exit(1);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            logger?.LogErrorEx(e);
+                            throw;
                         }
                     }
                 };

@@ -191,44 +191,41 @@ namespace Neon.Operator.ResourceManager
 
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
-            try
+            while (await eventChannel.Reader.WaitToReadAsync(cancellationToken))
             {
-                while (await eventChannel.Reader.WaitToReadAsync(cancellationToken))
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (eventChannel.Reader.TryRead(out var uid))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
 
-                    if (eventChannel.Reader.TryRead(out var uid))
+                    if (@event == null || @event.Value == null || queue[@event].IsCancellationRequested)
                     {
-                        var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
+                        continue;
+                    }
 
-                        if (@event == null || @event.Value == null || queue[@event].IsCancellationRequested)
+                    try
+                    {
+                        currentEvents.TryAdd(uid, DateTime.UtcNow);
+
+                        metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
+                        logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
+                        using (var timer = metrics.WorkDurationSeconds.NewTimer())
                         {
-                            continue;
-                        }
-
-                        try
-                        {
-                            currentEvents.TryAdd(uid, DateTime.UtcNow);
-
-                            metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
-                            logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-
-                            using (var timer = metrics.WorkDurationSeconds.NewTimer())
-                            {
-                                await eventHandler?.Invoke(@event);
-                            }
-                        }
-                        finally
-                        {
-                            currentEvents.Remove(uid, out _);
+                            await eventHandler?.Invoke(@event);
                         }
                     }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
+                        throw;
+                    }
+                    finally
+                    {
+                        currentEvents.Remove(uid, out _);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(e);
-                throw;
             }
 
             if (cancellationToken.IsCancellationRequested)
@@ -247,44 +244,41 @@ namespace Neon.Operator.ResourceManager
 
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
-            try
+            while (await finalizeChannel.Reader.WaitToReadAsync(cancellationToken))
             {
-                while (await finalizeChannel.Reader.WaitToReadAsync(cancellationToken))
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (finalizeChannel.Reader.TryRead(out var uid))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
 
-                    if (finalizeChannel.Reader.TryRead(out var uid))
+                    if (@event == null || @event.Value == null || queue[@event].IsCancellationRequested)
                     {
-                        var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
+                        continue;
+                    }
 
-                        if (@event == null || @event.Value == null || queue[@event].IsCancellationRequested)
+                    try
+                    {
+                        currentEvents.TryAdd(uid, DateTime.UtcNow);
+
+                        metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
+                        logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
+
+                        using (var timer = metrics.WorkDurationSeconds.NewTimer())
                         {
-                            continue;
-                        }
-
-                        try
-                        {
-                            currentEvents.TryAdd(uid, DateTime.UtcNow);
-
-                            metrics.QueueDurationSeconds.Observe((DateTime.UtcNow - @event.CreatedAt).TotalSeconds);
-                            logger?.LogDebugEx(() => $"Executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
-
-                            using (var timer = metrics.WorkDurationSeconds.NewTimer())
-                            {
-                                await eventHandler?.Invoke(@event);
-                            }
-                        }
-                        finally
-                        {
-                            currentEvents.Remove(uid, out _);
+                            await eventHandler?.Invoke(@event);
                         }
                     }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
+                        throw;
+                    }
+                    finally
+                    {
+                        currentEvents.Remove(uid, out _);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                logger?.LogErrorEx(e);
-                throw;
             }
 
             if (cancellationToken.IsCancellationRequested)
