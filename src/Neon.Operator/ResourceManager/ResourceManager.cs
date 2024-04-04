@@ -16,11 +16,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -199,6 +199,7 @@ namespace Neon.Operator.ResourceManager
         private Task                                                     watcherTask;
         private CancellationTokenSource                                  watcherTcs;
         private EventQueue<TEntity, TController>                         eventQueue;
+        private ConcurrentDictionary<string, CancellationTokenSource>    reconcileTokens;
 
         /// <summary>
         /// Default constructor.
@@ -684,16 +685,6 @@ namespace Neon.Operator.ResourceManager
         {
             await SyncContext.Clear;
 
-            //-----------------------------------------------------------------
-            // We're going to use this dictionary to keep track of the [Status]
-            // property of the resources we're watching so we can distinguish
-            // between changes to the status vs. changes to anything else in
-            // the resource.
-            //
-            // The dictionary simply holds the status property serialized to
-            // JSON, with these keyed by resource name.  Note that the resource
-            // entities might not have a [Status] property.
-
             var entityType   = typeof(TEntity);
             var statusGetter = entityType.GetProperty("Status")?.GetMethod;
             
@@ -747,9 +738,24 @@ namespace Neon.Operator.ResourceManager
                                                     await finalizerManager.RegisterAllFinalizersAsync(resource, cancellationToken: cancellationToken);
                                                 }
 
+                                                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                                                reconcileTokens.AddOrUpdate(
+                                                    key: resource.Uid(),
+                                                    addValueFactory: (id) =>
+                                                    {
+                                                        return cts;
+
+                                                    },
+                                                    updateValueFactory: (id, token) =>
+                                                    {
+                                                        return cts;
+
+                                                    });
+
                                                 using (metrics.ReconcileTimeSeconds.NewTimer())
                                                 {
-                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
+                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cts.Token);
                                                 }
                                             }
                                             catch (RequeueException e)
@@ -782,6 +788,13 @@ namespace Neon.Operator.ResourceManager
                                                 return;
 
                                             }
+                                            catch (OperationCanceledException e)
+                                            {
+                                                logger?.LogErrorEx(e);
+                                                metrics.ReconcileErrorsTotal.Inc();
+
+                                                return;
+                                            }
                                             catch (Exception e)
                                             {
                                                 metrics.ReconcileErrorsTotal.Inc();
@@ -804,6 +817,10 @@ namespace Neon.Operator.ResourceManager
                                                     return;
                                                 }
                                             }
+                                            finally
+                                            {
+                                                reconcileTokens.TryRemove(resource.Uid(), out _);
+                                            }
 
                                             break;
 
@@ -812,6 +829,11 @@ namespace Neon.Operator.ResourceManager
                                             try
                                             {
                                                 metrics.DeleteEventsTotal?.Inc();
+
+                                                if (reconcileTokens.TryGetValue(resource.Uid(), out var token))
+                                                {
+                                                    await token.CancelAsync();
+                                                }
 
                                                 using (metrics.DeleteTimeSeconds.NewTimer())
                                                 {
@@ -838,9 +860,24 @@ namespace Neon.Operator.ResourceManager
                                                     {
                                                         metrics.ReconcileEventsTotal?.Inc();
 
+                                                        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                                                        reconcileTokens.AddOrUpdate(
+                                                            key: resource.Uid(),
+                                                            addValueFactory: (id) =>
+                                                            {
+                                                                return cts;
+
+                                                            },
+                                                            updateValueFactory: (id, token) =>
+                                                            {
+                                                                return cts;
+
+                                                            });
+
                                                         using (metrics.ReconcileTimeSeconds.NewTimer())
                                                         {
-                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
+                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cts.Token);
                                                         }
                                                     }
                                                     catch (RequeueException e)
@@ -872,6 +909,13 @@ namespace Neon.Operator.ResourceManager
 
                                                         return;
                                                     }
+                                                    catch (OperationCanceledException e)
+                                                    {
+                                                        logger?.LogErrorEx(e);
+                                                        metrics.ReconcileErrorsTotal.Inc();
+
+                                                        return;
+                                                    }
                                                     catch (Exception e)
                                                     {
                                                         metrics.ReconcileErrorsTotal?.Inc();
@@ -894,6 +938,11 @@ namespace Neon.Operator.ResourceManager
                                                             return;
                                                         }
                                                     }
+                                                    finally
+                                                    {
+                                                        reconcileTokens.TryRemove(resource.Uid(), out _);
+                                                    }
+
                                                     break;
 
                                                 case ModifiedEventType.Finalizing:
@@ -961,15 +1010,34 @@ namespace Neon.Operator.ResourceManager
                                                         {
                                                             metrics.StatusModifiedTotal?.Inc();
 
+                                                            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                                                            reconcileTokens.AddOrUpdate(
+                                                                key: resource.Uid(),
+                                                                addValueFactory: (id) =>
+                                                                {
+                                                                    return cts;
+
+                                                                },
+                                                                updateValueFactory: (id, token) =>
+                                                                {
+                                                                    return cts;
+
+                                                                });
+
                                                             using (metrics.StatusModifiedTimeSeconds.NewTimer())
                                                             {
-                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource, cancellationToken: cancellationToken);
+                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource, cancellationToken: cts.Token);
                                                             }
                                                         }
                                                         catch (Exception e)
                                                         {
                                                             metrics.StatusModifiedErrorsTotal?.Inc();
                                                             logger?.LogErrorEx(e);
+                                                        }
+                                                        finally
+                                                        {
+                                                            reconcileTokens.TryRemove(resource.Uid(), out _);
                                                         }
                                                     }
                                                     else
