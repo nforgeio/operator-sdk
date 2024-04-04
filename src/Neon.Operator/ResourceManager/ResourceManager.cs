@@ -1124,11 +1124,23 @@ namespace Neon.Operator.ResourceManager
                             switch (@event.Type)
                             {
                                 case (k8s.WatchEventType)WatchEventType.Added:
-                                case (k8s.WatchEventType)WatchEventType.Deleted:
                                 case (k8s.WatchEventType)WatchEventType.Modified:
 
                                     await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
                                     await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
+
+                                    break;
+
+                                case (k8s.WatchEventType)WatchEventType.Deleted:
+
+                                    if (reconcileTokens.TryGetValue(resource.Uid(), out var token))
+                                    {
+                                        await token.CancelAsync();
+                                    }
+
+                                    await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
+                                    await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
+
                                     break;
 
                                 case (k8s.WatchEventType)WatchEventType.Bookmark:
