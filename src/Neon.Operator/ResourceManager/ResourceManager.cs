@@ -269,6 +269,7 @@ namespace Neon.Operator.ResourceManager
             this.crdCache               = serviceProvider.GetRequiredService<ICrdCache>();
             this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
+            this.reconcileTokens        = new ConcurrentDictionary<string, CancellationTokenSource>();
 
             IResourceController<TEntity> controller;
             

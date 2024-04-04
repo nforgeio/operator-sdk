@@ -66,7 +66,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         if: "!github.event.release.prerelease"
         with:
-          file: binary_release.zip
           repo_token: ${{ secrets.RELEASES_TOKEN }}
           tag: ${{ github.ref }}
           body: ${{ steps.git-cliff.outputs.content }}
@@ -75,7 +74,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         if: "github.event.release.prerelease"
         with:
-          file: binary_release.zip
           repo_token: ${{ secrets.RELEASES_TOKEN }}
           tag: ${{ github.ref }}
           body: ${{ steps.git-cliff-prerelease.outputs.content }}
