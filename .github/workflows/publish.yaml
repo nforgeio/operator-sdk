@@ -30,3 +30,31 @@ jobs:
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
     - name: publish-github
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.PACKAGES_PAT }} --source https://nuget.pkg.github.com/nforgeio/index.json --skip-duplicate
+  changelog:
+    name: Generate changelog
+    runs-on: ubuntu-latest
+    outputs:
+      release_body: ${{ steps.git-cliff.outputs.content }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: -vv --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+
+      # use release body in the same job
+      - name: Upload the binary releases
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: binary_release.zip
+          repo_token: ${{ secrets.RELEASES_TOKEN }}
+          tag: ${{ github.ref }}
+          body: ${{ steps.git-cliff.outputs.content }}
