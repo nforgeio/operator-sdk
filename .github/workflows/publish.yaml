@@ -61,19 +61,21 @@ jobs:
           args: -vv --latest --unreleased --strip header
         env:
           OUTPUT: CHANGES.md
-
-      - name: Upload the changelog
-        uses: svenstaro/upload-release-action@v2
+          
+      - name: update release
+        id: update_release
+        uses: tubone24/update_release@v1.0
         if: "!github.event.release.prerelease"
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         with:
-          repo_token: ${{ secrets.RELEASES_TOKEN }}
-          tag: ${{ github.ref }}
           body: ${{ steps.git-cliff.outputs.content }}
-
-      - name: Upload the prerelease changelog
-        uses: svenstaro/upload-release-action@v2
+          
+      - name: update prerelease
+        id: update_release
+        uses: tubone24/update_release@v1.0
         if: "github.event.release.prerelease"
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         with:
-          repo_token: ${{ secrets.RELEASES_TOKEN }}
-          tag: ${{ github.ref }}
           body: ${{ steps.git-cliff-prerelease.outputs.content }}
