@@ -121,19 +121,29 @@ namespace Neon.Operator.ResourceManager
         {
             await SyncContext.Clear;
 
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                for (int i = 0; i < reconcileTasks.Length; i++)
+                while (true)
                 {
-                    var task = reconcileTasks[i];
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    if (task == null || !task.Status.Equals(TaskStatus.Running))
+                    for (int i = 0; i < reconcileTasks.Length; i++)
                     {
-                        reconcileTasks[i] = ReconcileConsumerAsync(cancellationToken);
-                    }
-                }
+                        var task = reconcileTasks[i];
 
-                await Task.WhenAny(reconcileTasks);
+                        if (task == null || !task.Status.Equals(TaskStatus.Running))
+                        {
+                            reconcileTasks[i] = ReconcileConsumerAsync(cancellationToken);
+                        }
+                    }
+
+                    await Task.WhenAny(reconcileTasks);
+                }
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e);
+                throw;
             }
         }
 
@@ -145,19 +155,29 @@ namespace Neon.Operator.ResourceManager
         {
             await SyncContext.Clear;
 
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                for (int i = 0; i < finalizeTasks.Length; i++)
+                while (true)
                 {
-                    var task = finalizeTasks[i];
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    if (task == null || !task.Status.Equals(TaskStatus.Running))
+                    for (int i = 0; i < finalizeTasks.Length; i++)
                     {
-                        finalizeTasks[i] = FinalizerConsumerAsync(cancellationToken);
-                    }
-                }
+                        var task = finalizeTasks[i];
 
-                await Task.WhenAny(finalizeTasks);
+                        if (task == null || !task.Status.Equals(TaskStatus.Running))
+                        {
+                            finalizeTasks[i] = FinalizerConsumerAsync(cancellationToken);
+                        }
+                    }
+
+                    await Task.WhenAny(finalizeTasks);
+                }
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e);
+                throw;
             }
         }
 
@@ -171,9 +191,10 @@ namespace Neon.Operator.ResourceManager
 
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
-            while (!cancellationToken.IsCancellationRequested
-                && await eventChannel.Reader.WaitToReadAsync())
+            while (await eventChannel.Reader.WaitToReadAsync(cancellationToken))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (eventChannel.Reader.TryRead(out var uid))
                 {
                     var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
@@ -195,11 +216,21 @@ namespace Neon.Operator.ResourceManager
                             await eventHandler?.Invoke(@event);
                         }
                     }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
+                        throw;
+                    }
                     finally
                     {
                         currentEvents.Remove(uid, out _);
                     }
                 }
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                logger?.LogInformationEx(() => "Reconcile consumer cancelled.");
             }
         }
 
@@ -213,9 +244,10 @@ namespace Neon.Operator.ResourceManager
 
             using var worker = metrics.ActiveWorkers.TrackInProgress();
 
-            while (!cancellationToken.IsCancellationRequested
-                && await finalizeChannel.Reader.WaitToReadAsync())
+            while (await finalizeChannel.Reader.WaitToReadAsync(cancellationToken))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (finalizeChannel.Reader.TryRead(out var uid))
                 {
                     var @event = queue.Keys.Where(key => key.Value.Uid() == uid).FirstOrDefault();
@@ -237,11 +269,21 @@ namespace Neon.Operator.ResourceManager
                             await eventHandler?.Invoke(@event);
                         }
                     }
+                    catch (Exception e)
+                    {
+                        logger?.LogErrorEx(e);
+                        throw;
+                    }
                     finally
                     {
                         currentEvents.Remove(uid, out _);
                     }
                 }
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                logger?.LogInformationEx(() => "Finalizer consumer cancelled.");
             }
         }
 
@@ -258,16 +300,24 @@ namespace Neon.Operator.ResourceManager
 
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
-
-            if (queuedEvent != null)
+            try
             {
-                if (@event.Value.Generation() > queuedEvent.Value.Generation())
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var queuedEvent = queue.Keys.Where(key => key.Value.Uid() == @event.Value.Uid()).FirstOrDefault();
+
+                if (queuedEvent != null)
                 {
-                    await DequeueAsync(queuedEvent, cancellationToken);
+                    if (@event.Value.Generation() > queuedEvent.Value.Generation())
+                    {
+                        await DequeueAsync(queuedEvent, cancellationToken);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                logger?.LogErrorEx(e);
+                throw;
             }
         }
 
@@ -287,46 +337,58 @@ namespace Neon.Operator.ResourceManager
 
             Covenant.Requires<ArgumentNullException>(@event != null, nameof(@event));
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var resource = @event.Value;
-
-            logger?.LogDebugEx(() => $"Event [{@event.Type}] queued for resource [{resource.Kind}/{resource.Name()}] ");
-
-            if (queue.Keys.Any(key => key.Value.Uid() == @event.Value.Uid()))
+            try
             {
-                logger?.LogInformationEx(() => $"Event [{@event.Type}] already exists for resource [{resource.Kind}/{resource.Name()}], aborting");
-                return;
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var resource = @event.Value;
+
+                logger?.LogDebugEx(() => $"Queuing event [{@event.Type}] for resource [{resource.Kind}/{resource.Name()}] ");
+
+                if (queue.Keys.Any(key => key.Value.Uid() == @event.Value.Uid()))
+                {
+                    logger?.LogInformationEx(() => $"Event [{@event.Type}] already exists for resource [{resource.Kind}/{resource.Name()}], aborting");
+                    return;
+                }
+
+                if (watchEventType == null)
+                {
+                    watchEventType = @event.Type;
+                }
+
+                @event.Type = watchEventType.Value;
+
+                var cts = new CancellationTokenSource();
+
+                if (queue.TryAdd(@event, cts))
+                {
+                    metrics.AddsTotal.Inc();
+                    metrics.Depth.Set(queue.Count);
+                }
+
+                switch (@event.ModifiedEventType)
+                {
+                    case Controllers.ModifiedEventType.Finalizing:
+
+                        logger?.LogDebugEx(() => $"Writing [{@event.Type}] [{resource.Kind}/{resource.Name()}] to finalizer channel.");
+
+                        await finalizeChannel.Writer.WriteAsync(@event.Value.Uid(), cancellationToken);
+
+                        break;
+
+                    default:
+
+                        logger?.LogDebugEx(() => $"Writing [{@event.Type}] [{resource.Kind}/{resource.Name()}] to event channel.");
+
+                        await eventChannel.Writer.WriteAsync(@event.Value.Uid(), cancellationToken);
+
+                        break;
+                }
             }
-
-            if (watchEventType == null)
+            catch (Exception e)
             {
-                watchEventType = @event.Type;
-            }
-
-            @event.Type = watchEventType.Value;
-
-            var cts = new CancellationTokenSource();
-
-            if (queue.TryAdd(@event, cts))
-            {
-                metrics.AddsTotal.Inc();
-                metrics.Depth.Set(queue.Count);
-            }
-
-            switch (@event.ModifiedEventType)
-            {
-                case Controllers.ModifiedEventType.Finalizing:
-
-                    await finalizeChannel.Writer.WriteAsync(@event.Value.Uid(), cancellationToken);
-
-                    break;
-
-                default:
-
-                    await eventChannel.Writer.WriteAsync(@event.Value.Uid(), cancellationToken);
-
-                    break;
+                logger?.LogErrorEx(e);
+                throw;
             }
         }
 
@@ -421,7 +483,7 @@ namespace Neon.Operator.ResourceManager
 
             logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
-            await Task.Delay(delay);
+            await Task.Delay(delay, cancellationToken);
 
             @event.CreatedAt = DateTime.UtcNow;
 

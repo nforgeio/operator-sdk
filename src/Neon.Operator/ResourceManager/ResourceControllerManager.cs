@@ -77,6 +77,7 @@ namespace Neon.Operator.ResourceManager
                 catch (Exception e)
                 {
                     logger?.LogErrorEx(e);
+                    throw;
                 }
             }
         }

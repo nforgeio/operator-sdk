@@ -16,11 +16,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -41,6 +41,7 @@ using Neon.Diagnostics;
 using Neon.K8s;
 using Neon.Operator.Cache;
 using Neon.Operator.Controllers;
+using Neon.Operator.Core.Exceptions;
 using Neon.Operator.Entities;
 using Neon.Operator.EventQueue;
 using Neon.Operator.Finalizers;
@@ -198,6 +199,7 @@ namespace Neon.Operator.ResourceManager
         private Task                                                     watcherTask;
         private CancellationTokenSource                                  watcherTcs;
         private EventQueue<TEntity, TController>                         eventQueue;
+        private ConcurrentDictionary<string, CancellationTokenSource>    reconcileTokens;
 
         /// <summary>
         /// Default constructor.
@@ -267,6 +269,7 @@ namespace Neon.Operator.ResourceManager
             this.crdCache               = serviceProvider.GetRequiredService<ICrdCache>();
             this.finalizerManager       = serviceProvider.GetRequiredService<IFinalizerManager<TEntity>>();
             this.lockProvider           = serviceProvider.GetRequiredService<AsyncKeyedLocker<string>>();
+            this.reconcileTokens        = new ConcurrentDictionary<string, CancellationTokenSource>();
 
             IResourceController<TEntity> controller;
             
@@ -683,16 +686,6 @@ namespace Neon.Operator.ResourceManager
         {
             await SyncContext.Clear;
 
-            //-----------------------------------------------------------------
-            // We're going to use this dictionary to keep track of the [Status]
-            // property of the resources we're watching so we can distinguish
-            // between changes to the status vs. changes to anything else in
-            // the resource.
-            //
-            // The dictionary simply holds the status property serialized to
-            // JSON, with these keyed by resource name.  Note that the resource
-            // entities might not have a [Status] property.
-
             var entityType   = typeof(TEntity);
             var statusGetter = entityType.GetProperty("Status")?.GetMethod;
             
@@ -746,10 +739,62 @@ namespace Neon.Operator.ResourceManager
                                                     await finalizerManager.RegisterAllFinalizersAsync(resource, cancellationToken: cancellationToken);
                                                 }
 
+                                                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                                                reconcileTokens.AddOrUpdate(
+                                                    key: resource.Uid(),
+                                                    addValueFactory: (id) =>
+                                                    {
+                                                        return cts;
+
+                                                    },
+                                                    updateValueFactory: (id, token) =>
+                                                    {
+                                                        return cts;
+
+                                                    });
+
                                                 using (metrics.ReconcileTimeSeconds.NewTimer())
                                                 {
-                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
+                                                    result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cts.Token);
                                                 }
+                                            }
+                                            catch (RequeueException e)
+                                            {
+                                                metrics.ReconcileErrorsTotal.Inc();
+                                                logger?.LogErrorEx(() => $"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
+
+                                                var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
+
+                                                @event.Attempt += 1;
+
+                                                resourceCache.Remove(resource);
+
+                                                if (!e.Delay.HasValue)
+                                                {
+                                                    e.Delay = errorPolicyResult.RequeueDelay;
+                                                }
+
+                                                if (!e.EventType.HasValue)
+                                                {
+                                                    e.EventType = errorPolicyResult.EventType;
+                                                }
+
+                                                await eventQueue.RequeueAsync(
+                                                        @event,
+                                                        delay:             e.Delay,
+                                                        watchEventType:    (k8s.WatchEventType?)e.EventType,
+                                                        cancellationToken: cancellationToken);
+
+                                                return;
+
+                                            }
+                                            catch (OperationCanceledException e)
+                                            {
+                                                logger?.LogErrorEx(e);
+                                                metrics.ReconcileErrorsTotal.Inc();
+
+                                                return;
                                             }
                                             catch (Exception e)
                                             {
@@ -773,6 +818,10 @@ namespace Neon.Operator.ResourceManager
                                                     return;
                                                 }
                                             }
+                                            finally
+                                            {
+                                                reconcileTokens.TryRemove(resource.Uid(), out _);
+                                            }
 
                                             break;
 
@@ -781,6 +830,11 @@ namespace Neon.Operator.ResourceManager
                                             try
                                             {
                                                 metrics.DeleteEventsTotal?.Inc();
+
+                                                if (reconcileTokens.TryGetValue(resource.Uid(), out var token))
+                                                {
+                                                    await token.CancelAsync();
+                                                }
 
                                                 using (metrics.DeleteTimeSeconds.NewTimer())
                                                 {
@@ -807,10 +861,61 @@ namespace Neon.Operator.ResourceManager
                                                     {
                                                         metrics.ReconcileEventsTotal?.Inc();
 
+                                                        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                                                        reconcileTokens.AddOrUpdate(
+                                                            key: resource.Uid(),
+                                                            addValueFactory: (id) =>
+                                                            {
+                                                                return cts;
+
+                                                            },
+                                                            updateValueFactory: (id, token) =>
+                                                            {
+                                                                return cts;
+
+                                                            });
+
                                                         using (metrics.ReconcileTimeSeconds.NewTimer())
                                                         {
-                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cancellationToken);
+                                                            result = await CreateController(scope.ServiceProvider).ReconcileAsync(resource, cancellationToken: cts.Token);
                                                         }
+                                                    }
+                                                    catch (RequeueException e)
+                                                    {
+                                                        metrics.ReconcileErrorsTotal?.Inc();
+                                                        logger?.LogErrorEx(e, () => $"Event type [{modifiedEventType}] on resource [{resource.Kind}/{resourceName}] threw a [{e.GetType()}] error. Attempt [{@event.Attempt}]");
+
+                                                        var errorPolicyResult = await CreateController(scope.ServiceProvider).ErrorPolicyAsync(resource, @event.Attempt, e, cancellationToken);
+
+                                                        @event.Attempt += 1;
+
+                                                        resourceCache.Remove(resource);
+
+                                                        if (!e.Delay.HasValue)
+                                                        {
+                                                            e.Delay = errorPolicyResult.RequeueDelay;
+                                                        }
+
+                                                        if (!e.EventType.HasValue)
+                                                        {
+                                                            e.EventType = errorPolicyResult.EventType;
+                                                        }
+
+                                                        await eventQueue.RequeueAsync(
+                                                        @event,
+                                                        delay:             e.Delay,
+                                                        watchEventType:    (k8s.WatchEventType?)e.EventType,
+                                                        cancellationToken: cancellationToken);
+
+                                                        return;
+                                                    }
+                                                    catch (OperationCanceledException e)
+                                                    {
+                                                        logger?.LogErrorEx(e);
+                                                        metrics.ReconcileErrorsTotal.Inc();
+
+                                                        return;
                                                     }
                                                     catch (Exception e)
                                                     {
@@ -834,6 +939,11 @@ namespace Neon.Operator.ResourceManager
                                                             return;
                                                         }
                                                     }
+                                                    finally
+                                                    {
+                                                        reconcileTokens.TryRemove(resource.Uid(), out _);
+                                                    }
+
                                                     break;
 
                                                 case ModifiedEventType.Finalizing:
@@ -901,15 +1011,34 @@ namespace Neon.Operator.ResourceManager
                                                         {
                                                             metrics.StatusModifiedTotal?.Inc();
 
+                                                            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                                                            reconcileTokens.AddOrUpdate(
+                                                                key: resource.Uid(),
+                                                                addValueFactory: (id) =>
+                                                                {
+                                                                    return cts;
+
+                                                                },
+                                                                updateValueFactory: (id, token) =>
+                                                                {
+                                                                    return cts;
+
+                                                                });
+
                                                             using (metrics.StatusModifiedTimeSeconds.NewTimer())
                                                             {
-                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource, cancellationToken: cancellationToken);
+                                                                await CreateController(scope.ServiceProvider).StatusModifiedAsync(resource, cancellationToken: cts.Token);
                                                             }
                                                         }
                                                         catch (Exception e)
                                                         {
                                                             metrics.StatusModifiedErrorsTotal?.Inc();
                                                             logger?.LogErrorEx(e);
+                                                        }
+                                                        finally
+                                                        {
+                                                            reconcileTokens.TryRemove(resource.Uid(), out _);
                                                         }
                                                     }
                                                     else
@@ -979,59 +1108,79 @@ namespace Neon.Operator.ResourceManager
                 {
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueResourceEvent", ActivityKind.Server))
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        var resource     = @event.Value;
-                        var resourceName = resource.Metadata.Name;
-
-                        logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
-
-                        resourceCache.Compare(resource, out var modifiedEventType);
-
-                        @event.ModifiedEventType = modifiedEventType;
-
-                        switch (@event.Type)
+                        try
                         {
-                            case (k8s.WatchEventType)WatchEventType.Added:
-                            case (k8s.WatchEventType)WatchEventType.Deleted:
-                            case (k8s.WatchEventType)WatchEventType.Modified:
+                            cancellationToken.ThrowIfCancellationRequested();
 
-                                await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
-                                await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
-                                break;
+                            var resource     = @event.Value;
+                            var resourceName = resource.Metadata.Name;
 
-                            case (k8s.WatchEventType)WatchEventType.Bookmark:
+                            logger?.LogDebugEx(() => $"Resource {resource.Kind} {resource.Namespace()}/{resource.Name()} received {@event.Type} event.");
 
-                                break;  // We don't care about these.
+                            resourceCache.Compare(resource, out var modifiedEventType);
 
-                            case (k8s.WatchEventType)WatchEventType.Error:
+                            @event.ModifiedEventType = modifiedEventType;
 
-                                // I believe we're only going to see this for extreme scenarios, like:
-                                //
-                                //      1. The CRD we're watching was deleted and recreated.
-                                //      2. The watcher is so far behind that part of the
-                                //         history is no longer available.
-                                //
-                                // We're going to log this and terminate the application, expecting
-                                // that Kubernetes will reschedule it so we can start over.
+                            switch (@event.Type)
+                            {
+                                case (k8s.WatchEventType)WatchEventType.Added:
+                                case (k8s.WatchEventType)WatchEventType.Modified:
 
-                                var stub = new TEntity();
+                                    await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
+                                    await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
 
-                                if (!string.IsNullOrEmpty(resource.Namespace()))
-                                {
-                                    logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
-                                }
-                                else
-                                {
-                                    logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
-                                }
+                                    break;
 
-                                logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
-                                Environment.Exit(1);
-                                break;
+                                case (k8s.WatchEventType)WatchEventType.Deleted:
 
-                            default:
-                                break;
+                                    if (reconcileTokens.TryGetValue(resource.Uid(), out var token))
+                                    {
+                                        await token.CancelAsync();
+                                    }
+
+                                    await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
+                                    await eventQueue.EnqueueAsync(@event, cancellationToken: cancellationToken);
+
+                                    break;
+
+                                case (k8s.WatchEventType)WatchEventType.Bookmark:
+
+                                    break;  // We don't care about these.
+
+                                case (k8s.WatchEventType)WatchEventType.Error:
+
+                                    // I believe we're only going to see this for extreme scenarios, like:
+                                    //
+                                    //      1. The CRD we're watching was deleted and recreated.
+                                    //      2. The watcher is so far behind that part of the
+                                    //         history is no longer available.
+                                    //
+                                    // We're going to log this and terminate the application, expecting
+                                    // that Kubernetes will reschedule it so we can start over.
+
+                                    var stub = new TEntity();
+
+                                    if (!string.IsNullOrEmpty(resource.Namespace()))
+                                    {
+                                        logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    }
+                                    else
+                                    {
+                                        logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    }
+
+                                    logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
+                                    Environment.Exit(1);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            logger?.LogErrorEx(e);
+                            throw;
                         }
                     }
                 };

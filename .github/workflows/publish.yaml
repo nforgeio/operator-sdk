@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Write release version
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
     - uses: actions/checkout@v3
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -25,8 +30,55 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: pack
-      run: dotnet pack --output ./artifacts -p:version=${GITHUB_REF_NAME}
+      run: dotnet pack --output ./artifacts -p:version=${VERSION}
     - name: publish
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
     - name: publish-github
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.PACKAGES_PAT }} --source https://nuget.pkg.github.com/nforgeio/index.json --skip-duplicate
+  changelog:
+    name: Generate changelog
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      release_body: ${{ steps.git-cliff.outputs.content }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff
+        if: "!github.event.release.prerelease"
+        with:
+          config: cliff.toml
+          args: --latest --tag-pattern ^v[0-9].[0-9].[0-9]$
+        env:
+          OUTPUT: CHANGES.md
+
+      - name: Generate a prerelease changelog
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff-prerelease
+        if: "github.event.release.prerelease"
+        with:
+          config: cliff.toml
+          args: --latest --unreleased --tag ${GITHUB_REF_NAME} --tag-pattern ^v[0-9].*
+        env:
+          OUTPUT: CHANGES.md
+          
+      - name: update release
+        uses: tubone24/update_release@v1.0
+        if: "!github.event.release.prerelease"
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        with:
+          body: ${{ steps.git-cliff.outputs.content }}
+          
+      - name: update prerelease
+        uses: tubone24/update_release@v1.0
+        if: "github.event.release.prerelease"
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        with:
+          body: ${{ steps.git-cliff-prerelease.outputs.content }}
