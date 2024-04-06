@@ -1038,7 +1038,7 @@ namespace Neon.K8s
             // long.  But we also don't want to slam the API server with potentially
             // thousands of pod queries all at once.
             //
-            // We're going to queries for all of the namespaces and then perform pod
+            // We're going to query for all of the namespaces and then perform pod
             // queries in parallel, but limiting that concurrency to something reasonable.
 
             const int podListConcurency = 100;
