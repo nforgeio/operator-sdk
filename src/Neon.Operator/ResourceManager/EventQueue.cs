@@ -483,7 +483,7 @@ namespace Neon.Operator.ResourceManager
 
             logger?.LogDebugEx(() => $"Sleeping before executing event [{@event.Type}] for resource [{@event.Value.Kind}/{@event.Value.Name()}]");
 
-            await Task.Delay(delay);
+            await Task.Delay(delay, cancellationToken);
 
             @event.CreatedAt = DateTime.UtcNow;
 
