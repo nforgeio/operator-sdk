@@ -478,7 +478,7 @@ namespace Neon.K8s
         /// <param name="secret">The secret.</param>
         /// <param name="namespaceParameter">Optionally overrides the default namespace.</param>
         /// <returns>The updated secret.</returns>
-        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter = null)
+        public static async Task<V1Secret> UpsertNamspacedSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter = null)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
