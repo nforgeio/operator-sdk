@@ -521,7 +521,8 @@ namespace Neon.K8s
         public static async Task<V1Secret> UpsertNamspacedSecretAsync(
             this ICoreV1Operations  k8s, 
             V1Secret                secret, 
-            string                  namespaceParameter)
+            string                  namespaceParameter,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
