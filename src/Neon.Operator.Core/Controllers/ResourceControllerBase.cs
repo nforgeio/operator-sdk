@@ -33,6 +33,8 @@ namespace Neon.Operator.Controllers
     public class ResourceControllerBase<T> : IResourceController<T>
         where T : IKubernetesObject<V1ObjectMeta>
     {
+        private string leaseName;
+
         /// <inheritdoc/>
         public string FieldSelector { get; set; } = null;
 
@@ -57,7 +59,8 @@ namespace Neon.Operator.Controllers
             }
         }
 
-        private string leaseName;
+        /// <inheritdoc/>
+        public bool IsLeader { get; set; }
 
         /// <inheritdoc/>
         public virtual Task DeletedAsync(T entity, CancellationToken cancellationToken = default)
@@ -72,6 +75,14 @@ namespace Neon.Operator.Controllers
         }
 
         /// <inheritdoc/>
+        public virtual Task OnPromotionAsync(CancellationToken cancellationToken = default)
+        {
+            IsLeader = true;
+
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
         public virtual Task OnDemotionAsync(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
@@ -79,12 +90,6 @@ namespace Neon.Operator.Controllers
 
         /// <inheritdoc/>
         public virtual Task OnNewLeaderAsync(string identity, CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public virtual Task OnPromotionAsync(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
