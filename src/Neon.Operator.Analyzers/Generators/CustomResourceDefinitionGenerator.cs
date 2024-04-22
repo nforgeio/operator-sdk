@@ -332,7 +332,7 @@ namespace Neon.Operator.Analyzers
                             sb.AppendLine(KubernetesYaml.Serialize(crd.Value));
                             var yaml = sb.ToString();
 
-                            var fileName = crd.Value.Name() + Constants.YamlExtension;
+                            var fileName = crd.Value.Name() + Constants.GeneratedYamlExtension;
                             fileNames.Add(fileName);
 
                             var outputPath = Path.Combine(crdOutputDirectory, fileName);
@@ -404,7 +404,7 @@ namespace Neon.Operator.Analyzers
             {
                 var fileName = Path.GetFileName(filePath);
                 if (fileNames.Contains(fileName)
-                    || Path.GetExtension(fileName) != Constants.YamlExtension)
+                    || Path.GetExtension(fileName) != Constants.GeneratedYamlExtension)
                 {
                     continue;
                 }

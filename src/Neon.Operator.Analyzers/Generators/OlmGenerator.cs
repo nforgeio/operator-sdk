@@ -250,7 +250,6 @@ namespace Neon.Operator.Analyzers.Generators
                             resource: attribute.Resource,
                             verbs: attribute.Verbs,
                             scope: attribute.Scope,
-                            @namespace: attribute.Namespace,
                             resourceNames: attribute.ResourceNames,
                             subResources: attribute.SubResources));
                 }

@@ -290,14 +290,12 @@ namespace Neon.Operator.Analyzers
                             apiGroup: "cert-manager.io",
                             resource: "certificates",
                             verbs: RbacVerb.All,
-                            scope: EntityScope.Namespaced,
-                            @namespace: operatorNamespace));
+                            scope: EntityScope.Namespaced));
 
                     attributes.Add(
                         new RbacRule<V1Secret>(
                             verbs: RbacVerb.Watch,
                             scope: EntityScope.Namespaced,
-                            @namespace: operatorNamespace,
                             resourceNames: $"{operatorName}-webhook-tls"));
                 }
 
@@ -328,7 +326,6 @@ namespace Neon.Operator.Analyzers
                                 resource:      attribute.Resource,
                                 verbs:         attribute.Verbs,
                                 scope:         attribute.Scope,
-                                @namespace:    attribute.Namespace,
                                 resourceNames: attribute.ResourceNames,
                                 subResources:  attribute.SubResources)) ;
                     }
@@ -505,7 +502,7 @@ namespace Neon.Operator.Analyzers
                         saNameString.Append($"-{sa.Namespace()}");
                     }
 
-                    saNameString.Append(Constants.YamlExtension);
+                    saNameString.Append(Constants.GeneratedYamlExtension);
 
                     File.WriteAllText(Path.Combine(rbacOutputDirectory, saNameString.ToString()), saString);
                 }
@@ -513,13 +510,13 @@ namespace Neon.Operator.Analyzers
                 foreach (var cr in clusterRoles)
                 {
                     var crString = KubernetesYaml.Serialize(cr);
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}{Constants.YamlExtension}"), crString);
+                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}{Constants.GeneratedYamlExtension}"), crString);
                 }
 
                 foreach (var crb in clusterRoleBindings)
                 {
                     var crbString = KubernetesYaml.Serialize(crb);
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}{Constants.YamlExtension}"), crbString);
+                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}{Constants.GeneratedYamlExtension}"), crbString);
                 }
 
                 foreach (var r in roles)
@@ -534,7 +531,7 @@ namespace Neon.Operator.Analyzers
                         rNameString.Append($"-{r.Namespace()}");
                     }
 
-                    rNameString.Append(Constants.YamlExtension);
+                    rNameString.Append(Constants.GeneratedYamlExtension);
 
                     File.WriteAllText(Path.Combine(rbacOutputDirectory, rNameString.ToString()), rString);
                 }
@@ -551,7 +548,7 @@ namespace Neon.Operator.Analyzers
                         rbNameString.Append($"-{rb.Namespace()}");
                     }
 
-                    rbNameString.Append(Constants.YamlExtension);
+                    rbNameString.Append(Constants.GeneratedYamlExtension);
 
                     var outputPath = Path.Combine(rbacOutputDirectory, rbNameString.ToString());
 

@@ -477,7 +477,7 @@ namespace Neon.Operator.Analyzers
                 );
             }
 
-            File.WriteAllText(Path.Combine(webhookOutputDirectory, $"{webhookConfiguration.Name()}{Constants.YamlExtension}"), KubernetesYaml.Serialize(webhookConfiguration));
+            File.WriteAllText(Path.Combine(webhookOutputDirectory, $"{webhookConfiguration.Name()}{Constants.GeneratedYamlExtension}"), KubernetesYaml.Serialize(webhookConfiguration));
         }
 
 

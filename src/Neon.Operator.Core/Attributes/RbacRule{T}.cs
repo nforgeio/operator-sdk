@@ -38,19 +38,16 @@ namespace Neon.Operator.Rbac
         /// </summary>
         /// <param name="verbs">Specifies the RBAC verbs.</param>
         /// <param name="scope">Specifies whether the entity is namespaced or cluster scoped.</param>
-        /// <param name="namespace">Optionally specifies a common separated list of namespaces to access.</param>
         /// <param name="resourceNames">Optionally specifies a comma separated list of the names of specific resources to be accessed.</param>/param>
         /// <param name="subResources">Optionally specifies a comma separated list of subresource names.</param>
         public RbacRule(
             RbacVerb    verbs         = RbacVerb.None,
             EntityScope scope         = EntityScope.Namespaced,
-            string      @namespace    = null,
             string      resourceNames = null,
             string      subResources  = null)
         {
             this.Verbs         = verbs;
             this.Scope         = scope;
-            this.Namespace     = @namespace;
             this.ResourceNames = resourceNames;
             this.SubResources  = subResources;
 
@@ -71,11 +68,6 @@ namespace Neon.Operator.Rbac
         public EntityScope Scope { get; set; } = EntityScope.Namespaced;
 
         /// <summary>
-        /// Comma separated list of namespaces to watch or <c>null</c>.
-        /// </summary>
-        public string Namespace { get; set; } = null;
-
-        /// <summary>
         /// Comma separated list of resource names to restrict access to individual 
         /// instances of a resource or <c>null</c>.
         /// </summary>
@@ -91,16 +83,6 @@ namespace Neon.Operator.Rbac
 
         /// <inheritdoc/>
         public string Resource => GetKubernetesEntityAttribute().PluralName;
-
-        /// <summary>
-        /// Returns <see cref="Namespace"/> as a list of strings or <c>null</c>
-        /// when <see cref="Namespace"/> is <c>null</c>.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<string> NamespaceList()
-        {
-            return Namespace?.Split(',') ?? null;
-        }
 
         /// <summary>
         /// Returns the entity type.

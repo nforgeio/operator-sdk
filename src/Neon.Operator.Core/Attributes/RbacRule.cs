@@ -48,7 +48,6 @@ namespace Neon.Operator.Rbac
             string      resource,
             RbacVerb    verbs         = RbacVerb.None,
             EntityScope scope         = EntityScope.Namespaced,
-            string      @namespace    = null,
             string      resourceNames = null,
             string      subResources  = null)
         {
@@ -56,7 +55,6 @@ namespace Neon.Operator.Rbac
             this.Resource      = resource;
             this.Verbs         = verbs;
             this.Scope         = scope;
-            this.Namespace     = @namespace;
             this.ResourceNames = resourceNames;
             this.SubResources  = subResources;
         }

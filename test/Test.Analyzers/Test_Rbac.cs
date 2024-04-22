@@ -89,7 +89,7 @@ namespace TestOperator.Foo.Bar
                 .AddAssembly(typeof(RequiredAttribute).Assembly)
                 .Build();
 
-            var outFile = "role-test-operator.yaml";
+            var outFile = "role-test-operator.g.yaml";
 
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
 
