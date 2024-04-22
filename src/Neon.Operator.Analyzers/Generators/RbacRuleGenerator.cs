@@ -513,13 +513,13 @@ namespace Neon.Operator.Analyzers
                 foreach (var cr in clusterRoles)
                 {
                     var crString = KubernetesYaml.Serialize(cr);
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}.yaml"), crString);
+                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}{Constants.YamlExtension}"), crString);
                 }
 
                 foreach (var crb in clusterRoleBindings)
                 {
                     var crbString = KubernetesYaml.Serialize(crb);
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}.yaml"), crbString);
+                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}{Constants.YamlExtension}"), crbString);
                 }
 
                 foreach (var r in roles)
