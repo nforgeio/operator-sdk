@@ -245,6 +245,10 @@ namespace Neon.Operator
                 logger?.LogErrorEx(e, () => e.Message);
             }
 
+            // $todo(jefflill): This watcher should be disposed promptly.
+            //
+            //      https://github.com/nforgeio/operator-sdk/issues/26
+
             _ = k8s.WatchAsync<V1Secret>(
                 async (@event) =>
                 {

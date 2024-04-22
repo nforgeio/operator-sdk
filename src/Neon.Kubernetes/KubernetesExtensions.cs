@@ -515,14 +515,14 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="secret">The secret.</param>
-        /// <param name="namespaceParameter">Optionally overrides the default namespace.</param>
+        /// <param name="namespaceParameter">Specifies the namespace.</param>
         /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated secret.</returns>
-        public static async Task<V1Secret> UpsertSecretAsync(
-            this ICoreV1Operations k8s,
-            V1Secret secret,
-            string namespaceParameter = null,
-            CancellationToken cancellationToken = default)
+        public static async Task<V1Secret> UpsertNamspacedSecretAsync(
+            this ICoreV1Operations  k8s, 
+            V1Secret                secret, 
+            string                  namespaceParameter,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
@@ -880,9 +880,9 @@ namespace Neon.K8s
 
                     try
                     {
-                        var typeMetadata                     = typeof(TEntity).GetKubernetesTypeMetadata();
-                        var pluralNameGroup                  = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
-                        var existingList                     = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(
+                        var typeMetadata    = typeof(TEntity).GetKubernetesTypeMetadata();
+                        var pluralNameGroup = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
+                        var existingList    = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(
                             fieldSelector:     $"metadata.name={pluralNameGroup}",
                             cancellationToken: cancellationToken
                             );
