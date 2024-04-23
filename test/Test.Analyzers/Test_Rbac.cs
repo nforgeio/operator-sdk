@@ -91,10 +91,10 @@ namespace TestOperator.Foo.Bar
 
             var outFile = "role-test-operator.g.yaml";
 
-            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile)).GetHashCodeIgnoringWhitespace();
+            var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
-            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile)).GetHashCodeIgnoringWhitespace();
-            output.Should().Be(expectedCrd);
+            var expectedCrd = File.ReadAllText(Path.Combine("Outputs", outFile));
+            output.GetHashCodeIgnoringWhitespace().Should().Be(expectedCrd.GetHashCodeIgnoringWhitespace());
         }
     }
 }

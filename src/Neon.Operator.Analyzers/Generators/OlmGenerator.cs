@@ -689,7 +689,7 @@ namespace Neon.Operator.Analyzers.Generators
             Directory.CreateDirectory(manifestDir);
             Directory.CreateDirectory(metadataDir);
 
-            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion{Constants.GeneratedYamlExtension}");
+            var csvPath = Path.Combine(manifestDir, $"{operatorName?.Name.ToLower()}.clusterserviceversion{Constants.YamlExtension}");
 
             AnalyzerHelper.WriteFileWhenDifferent(csvPath, outputString);
 
