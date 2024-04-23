@@ -30,11 +30,11 @@ using Neon.Xunit;
 namespace TestKubernetes
 {
     [Trait(TestTrait.Category, TestArea.NeonOperator)]
-    public class Test_Kubernetes : IClassFixture<TestOperatorFixture>
+    public class Test_Kubernetes : IClassFixture<OperatorFixture>
     {
-        private TestOperatorFixture fixture;
+        private OperatorFixture fixture;
 
-        public Test_Kubernetes(TestOperatorFixture fixture)
+        public Test_Kubernetes(OperatorFixture fixture)
         {
             this.fixture = fixture;
             fixture.RegisterType<V1Certificate>();

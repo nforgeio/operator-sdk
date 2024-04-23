@@ -37,7 +37,7 @@ namespace Neon.Operator.Xunit
         /// <param name="plural">The plural form of the type.</param>
         public TypeNotRegisteredException(string group, string version, string plural)
             : base($"There is no type registered for {group}/{version}/{plural}. " +
-                  $"Register the type by calling TestOperatorFixture.RegisterType<T>() in your unit test.")
+                  $"Register the type by calling OperatorFixture.RegisterType<T>() in your unit test.")
         {
 
         }
@@ -49,7 +49,7 @@ namespace Neon.Operator.Xunit
         /// <param name="plural">The plural form of the type.</param>
         public TypeNotRegisteredException(string version, string plural)
             : base($"There is no type registered for {version}/{plural}. " +
-                  $"Register the type by calling TestOperatorFixture.RegisterType<T>() in your unit test.")
+                  $"Register the type by calling OperatorFixture.RegisterType<T>() in your unit test.")
         {
 
         }

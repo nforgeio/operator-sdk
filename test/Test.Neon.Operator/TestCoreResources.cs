@@ -35,11 +35,11 @@ using Xunit;
 namespace TestKubeOperator
 {
     [Trait(TestTrait.Category, TestArea.NeonOperator)]
-    public class TestCoreResources : IClassFixture<TestOperatorFixture>
+    public class TestCoreResources : IClassFixture<OperatorFixture>
     {
-        private TestOperatorFixture fixture;
+        private OperatorFixture fixture;
 
-        public TestCoreResources(TestOperatorFixture fixture)
+        public TestCoreResources(OperatorFixture fixture)
         {
             this.fixture = fixture;
             fixture.RegisterType<V1ConfigMap>();

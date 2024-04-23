@@ -1,4 +1,4 @@
-// FILE:	    TestOperatorFixture.cs
+// FILE:	    OperatorFixture.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ namespace Neon.Operator.Xunit
     /// <summary>
     /// A test fixture used for testing Kubernetes Operators.
     /// </summary>
-    public class TestOperatorFixture : TestFixture
+    public class OperatorFixture : TestFixture
     {
         /// <summary>
         /// The services collection.
@@ -45,7 +45,7 @@ namespace Neon.Operator.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
-        public TestOperatorFixture()
+        public OperatorFixture()
         {
             this.testApiServerHost             = new TestApiServerBuilder().Build();
             this.KubernetesClientConfiguration = KubernetesClientConfiguration.BuildConfigFromConfigObject(testApiServerHost.KubeConfig);
