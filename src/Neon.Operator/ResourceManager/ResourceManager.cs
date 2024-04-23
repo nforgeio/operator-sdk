@@ -530,11 +530,7 @@ namespace Neon.Operator.ResourceManager
 
                         await using (var scope = serviceProvider.CreateAsyncScope())
                         {
-                            var controller = CreateController(scope.ServiceProvider);
-
-                            controller.IsLeader = true;
-
-                            await controller.OnPromotionAsync(cancellationToken: watcherTcs.Token);
+                            await CreateController(scope.ServiceProvider).OnPromotionAsync(cancellationToken: watcherTcs.Token);
                         }
 
                     }).Wait();
@@ -572,11 +568,7 @@ namespace Neon.Operator.ResourceManager
 
                         await using (var scope = serviceProvider.CreateAsyncScope())
                         {
-                            var controller = CreateController(scope.ServiceProvider);
-
-                            controller.IsLeader = false;
-
-                            await controller.OnDemotionAsync();
+                            await CreateController(scope.ServiceProvider).OnDemotionAsync();
                         }
 
                     }).Wait();
