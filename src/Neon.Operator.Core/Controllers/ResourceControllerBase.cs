@@ -60,9 +60,6 @@ namespace Neon.Operator.Controllers
         }
 
         /// <inheritdoc/>
-        public bool IsLeader { get; set; }
-
-        /// <inheritdoc/>
         public virtual Task DeletedAsync(T entity, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
@@ -77,8 +74,6 @@ namespace Neon.Operator.Controllers
         /// <inheritdoc/>
         public virtual Task OnPromotionAsync(CancellationToken cancellationToken = default)
         {
-            IsLeader = true;
-
             return Task.CompletedTask;
         }
 

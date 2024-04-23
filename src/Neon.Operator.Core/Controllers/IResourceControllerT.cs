@@ -70,17 +70,6 @@ namespace Neon.Operator.Controllers
         public Task DeletedAsync(TEntity entity, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// <para>
-        /// Returns <c>true</c> when this controller instance is the leader.
-        /// </para>
-        /// <note>
-        /// <b>IMPORTANT:</b> This property is managed by the OperatorSDK and should never
-        /// be modified by user code.
-        /// </note>
-        /// </summary>
-        public bool IsLeader { get; set; }
-
-        /// <summary>
         /// Called when the instance has a Leader Elector and this instance has
         /// assumed leadership.
         /// </summary>
