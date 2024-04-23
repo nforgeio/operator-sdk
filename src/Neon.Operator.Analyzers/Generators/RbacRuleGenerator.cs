@@ -42,6 +42,7 @@ namespace Neon.Operator.Analyzers
     public class RbacRuleGenerator : ISourceGenerator
     {
         private Dictionary<string, StringBuilder> logs;
+
         public void Initialize(GeneratorInitializationContext context)
         {
             //System.Diagnostics.Debugger.Launch();
@@ -51,25 +52,30 @@ namespace Neon.Operator.Analyzers
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
-            Assembly assembly = null;
+            var assembly     = (Assembly)null;
+
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
-                var targetAssembly = runtimeDependencies
+                var targetAssembly      = runtimeDependencies
                     .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
+                {
                     assembly = Assembly.LoadFrom(targetAssembly);
+                }
             }
             catch (Exception)
             {
             }
+
             return assembly;
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
-            bool isTestProject = false;
+            var isTestProject = false;
+
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.IsTestProject", out var isTestProjectString))
             {
                 bool.TryParse(isTestProjectString, out isTestProject);
@@ -80,32 +86,28 @@ namespace Neon.Operator.Analyzers
                 }
             }
 
-            var metadataLoadContext   = new MetadataLoadContext(context.Compilation);
-            var rbacRules             = ((RbacRuleReceiver)context.SyntaxReceiver)?.RbacAttributesToRegister;
-            var classesWithRbac       = ((RbacRuleReceiver)context.SyntaxReceiver)?.ClassesToRegister;
-            var controllers           = ((RbacRuleReceiver)context.SyntaxReceiver)?.ControllersToRegister;
-            var hasMutatingWebhooks   = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasMutatingWebhooks ?? false;
-            var hasValidatingWebhooks = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasValidatingWebhooks ?? false;
-            var assemblyAttributes    = ((RbacRuleReceiver)context.SyntaxReceiver)?.AssemblyAttributes;
-            var namedTypeSymbols      = context.Compilation.GetNamedTypeSymbols();
-
-
-            var serviceAccounts     = new List<V1ServiceAccount>();
-            var clusterRoles        = new List<V1ClusterRole>();
-            var clusterRoleBindings = new List<V1ClusterRoleBinding>();
-            var roles               = new List<V1Role>();
-            var roleBindings        = new List<V1RoleBinding>();
-            var attributes          = new List<IRbacRule>();
-            var nameAttribute       = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, assemblyAttributes);
-
-            string operatorName        = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
-            string operatorNamespace   = string.Empty;
-            string rbacOutputDirectory = null;
-
-            bool leaderElectionDisabled          = false;
-            bool certManagerDisabled             = false;
-            bool autoRegisterWebhooks            = false;
-            bool manageCustomResourceDefinitions = false;
+            var metadataLoadContext             = new MetadataLoadContext(context.Compilation);
+            var rbacRules                       = ((RbacRuleReceiver)context.SyntaxReceiver)?.RbacAttributesToRegister;
+            var classesWithRbac                 = ((RbacRuleReceiver)context.SyntaxReceiver)?.ClassesToRegister;
+            var controllers                     = ((RbacRuleReceiver)context.SyntaxReceiver)?.ControllersToRegister;
+            var hasMutatingWebhooks             = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasMutatingWebhooks ?? false;
+            var hasValidatingWebhooks           = ((RbacRuleReceiver)context.SyntaxReceiver)?.HasValidatingWebhooks ?? false;
+            var assemblyAttributes              = ((RbacRuleReceiver)context.SyntaxReceiver)?.AssemblyAttributes;
+            var namedTypeSymbols                = context.Compilation.GetNamedTypeSymbols();
+            var serviceAccounts                 = new List<V1ServiceAccount>();
+            var clusterRoles                    = new List<V1ClusterRole>();
+            var clusterRoleBindings             = new List<V1ClusterRoleBinding>();
+            var roles                           = new List<V1Role>();
+            var roleBindings                    = new List<V1RoleBinding>();
+            var attributes                      = new List<IRbacRule>();
+            var nameAttribute                   = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, assemblyAttributes);
+            var operatorName                    = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
+            var operatorNamespace               = string.Empty;
+            var rbacOutputDirectory             = (string)null;
+            var leaderElectionDisabled          = false;
+            var certManagerDisabled             = false;
+            var autoRegisterWebhooks            = false;
+            var manageCustomResourceDefinitions = false;
 
             logs = new Dictionary<string, StringBuilder>();
 
@@ -342,11 +344,12 @@ namespace Neon.Operator.Analyzers
                         var k8sAttr    = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
                         var apiGroup   = k8sAttr.Group;
                         var resource   = k8sAttr.PluralName;
+                        var rule       = new RbacRule(apiGroup, resource);
 
-                        var rule = new RbacRule(apiGroup, resource);
                         foreach (var p in r.NamedArguments)
                         {
                             var propertyInfo = typeof(RbacRule).GetProperty(p.MemberInfo.Name);
+
                             if (propertyInfo != null)
                             {
                                 propertyInfo.SetValue(rule, p.TypedValue.Value);
@@ -354,6 +357,7 @@ namespace Neon.Operator.Analyzers
                             }
 
                             var fieldInfo = typeof(RbacRule).GetField(p.MemberInfo.Name);
+
                             if (fieldInfo != null)
                             {
                                 fieldInfo.SetValue(rule, p.TypedValue.Value);
@@ -401,17 +405,17 @@ namespace Neon.Operator.Analyzers
 
                     clusterRole.Metadata.Name = operatorName;
                     clusterRole.Rules = clusterRules
-                                            .OrderBy(pr => pr.ApiGroups.First())
-                                            .ThenBy(pr => pr.Resources.First())
-                                            .ThenBy(pr => pr.ResourceNames?.First())
-                                            .ToList();
+                        .OrderBy(pr => pr.ApiGroups.First())
+                        .ThenBy(pr => pr.Resources.First())
+                        .ThenBy(pr => pr.ResourceNames?.First())
+                        .ToList();
 
                     clusterRoles.Add(clusterRole);
 
                     var clusterRoleBinding = new V1ClusterRoleBinding().Initialize();
 
                     clusterRoleBinding.Metadata.Name = operatorName;
-                    clusterRoleBinding.RoleRef = new V1RoleRef(name: clusterRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole");
+                    clusterRoleBinding.RoleRef       = new V1RoleRef(name: clusterRole.Metadata.Name, apiGroup: "rbac.authorization.k8s.io", kind: "ClusterRole");
 
                     clusterRoleBinding.Subjects = new List<V1Subject>()
                     {
@@ -460,10 +464,10 @@ namespace Neon.Operator.Analyzers
 
                         namespacedRole.Metadata.Name = operatorName;
                         namespacedRole.Rules         = namespaceRules[@namespace]
-                                                            .OrderBy(pr => pr.ApiGroups.First())
-                                                            .ThenBy(pr => pr.Resources.First())
-                                                            .ThenBy(pr => pr.ResourceNames?.First())
-                                                            .ToList();
+                            .OrderBy(pr => pr.ApiGroups.First())
+                            .ThenBy(pr => pr.Resources.First())
+                            .ThenBy(pr => pr.ResourceNames?.First())
+                            .ToList();
 
                         if (!string.IsNullOrEmpty(operatorNamespace))
                         {
@@ -492,9 +496,13 @@ namespace Neon.Operator.Analyzers
 
                 foreach (var sa in serviceAccounts)
                 {
-                    var saString = KubernetesYaml.Serialize(sa);
+                    var sbYaml = new StringBuilder();
+
+                    sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(sa));
 
                     var saNameString = new StringBuilder();
+
                     saNameString.Append($"serviceaccount-{sa.Name()}");
 
                     if (!string.IsNullOrEmpty(sa.Metadata.NamespaceProperty))
@@ -504,26 +512,44 @@ namespace Neon.Operator.Analyzers
 
                     saNameString.Append(Constants.GeneratedYamlExtension);
 
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, saNameString.ToString()), saString);
+                    var outputPath = Path.Combine(rbacOutputDirectory, saNameString.ToString());
+
+                    AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
                 foreach (var cr in clusterRoles)
                 {
-                    var crString = KubernetesYaml.Serialize(cr);
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}{Constants.GeneratedYamlExtension}"), crString);
+                    var sbYaml = new StringBuilder();
+
+                    sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(cr));
+
+                    var outputPath = Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}{Constants.GeneratedYamlExtension}");
+
+                    AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
                 foreach (var crb in clusterRoleBindings)
                 {
-                    var crbString = KubernetesYaml.Serialize(crb);
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}{Constants.GeneratedYamlExtension}"), crbString);
+                    var sbYaml = new StringBuilder();
+
+                    sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(crb));
+
+                    var outputPath = Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}{Constants.GeneratedYamlExtension}");
+
+                    AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
                 foreach (var r in roles)
                 {
-                    var rString = KubernetesYaml.Serialize(r);
+                    var sbYaml = new StringBuilder();
+
+                    sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(KubernetesYaml.Serialize(r)));
 
                     var rNameString = new StringBuilder();
+
                     rNameString.Append($"role-{r.Name()}");
 
                     if (!string.IsNullOrEmpty(r.Metadata.NamespaceProperty))
@@ -533,14 +559,20 @@ namespace Neon.Operator.Analyzers
 
                     rNameString.Append(Constants.GeneratedYamlExtension);
 
-                    File.WriteAllText(Path.Combine(rbacOutputDirectory, rNameString.ToString()), rString);
+                    var outputPath = Path.Combine(rbacOutputDirectory, rNameString.ToString());
+
+                    AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
                 foreach (var rb in roleBindings)
                 {
-                    var rbString = KubernetesYaml.Serialize(rb);
+                    var sbYaml = new StringBuilder();
+
+                    sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(KubernetesYaml.Serialize(KubernetesYaml.Serialize(rb))));
 
                     var rbNameString = new StringBuilder();
+
                     rbNameString.Append($"rolebinding-{rb.Name()}");
 
                     if (!string.IsNullOrEmpty(rb.Metadata.NamespaceProperty))
@@ -552,10 +584,7 @@ namespace Neon.Operator.Analyzers
 
                     var outputPath = Path.Combine(rbacOutputDirectory, rbNameString.ToString());
 
-                    if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != rbString)
-                    {
-                        File.WriteAllText(outputPath, rbString);
-                    }
+                    AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
             }
             catch (Exception e)
@@ -593,8 +622,7 @@ namespace Neon.Operator.Analyzers
                     }
 
                     Directory.CreateDirectory(logOutputDirectory);
-
-                    File.WriteAllText(Path.Combine(logOutputDirectory, $"{context.Compilation.AssemblyName}.log"), log.ToString());
+                    AnalyzerHelper.WriteFileWhenDifferent(Path.Combine(logOutputDirectory, $"{context.Compilation.AssemblyName}.log"), log.ToString());
                 }
             }
         }
