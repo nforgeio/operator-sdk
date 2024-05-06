@@ -50,11 +50,6 @@ namespace Neon.Operator.Attributes
         public EntityScope Scope { get; set; } = EntityScope.Namespaced;
 
         /// <summary>
-        /// Comma separated list of namespaces to watch. 
-        /// </summary>
-        public string Namespace { get; set; } = null;
-
-        /// <summary>
         /// Comma separated list of resource names. When specified, requests can be restricted to individual 
         /// instances of a resource
         /// </summary>
@@ -74,12 +69,6 @@ namespace Neon.Operator.Attributes
             {
                 this.Scope = EntityScope.Cluster;
             }
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<string> NamespaceList()
-        {
-            return Namespace?.Split(',') ?? null;
         }
 
         /// <inheritdoc/>

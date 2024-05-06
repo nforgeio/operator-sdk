@@ -188,8 +188,9 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="deployment">The target deployment.</param>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s)
+        public static async Task RestartAsync(this V1Deployment deployment, IKubernetes k8s, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
@@ -213,14 +214,21 @@ namespace Neon.K8s
     }}
 }}";
 
-            await k8s.AppsV1.PatchNamespacedDeploymentAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), deployment.Name(), deployment.Namespace());
+            await k8s.AppsV1.PatchNamespacedDeploymentAsync(
+                body:               new V1Patch(patchStr, V1Patch.PatchType.MergePatch),
+                name:               deployment.Name(),
+                namespaceParameter: deployment.Namespace(),
+                cancellationToken:  cancellationToken);
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
+                        var newDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(
+                            name:               deployment.Name(),
+                            namespaceParameter: deployment.Namespace(),
+                            cancellationToken:  cancellationToken);
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -229,15 +237,19 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(300),
-                pollInterval: TimeSpan.FromMilliseconds(500));
+                timeout:           TimeSpan.FromSeconds(300),
+                pollInterval:      TimeSpan.FromMilliseconds(500),
+                cancellationToken: cancellationToken);
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        deployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(deployment.Name(), deployment.Namespace());
+                        deployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(
+                            name:               deployment.Name(),
+                            namespaceParameter: deployment.Namespace(),
+                            cancellationToken:  cancellationToken);
 
                         return (deployment.Status.Replicas == deployment.Status.AvailableReplicas) && deployment.Status.UnavailableReplicas == null;
                     }
@@ -246,8 +258,9 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(300),
-                pollInterval: TimeSpan.FromMilliseconds(500));
+                timeout:           TimeSpan.FromSeconds(300),
+                pollInterval:      TimeSpan.FromMilliseconds(500),
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -255,8 +268,9 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="statefulset">The deployment being restarted.</param>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s)
+        public static async Task RestartAsync(this V1StatefulSet statefulset, IKubernetes k8s, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
@@ -280,14 +294,21 @@ namespace Neon.K8s
     }}
 }}";
 
-            await k8s.AppsV1.PatchNamespacedStatefulSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), statefulset.Name(), statefulset.Namespace());
+            await k8s.AppsV1.PatchNamespacedStatefulSetAsync(
+                body:               new V1Patch(patchStr, V1Patch.PatchType.MergePatch),
+                name:               statefulset.Name(),
+                namespaceParameter: statefulset.Namespace(),
+                cancellationToken:  cancellationToken);
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+                        var newDeployment = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(
+                            name:               statefulset.Name(),
+                            namespaceParameter: statefulset.Namespace(),
+                            cancellationToken:  cancellationToken);
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -296,15 +317,19 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(300),
-                pollInterval: TimeSpan.FromMilliseconds(500));
+                timeout:           TimeSpan.FromSeconds(300),
+                pollInterval:      TimeSpan.FromMilliseconds(500),
+                cancellationToken: cancellationToken);
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        statefulset = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(statefulset.Name(), statefulset.Namespace());
+                        statefulset = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(
+                            name:               statefulset.Name(),
+                            namespaceParameter: statefulset.Namespace(),
+                            cancellationToken:  cancellationToken);
 
                         return (statefulset.Status.Replicas == statefulset.Status.ReadyReplicas) && statefulset.Status.UpdatedReplicas == null;
                     }
@@ -313,8 +338,9 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout: TimeSpan.FromSeconds(300),
-                pollInterval: TimeSpan.FromMilliseconds(500));
+                timeout:           TimeSpan.FromSeconds(300),
+                pollInterval:      TimeSpan.FromMilliseconds(500),
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -322,8 +348,9 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="daemonset">The daemonset being restarted.</param>
         /// <param name="k8s">The <see cref="IKubernetes"/> client to be used for the operation.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RestartAsync(this V1DaemonSet daemonset, IKubernetes k8s)
+        public static async Task RestartAsync(this V1DaemonSet daemonset, IKubernetes k8s, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
@@ -347,14 +374,21 @@ namespace Neon.K8s
     }}
 }}";
 
-            await k8s.AppsV1.PatchNamespacedDaemonSetAsync(new V1Patch(patchStr, V1Patch.PatchType.MergePatch), daemonset.Name(), daemonset.Namespace());
+            await k8s.AppsV1.PatchNamespacedDaemonSetAsync(
+                body:               new V1Patch(patchStr, V1Patch.PatchType.MergePatch),
+                name:               daemonset.Name(),
+                namespaceParameter: daemonset.Namespace(),
+                cancellationToken:  cancellationToken);
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        var newDeployment = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+                        var newDeployment = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(
+                            name:               daemonset.Name(),
+                            namespaceParameter: daemonset.Namespace(),
+                            cancellationToken:  cancellationToken);
 
                         return newDeployment.Status.ObservedGeneration > generation;
                     }
@@ -363,15 +397,19 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(300),
-                pollInterval: TimeSpan.FromMilliseconds(500));
+                timeout:           TimeSpan.FromSeconds(300),
+                pollInterval:      TimeSpan.FromMilliseconds(500),
+                cancellationToken: cancellationToken);
 
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
                     try
                     {
-                        daemonset = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(daemonset.Name(), daemonset.Namespace());
+                        daemonset = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(
+                            name:               daemonset.Name(),
+                            namespaceParameter: daemonset.Namespace(),
+                            cancellationToken:  cancellationToken);
 
                         return (daemonset.Status.CurrentNumberScheduled == daemonset.Status.NumberReady) && daemonset.Status.UpdatedNumberScheduled == null;
                     }
@@ -380,8 +418,9 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout:      TimeSpan.FromSeconds(300),
-                pollInterval: TimeSpan.FromMilliseconds(500));
+                timeout:           TimeSpan.FromSeconds(300),
+                pollInterval:      TimeSpan.FromMilliseconds(500),
+                cancellationToken: cancellationToken);
         }
 
         //---------------------------------------------------------------------
@@ -476,20 +515,32 @@ namespace Neon.K8s
         /// </summary>
         /// <param name="k8s">The <see cref="Kubernetes"/> client.</param>
         /// <param name="secret">The secret.</param>
-        /// <param name="namespaceParameter">Optionally overrides the default namespace.</param>
+        /// <param name="namespaceParameter">Specifies the namespace.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The updated secret.</returns>
-        public static async Task<V1Secret> UpsertSecretAsync(this ICoreV1Operations k8s, V1Secret secret, string namespaceParameter = null)
+        public static async Task<V1Secret> UpsertNamspacedSecretAsync(
+            this ICoreV1Operations  k8s, 
+            V1Secret                secret, 
+            string                  namespaceParameter,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(secret != null, nameof(secret));
 
-            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter)).Items.Any(s => s.Metadata.Name == secret.Name()))
+            if ((await k8s.ListNamespacedSecretAsync(namespaceParameter, cancellationToken: cancellationToken)).Items.Any(s => s.Metadata.Name == secret.Name()))
             {
-                return await k8s.ReplaceNamespacedSecretAsync(secret, secret.Name(), namespaceParameter);
+                return await k8s.ReplaceNamespacedSecretAsync(
+                    body:               secret,
+                    name:               secret.Name(),
+                    namespaceParameter: namespaceParameter,
+                    cancellationToken:  cancellationToken);
             }
             else
             {
-                return await k8s.CreateNamespacedSecretAsync(secret, namespaceParameter);
+                return await k8s.CreateNamespacedSecretAsync(
+                    body:               secret,
+                    namespaceParameter: namespaceParameter,
+                    cancellationToken:  cancellationToken);
             }
         }
 
@@ -503,7 +554,7 @@ namespace Neon.K8s
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -550,7 +601,11 @@ namespace Neon.K8s
                 {
                     try
                     {
-                        var deployments = await k8sAppsV1.ListNamespacedDeploymentAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var deployments = await k8sAppsV1.ListNamespacedDeploymentAsync(
+                            namespaceParameter: namespaceParameter,
+                            fieldSelector:      fieldSelector,
+                            labelSelector:      labelSelector,
+                            cancellationToken:  cancellationToken);
 
                         if (deployments == null || deployments.Items.Count == 0)
                         {
@@ -582,7 +637,7 @@ namespace Neon.K8s
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -629,7 +684,11 @@ namespace Neon.K8s
                 {
                     try
                     {
-                        var statefulsets = await k8sAppsV1.ListNamespacedStatefulSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var statefulsets = await k8sAppsV1.ListNamespacedStatefulSetAsync(
+                            namespaceParameter: namespaceParameter,
+                            fieldSelector:      fieldSelector,
+                            labelSelector:      labelSelector,
+                            cancellationToken:  cancellationToken);
 
                         if (statefulsets == null || statefulsets.Items.Count == 0)
                         {
@@ -660,7 +719,7 @@ namespace Neon.K8s
         /// <param name="fieldSelector">Optionally specifies a field selector.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// One of <paramref name="name"/>, <paramref name="labelSelector"/>, or <paramref name="fieldSelector"/>
@@ -707,7 +766,11 @@ namespace Neon.K8s
                 {
                     try
                     {
-                        var daemonsets = await k8sAppsV1.ListNamespacedDaemonSetAsync(namespaceParameter, fieldSelector: fieldSelector, labelSelector: labelSelector);
+                        var daemonsets = await k8sAppsV1.ListNamespacedDaemonSetAsync(
+                            namespaceParameter: namespaceParameter,
+                            fieldSelector:      fieldSelector,
+                            labelSelector:      labelSelector,
+                            cancellationToken:  cancellationToken);
 
                         if (daemonsets == null || daemonsets.Items.Count == 0)
                         {
@@ -736,7 +799,7 @@ namespace Neon.K8s
         /// <param name="namespaceParameter">The namespace.</param>
         /// <param name="pollInterval">Optionally specifies the polling interval.  This defaults to 1 second.</param>
         /// <param name="timeout">Optopnally specifies the operation timeout.  This defaults to 30 seconds.</param>
-        /// <param name="cancellationToken">Optionally specifies the cancellation token.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>x
         public static async Task WaitForPodAsync(
             this ICoreV1Operations  k8sCoreV1, 
@@ -765,7 +828,10 @@ namespace Neon.K8s
                 {
                     try
                     {
-                        var pod = await k8sCoreV1.ReadNamespacedPodAsync(name, namespaceParameter, cancellationToken: cancellationToken);
+                        var pod = await k8sCoreV1.ReadNamespacedPodAsync(
+                            name:               name,
+                            namespaceParameter: namespaceParameter,
+                            cancellationToken:  cancellationToken);
 
                         return pod.Status.Phase == "Running" && pod.Status.ContainerStatuses.All(status => status.Ready);
                     }
@@ -816,9 +882,12 @@ namespace Neon.K8s
 
                     try
                     {
-                        var typeMetadata                     = typeof(TEntity).GetKubernetesTypeMetadata();
-                        var pluralNameGroup                  = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
-                        var existingList                     = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(fieldSelector: $"metadata.name={pluralNameGroup}");
+                        var typeMetadata    = typeof(TEntity).GetKubernetesTypeMetadata();
+                        var pluralNameGroup = string.IsNullOrEmpty(typeMetadata.Group) ? typeMetadata.PluralName : $"{typeMetadata.PluralName}.{typeMetadata.Group}";
+                        var existingList    = await k8sApiextensionsV1.ListCustomResourceDefinitionAsync(
+                            fieldSelector:     $"metadata.name={pluralNameGroup}",
+                            cancellationToken: cancellationToken
+                            );
                         var existingCustomResourceDefinition = existingList?.Items?.SingleOrDefault();
 
                         if (existingCustomResourceDefinition != null)
@@ -835,9 +904,10 @@ namespace Neon.K8s
                         return false;
                     }
                 },
-                timeout:        timeout,
-                pollInterval:   pollInterval,
-                timeoutMessage: $"Timeout waiting for CRD: {typeof(TEntity).FullName}");
+                timeout:           timeout,
+                pollInterval:      pollInterval,
+                timeoutMessage:    $"Timeout waiting for CRD: {typeof(TEntity).FullName}",
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -849,18 +919,23 @@ namespace Neon.K8s
         /// Specifies the label selector to constrain the set of pods to be targeted.
         /// This is required.
         /// </param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The <see cref="V1Pod"/>.</returns>
         /// <exception cref="KubernetesException">Thrown when no healthy pods exist.</exception>
         public static async Task<V1Pod> GetNamespacedRunningPodAsync(
             this ICoreV1Operations  k8sCoreV1,
             string                  namespaceParameter,
-            string                  labelSelector)
+            string                  labelSelector,
+            CancellationToken       cancellationToken = default)
         {
             await SyncContext.Clear;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(namespaceParameter), nameof(namespaceParameter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(labelSelector), nameof(labelSelector));
 
-            var pods = (await k8sCoreV1.ListNamespacedPodAsync(namespaceParameter, labelSelector: labelSelector)).Items;
+            var pods = (await k8sCoreV1.ListNamespacedPodAsync(
+                namespaceParameter: namespaceParameter,
+                labelSelector:      labelSelector,
+                cancellationToken:  cancellationToken)).Items;
             var pod  =  pods.FirstOrDefault(pod => pod.Status.Phase == "Running");
 
             if (pod == null)
@@ -962,7 +1037,8 @@ namespace Neon.K8s
                         command:            command,
                         cancellationToken:  cancellationToken,
                         noSuccessCheck:     true);
-                });
+                },
+                cancellationToken: cancellationToken);
         }
 
         /// <summary>
@@ -1030,8 +1106,9 @@ namespace Neon.K8s
         /// Lists pods from all cluster namespaces.
         /// </summary>
         /// <param name="k8sCoreV1">The <see cref="IKubernetes"/> instance.</param>
+        /// <param name="cancellationToken">Optionally specifies a cancellation token.</param>
         /// <returns>The <see cref="V1PodList"/>.</returns>
-        public static async Task<V1PodList> ListAllPodsAsync(this ICoreV1Operations k8sCoreV1)
+        public static async Task<V1PodList> ListAllPodsAsync(this ICoreV1Operations k8sCoreV1, CancellationToken cancellationToken = default)
         {
             await SyncContext.Clear;
 
@@ -1045,18 +1122,20 @@ namespace Neon.K8s
 
             const int podListConcurency = 100;
 
-            var namespaces = (await k8sCoreV1.ListNamespaceAsync()).Items;
+            var namespaces = (await k8sCoreV1.ListNamespaceAsync(cancellationToken: cancellationToken)).Items;
             var pods       = new V1PodList() { Items = new List<V1Pod>() };
 
             await Parallel.ForEachAsync(namespaces, new ParallelOptions() { MaxDegreeOfParallelism = podListConcurency },
                 async (@namespace, cancellationToken) =>
                 {
-                    var namespacedPods = await k8sCoreV1.ListNamespacedPodAsync(@namespace.Name());
+                    var namespacedPods = await k8sCoreV1.ListNamespacedPodAsync(@namespace.Name(), cancellationToken: cancellationToken);
 
                     lock (pods)
                     {
                         foreach (var pod in namespacedPods.Items)
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
+
                             pods.Items.Add(pod);
                         }
                     }

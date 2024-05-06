@@ -52,6 +52,7 @@ namespace Neon.Operator.Analyzers
             var sources = new HashSet<string>();
 
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CrdTargetNamespace", out var targetNamespace);
+
             targetNamespace ??= "Neon.Operator.Resources";
 
             foreach (var file in context.AdditionalFiles)
@@ -65,13 +66,15 @@ namespace Neon.Operator.Analyzers
                 catch
                 {
                     // not a valid CRD.
+
                     continue;
                 }
 
                 var basename = crd.Spec.Names.Kind;
+
                 foreach (var version in crd.Spec.Versions)
                 {
-                    var className = GetClassName(version: version.Name, kind: crd.Spec.Names.Kind);
+                    var className   = GetClassName(version: version.Name, kind: crd.Spec.Names.Kind);
                     var compilation = CompilationUnit();
 
                     var crdClass = ClassDeclaration(className)
@@ -129,7 +132,7 @@ namespace Neon.Operator.Analyzers
                     if (version.Schema.OpenAPIV3Schema.Properties.ContainsKey("spec"))
                     {
                         var specClassName = GetSpecClassName(version: version.Name, kind: crd.Spec.Names.Kind);
-                        var refTypeName = $"global::{targetNamespace}.{className}.{specClassName}";
+                        var refTypeName   = $"global::{targetNamespace}.{className}.{specClassName}";
 
                         crdClass = crdClass
                             .AddBaseListTypes(
@@ -155,7 +158,7 @@ namespace Neon.Operator.Analyzers
                     if (version.Schema.OpenAPIV3Schema.Properties.ContainsKey("status"))
                     {
                         var statusClassName = GetStatusClassName(version: version.Name, kind: crd.Spec.Names.Kind);
-                        var refTypeName = $"global::{targetNamespace}.{className}.{statusClassName}";
+                        var refTypeName     = $"global::{targetNamespace}.{className}.{statusClassName}";
 
                         crdClass = crdClass
                             .AddBaseListTypes(
@@ -180,15 +183,13 @@ namespace Neon.Operator.Analyzers
 
                     compilation = compilation
                         .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                            NamespaceDeclaration(ParseName(targetNamespace))
-                            .AddMembers(crdClass)));
+                            NamespaceDeclaration(ParseName(targetNamespace)).AddMembers(crdClass)));
 
                     var compilationString = compilation.NormalizeWhitespace().ToString();
 
                     context.AddSource(
                         $"{className}.g.cs",
-                        SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256)
-                        );
+                        SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256));
                 }
 
             }
@@ -216,13 +217,12 @@ namespace Neon.Operator.Analyzers
                 case Constants.DoubleTypeString:
 
                     propertyDeclaration = PropertyDeclaration(GetSimpleTypeSyntax(properties.Type, required), FirstLetterToUpper(name))
-                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                    .AddAccessorListAccessors(
-                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
+                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                        .AddAccessorListAccessors(
+                            AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                            AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
                     break;
 
                 case Constants.StringTypeString:
@@ -266,13 +266,12 @@ namespace Neon.Operator.Analyzers
                     }
 
                     propertyDeclaration = PropertyDeclaration(ParseTypeName(typeName), FirstLetterToUpper(name))
-                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                    .AddAccessorListAccessors(
-                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
+                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                        .AddAccessorListAccessors(
+                            AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                            AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
                     break;
 
                 case Constants.ArrayTypeString:
@@ -281,6 +280,7 @@ namespace Neon.Operator.Analyzers
                     {
                         break;
                     }
+
                     V1JSONSchemaProps items = null;
 
                     if (properties.Items.GetType() == typeof(Dictionary<object, object>))
@@ -292,6 +292,7 @@ namespace Neon.Operator.Analyzers
                         items = ((V1JSONSchemaProps)properties.Items);
 
                     }
+
                     switch (items.Type)
                     {
                         case Constants.BooleanTypeString:
@@ -304,6 +305,7 @@ namespace Neon.Operator.Analyzers
                         case Constants.StringTypeString:
 
                             var arrayType = GetSimpleTypeSyntax(items.Type, true);
+
                             propertyDeclaration = PropertyDeclaration(
                                 type:       ParseTypeName($"global::{typeof(List<>).Namespace}.List<{arrayType}>"),
                                 identifier: FirstLetterToUpper(name))
@@ -313,12 +315,11 @@ namespace Neon.Operator.Analyzers
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                         AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
                             break;
 
                         case Constants.ObjectTypeString:
 
-                            var arrayTypeName = FirstLetterToUpper(name).TrimEnd('s');
+                            var arrayTypeName      = FirstLetterToUpper(name).TrimEnd('s');
                             var arrayReferenceType = $"global::{targetNamespace}.{baseClassName}.{arrayTypeName}";
 
                             AddObject(
@@ -338,7 +339,6 @@ namespace Neon.Operator.Analyzers
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                         AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
                             break;
 
                         default:
@@ -365,7 +365,7 @@ namespace Neon.Operator.Analyzers
 
                     }
 
-                    var objTypeName = FirstLetterToUpper(name);
+                    var objTypeName      = FirstLetterToUpper(name);
                     var objReferenceType = $"global::{targetNamespace}.{baseClassName}.{objTypeName}";
 
                     AddObject(
@@ -379,22 +379,20 @@ namespace Neon.Operator.Analyzers
                     propertyDeclaration = PropertyDeclaration(
                         type:       ParseTypeName(objReferenceType),
                         identifier: objTypeName)
-                                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                    .AddAccessorListAccessors(
-                                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-                                        AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
+                            .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                            .AddAccessorListAccessors(
+                                AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                                AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
                     break;
 
                 default:
 
                     if (properties.AnyOf != null)
                     {
-                        var anyOfType = properties.AnyOf.First();
-
-                        var anyOfTypeName = FirstLetterToUpper(name);
+                        var anyOfType          = properties.AnyOf.First();
+                        var anyOfTypeName      = FirstLetterToUpper(name);
                         var anyOfReferenceType = $"global::{targetNamespace}.{baseClassName}.{anyOfTypeName}";
 
                         if (anyOfType.Type == Constants.ObjectTypeString)
@@ -416,7 +414,6 @@ namespace Neon.Operator.Analyzers
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
                                         AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                                             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
-
                             break;
                         }
                         else
@@ -446,11 +443,11 @@ namespace Neon.Operator.Analyzers
             else
             {
                 propertyDeclaration = propertyDeclaration?
-                        .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateDefaultNullAttribute()])));
+                    .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateDefaultNullAttribute()])));
             }
 
             propertyDeclaration = propertyDeclaration?
-                    .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateJsonPropertyNameAttribute(name)])));
+                .AddAttributeLists(AttributeList(SeparatedList(nodes: [CreateJsonPropertyNameAttribute(name)])));
 
             return propertyDeclaration;
         }
@@ -473,40 +470,38 @@ namespace Neon.Operator.Analyzers
             sources.Add(name);
 
             var stringProperties = properties.Select(s => (string)s).ToList();
-            var stringGroups = stringProperties.GroupBy(s => s.ToLower());
-
-            var compilation = CompilationUnit();
+            var stringGroups     = stringProperties.GroupBy(s => s.ToLower());
+            var compilation      = CompilationUnit();
             
             var classDeclaration = EnumDeclaration(name)
-                        .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                        .AddAttributeLists(AttributeList(SeparatedList(nodes:
-                        [
-                            Attribute(
-                                name: ParseName(typeof(JsonConverterAttribute).GetGlobalTypeName()),
-                                argumentList: AttributeArgumentList(
-                                    SeparatedList<AttributeArgumentSyntax>(nodes:
-                                    [
-                                        AttributeArgument(
-                                            expression: LiteralExpression(
-                                                kind: SyntaxKind.StringLiteralExpression,
-                                                token: Token(
-                                                    leading: SyntaxTriviaList.Empty,
-                                                    kind: SyntaxKind.StringLiteralToken,
-                                                    text: $@"typeof({typeof(JsonStringEnumMemberConverter).GetGlobalTypeName()})",
-                                                    valueText: nameof(JsonStringEnumMemberConverter),
-                                                    trailing: SyntaxTriviaList.Empty)))
+                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                .AddAttributeLists(AttributeList(SeparatedList(nodes:
+                [
+                    Attribute(
+                        name: ParseName(typeof(JsonConverterAttribute).GetGlobalTypeName()),
+                        argumentList: AttributeArgumentList(
+                            SeparatedList<AttributeArgumentSyntax>(nodes:
+                            [
+                                AttributeArgument(
+                                    expression: LiteralExpression(
+                                        kind: SyntaxKind.StringLiteralExpression,
+                                        token: Token(
+                                            leading: SyntaxTriviaList.Empty,
+                                            kind: SyntaxKind.StringLiteralToken,
+                                            text: $@"typeof({typeof(JsonStringEnumMemberConverter).GetGlobalTypeName()})",
+                                            valueText: nameof(JsonStringEnumMemberConverter),
+                                            trailing: SyntaxTriviaList.Empty)))
 
-                                        ])
-                                    )
-                                )
-                        ])));
+                                ])
+                            )
+                        )
+                ])));
 
             foreach (var value in properties)
             {
                 var enumValue = (string)value;
 
-                if (enumValue.ToLower() == enumValue
-                    && stringGroups.Where(g => g.Key == enumValue).First().Count() > 1)
+                if (enumValue.ToLower() == enumValue && stringGroups.Where(g => g.Key == enumValue).First().Count() > 1)
                 {
                     continue;
                 }
@@ -520,28 +515,27 @@ namespace Neon.Operator.Analyzers
             }
 
             compilation = compilation
-                   .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                       NamespaceDeclaration(ParseName(targetNamespace))
-                       .AddMembers(ClassDeclaration(baseClassName)
-                            .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
-                            .AddMembers(classDeclaration))));
+                .WithMembers(SingletonList<MemberDeclarationSyntax>(
+                    NamespaceDeclaration(ParseName(targetNamespace))
+                    .AddMembers(ClassDeclaration(baseClassName)
+                        .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
+                        .AddMembers(classDeclaration))));
 
 
             var compilationString = compilation.NormalizeWhitespace().ToString();
 
             context.AddSource(
                 $"{name}.g.cs",
-                SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256)
-                );
+                SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256));
         }
 
         private void AddObject(
-            string name,
-            V1JSONSchemaProps properties,
-            string targetNamespace,
-            GeneratorExecutionContext context,
-            HashSet<string> sources,
-            string baseClassName = null)
+            string                      name,
+            V1JSONSchemaProps           properties,
+            string                      targetNamespace,
+            GeneratorExecutionContext   context,
+            HashSet<string>             sources,
+            string                      baseClassName = null)
         {
             try
             {
@@ -554,10 +548,8 @@ namespace Neon.Operator.Analyzers
 
                 sources.Add(name);
 
-                var compilation = CompilationUnit();
-
-                var classDeclaration = ClassDeclaration(name)
-                        .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
+                var compilation      = CompilationUnit();
+                var classDeclaration = ClassDeclaration(name).WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
 
                 foreach (var p in properties.Properties)
                 {
@@ -578,24 +570,23 @@ namespace Neon.Operator.Analyzers
                 }
 
                 compilation = compilation
-                       .WithMembers(SingletonList<MemberDeclarationSyntax>(
-                           NamespaceDeclaration(ParseName(targetNamespace))
-                           .AddMembers(ClassDeclaration(baseClassName)
-                                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
-                                .AddMembers(classDeclaration))));
+                    .WithMembers(SingletonList<MemberDeclarationSyntax>(
+                        NamespaceDeclaration(ParseName(targetNamespace))
+                        .AddMembers(ClassDeclaration(baseClassName)
+                            .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword)))
+                            .AddMembers(classDeclaration))));
 
 
                 var compilationString = compilation.NormalizeWhitespace().ToString();
 
                 context.AddSource(
                     $"{name}.g.cs",
-                    SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256)
-                    );
+                    SourceText.From(compilationString, Encoding.UTF8, SourceHashAlgorithm.Sha256));
             }
             catch
             {
-                return;
                 // ignore for now.
+                return;
             }
 
         }
@@ -631,10 +622,14 @@ namespace Neon.Operator.Analyzers
         public string FirstLetterToUpper(string str)
         {
             if (str == null)
+            {
                 return null;
+            }
 
             if (str.Length > 1)
+            {
                 return char.ToUpper(str[0]) + str.Substring(1);
+            }
 
             return str.ToUpper();
         }
@@ -694,7 +689,6 @@ namespace Neon.Operator.Analyzers
                                     text: $@"""{plural}""",
                                     valueText: plural,
                                     trailing: SyntaxTriviaList.Empty))),
-
                         ])
                     )
                 );
@@ -719,7 +713,6 @@ namespace Neon.Operator.Analyzers
                                     text: $@"""{value}""",
                                     valueText: value,
                                     trailing: SyntaxTriviaList.Empty)))
-
                         ])
                     )
                 );
@@ -741,7 +734,6 @@ namespace Neon.Operator.Analyzers
                                     text: "null",
                                     valueText: "null",
                                     trailing: SyntaxTriviaList.Empty)))
-
                         ])
                     )
                 ); ;
@@ -764,7 +756,6 @@ namespace Neon.Operator.Analyzers
                                     text: $@"""{value}""",
                                     valueText: (string)value,
                                     trailing: SyntaxTriviaList.Empty)))
-
                         ])
                     )
                 );

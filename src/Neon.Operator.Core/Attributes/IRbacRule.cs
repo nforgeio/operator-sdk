@@ -58,16 +58,5 @@ namespace Neon.Operator.Rbac
         /// Optional comma-separated list of subresources.
         /// </summary>
         string SubResources { get; set; }
-
-        /// <summary>
-        /// Optional comma-separated list of namespaces.
-        /// </summary>
-        string Namespace { get; set; }
-
-        /// <summary>
-        /// Gets a list of the Namespaces that the rule applies to.
-        /// </summary>
-        /// <returns>The list of namespaces.</returns>
-        IEnumerable<string> NamespaceList();
     }
 }

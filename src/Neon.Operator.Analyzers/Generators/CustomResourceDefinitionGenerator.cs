@@ -38,7 +38,7 @@ using Neon.Operator.OperatorLifecycleManager;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
-using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+using MetadataLoadContext      = Neon.Roslyn.MetadataLoadContext;
 using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
 namespace Neon.Operator.Analyzers
@@ -46,18 +46,18 @@ namespace Neon.Operator.Analyzers
     [Generator]
     public class CustomResourceDefinitionGenerator : ISourceGenerator
     {
-        internal static readonly DiagnosticDescriptor TooManyStorageVersionsError = new DiagnosticDescriptor(id: "NO10001",
-                                                                                              title: "One and only one version must be marked as the storage version",
-                                                                                              messageFormat: "'{0}' has {1} versions marked for storage",
-                                                                                              category: "NeonOperatorSdk",
-                                                                                              DiagnosticSeverity.Error,
-                                                                                              isEnabledByDefault: true);
+        internal static readonly DiagnosticDescriptor TooManyStorageVersionsError =
+            new DiagnosticDescriptor(id: "NO10001",
+                title:              "One and only one version must be marked as the storage version",
+                messageFormat:      "'{0}' has {1} versions marked for storage",
+                category:           "NeonOperatorSdk",
+                defaultSeverity:    DiagnosticSeverity.Error,
+                isEnabledByDefault: true);
 
-        private static readonly string[] IgnoredProperties = { "metadata", "apiversion", "kind" };
+        private static readonly string[]            IgnoredProperties = { "metadata", "apiversion", "kind" };
+        public static XmlDocumentationProvider      DocumentationProvider { get; set; } = new XmlDocumentationProvider();
 
-        private Dictionary<string, StringBuilder> logs;
-
-        public static XmlDocumentationProvider DocumentationProvider { get; set; } = new XmlDocumentationProvider();
+        private Dictionary<string, StringBuilder>   logs;
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -69,19 +69,22 @@ namespace Neon.Operator.Analyzers
         public System.Reflection.Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new System.Reflection.AssemblyName(args.Name);
-            System.Reflection.Assembly assembly = null;
+            var assembly     = (Assembly)null;
+
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
-                var targetAssembly = runtimeDependencies
-                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+                var targetAssembly      = runtimeDependencies.FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
-                if (!String.IsNullOrEmpty(targetAssembly))
-                    assembly = System.Reflection.Assembly.LoadFrom(targetAssembly);
+                if (!string.IsNullOrEmpty(targetAssembly))
+                {
+                    assembly = Assembly.LoadFrom(targetAssembly);
+                }
             }
             catch (Exception)
             {
             }
+
             return assembly;
         }
 
@@ -89,8 +92,7 @@ namespace Neon.Operator.Analyzers
         {
             logs = new Dictionary<string, StringBuilder>();
 
-            var processName = System.Diagnostics.Process.GetCurrentProcess().MainModule.ModuleName;
-
+            var processName   = System.Diagnostics.Process.GetCurrentProcess().MainModule.ModuleName;
             var shouldRunLive = processName.Contains("VBCSCompiler") || processName.Contains("testhost") || processName.Contains("dotnet");
 
             if (!shouldRunLive)
@@ -185,6 +187,7 @@ namespace Neon.Operator.Analyzers
                 var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
                 var customResourceDefinitions = new Dictionary<string, V1CustomResourceDefinition>();
                 var operatorVersionAttribute  = RoslynExtensions.GetAttribute<VersionAttribute>(metadataLoadContext, context.Compilation, attributes);
+
                 DocumentationProvider.AddMetadataReferences(context.Compilation.ExternalReferences);
 
                 var operatorVersion = operatorVersionAttribute?.Version ?? "";
@@ -196,6 +199,7 @@ namespace Neon.Operator.Analyzers
                         operatorVersion = versionString;
                     }
                 }
+
                 foreach (var cr in customResources)
                 {
                     try
@@ -228,17 +232,17 @@ namespace Neon.Operator.Analyzers
                         var scaleAttr   = crSystemType.GetCustomAttribute<ScaleAttribute>();
                         var scopeAttr   = crSystemType.GetCustomAttribute<EntityScopeAttribute>();
                         var shortNames  = crSystemType.GetCustomAttributes<ShortNameAttribute>()?.Select(sn => sn.Name).Distinct().ToList();
+                        var scope       = EntityScope.Namespaced;
 
-                        var scope = EntityScope.Namespaced;
                         if (scopeAttr != null)
                         {
                             scope = scopeAttr.Scope;
                         }
-                        var additionalPrinterColumns = new List<V1CustomResourceColumnDefinition>();
 
-                        var schema           = new V1CustomResourceValidation(MapType(namedTypeSymbols, crSystemType, additionalPrinterColumns, string.Empty));
-                        var pluralNameGroup  = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
-                        var implementsStatus = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
+                        var additionalPrinterColumns = new List<V1CustomResourceColumnDefinition>();
+                        var schema                   = new V1CustomResourceValidation(MapType(namedTypeSymbols, crSystemType, additionalPrinterColumns, string.Empty));
+                        var pluralNameGroup          = string.IsNullOrEmpty(k8sAttr.Group) ? k8sAttr.PluralName : $"{k8sAttr.PluralName}.{k8sAttr.Group}";
+                        var implementsStatus         = crSystemType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Equals(typeof(IStatus<> )));
 
                         schema.OpenAPIV3Schema.Description = crTypeIdentifier.GetSummary(DocumentationProvider);
 
@@ -275,22 +279,22 @@ namespace Neon.Operator.Analyzers
                         else
                         {
                             var crd = new V1CustomResourceDefinition(
-                            apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
-                            kind:       V1CustomResourceDefinition.KubeKind,
-                            metadata:   new V1ObjectMeta(name: pluralNameGroup),
-                            spec:       new V1CustomResourceDefinitionSpec(
-                                group:      k8sAttr.Group,
-                                names:      new V1CustomResourceDefinitionNames(
-                                    kind:       k8sAttr.Kind,
-                                    plural:     k8sAttr.PluralName,
-                                    singular:   k8sAttr.Kind.ToLowerInvariant(),
-                                    shortNames: shortNames
-                                ),
-                                scope:      scope.ToMemberString(),
-                                versions:   new List<V1CustomResourceDefinitionVersion>
-                                {
-                                    version,
-                                }));
+                                apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",
+                                kind:       V1CustomResourceDefinition.KubeKind,
+                                metadata:   new V1ObjectMeta(name: pluralNameGroup),
+                                spec:       new V1CustomResourceDefinitionSpec(
+                                    group:      k8sAttr.Group,
+                                    names:      new V1CustomResourceDefinitionNames(
+                                        kind:       k8sAttr.Kind,
+                                        plural:     k8sAttr.PluralName,
+                                        singular:   k8sAttr.Kind.ToLowerInvariant(),
+                                        shortNames: shortNames
+                                    ),
+                                    scope:      scope.ToMemberString(),
+                                    versions:   new List<V1CustomResourceDefinitionVersion>
+                                    {
+                                        version,
+                                    }));
 
                             customResourceDefinitions.Add(pluralNameGroup, crd);
                         }
@@ -328,26 +332,22 @@ namespace Neon.Operator.Analyzers
                         else
                         {
                             var sb = new StringBuilder();
-                            sb.AppendLine(Constants.YamlCrdHeader);
-                            sb.AppendLine(KubernetesYaml.Serialize(crd.Value));
-                            var yaml = sb.ToString();
 
-                            var fileName = crd.Value.Name() + Constants.YamlExtension;
+                            sb.AppendLine(Constants.AutoGeneratedYamlHeader);
+                            sb.AppendLine(KubernetesYaml.Serialize(crd.Value));
+
+                            var yaml     = sb.ToString();
+                            var fileName = crd.Value.Name() + Constants.GeneratedYamlExtension;
+
                             fileNames.Add(fileName);
 
                             var outputPath = Path.Combine(crdOutputDirectory, fileName);
 
-                            if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
-                            {
-                                File.WriteAllText(outputPath, yaml);
-                            }
+                            AnalyzerHelper.WriteFileWhenDifferent(outputPath, yaml);
 
                             outputPath = Path.Combine(olmManifestDir, fileName);
 
-                            if (!File.Exists(outputPath) || File.ReadAllText(outputPath) != yaml)
-                            {
-                                File.WriteAllText(outputPath, yaml);
-                            }
+                            AnalyzerHelper.WriteFileWhenDifferent(outputPath, yaml);
                         }
                     }
                     catch (Exception e)
@@ -392,8 +392,7 @@ namespace Neon.Operator.Analyzers
                     }
 
                     Directory.CreateDirectory(logOutputDirectory);
-
-                    File.WriteAllText(Path.Combine(logOutputDirectory, $"{context.Compilation.AssemblyName}.log"), log.ToString());
+                    AnalyzerHelper.WriteFileWhenDifferent(Path.Combine(logOutputDirectory, $"{context.Compilation.AssemblyName}.log"), log);
                 }
             }
         }
@@ -403,17 +402,19 @@ namespace Neon.Operator.Analyzers
             foreach (var filePath in Directory.GetFiles(path))
             {
                 var fileName = Path.GetFileName(filePath);
-                if (fileNames.Contains(fileName)
-                    || Path.GetExtension(fileName) != Constants.YamlExtension)
+
+                if (fileNames.Contains(fileName) || Path.GetExtension(fileName) != Constants.GeneratedYamlExtension)
                 {
                     continue;
                 }
 
                 var shouldDelete = false;
+
                 using (StreamReader reader = new StreamReader(filePath))
                 {
                     var line = reader.ReadLine();
-                    if (line == Constants.YamlCrdHeader)
+
+                    if (line == Constants.AutoGeneratedYamlHeader)
                     {
                         shouldDelete = true;
                     }
@@ -445,7 +446,9 @@ namespace Neon.Operator.Analyzers
             props.Description ??= info.GetPropertySymbol().GetSummary(DocumentationProvider);
 
             // get additional printer column information
+
             var additionalColumn = info.GetCustomAttribute<AdditionalPrinterColumnAttribute>();
+
             if (additionalColumn != null)
             {
                 additionalColumns.Add(
@@ -461,6 +464,7 @@ namespace Neon.Operator.Analyzers
             }
 
             var patternAttribute = info.GetCustomAttribute<PatternAttribute>();
+
             if (patternAttribute != null)
             {
                 props.Pattern = patternAttribute.Pattern;
@@ -472,6 +476,7 @@ namespace Neon.Operator.Analyzers
             }
 
             var rangeAttribute = info.GetCustomAttribute<Attributes.RangeAttribute>();
+
             if (rangeAttribute != null)
             {
                 props.Minimum          = rangeAttribute.minimum;
@@ -490,13 +495,10 @@ namespace Neon.Operator.Analyzers
             string                                  jsonPath)
         {
             var typeSymbol = namedTypeSymbols.Where(nts => nts.GetFullMetadataName() == type.FullName).FirstOrDefault();
-            
-            var props = new V1JSONSchemaProps();
-
+            var props      = new V1JSONSchemaProps();
             var interfaces = type.GetInterfaces();
 
-            if (type.IsGenericType &&
-                    type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+            if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
             {
                 type = type.GenericTypeArguments[0];
             }
@@ -505,33 +507,30 @@ namespace Neon.Operator.Analyzers
             {
                 props.Type = Constants.ObjectTypeString;
             }
-            else if (type.IsGenericType && (
-                type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>))
-                || type.GetGenericTypeDefinition().Equals(typeof(Dictionary<,>))
-                ))
+            else if (type.IsGenericType && (type.GetGenericTypeDefinition().Equals(typeof(IDictionary<,>)) || type.GetGenericTypeDefinition().Equals(typeof(Dictionary<,>))))
             {
-                props.Type = Constants.ObjectTypeString;
+                props.Type                 = Constants.ObjectTypeString;
                 props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments[1], additionalColumns, jsonPath);
             }
             else if (type.IsGenericType &&
-                type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>)) &&
-                type.GenericTypeArguments.Length == 1 &&
-                type.GenericTypeArguments.Single().IsGenericType &&
-                type.GenericTypeArguments.Single().GetGenericTypeDefinition().Equals(typeof(KeyValuePair<,>)))
+                     type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>)) &&
+                     type.GenericTypeArguments.Length == 1 &&
+                     type.GenericTypeArguments.Single().IsGenericType &&
+                     type.GenericTypeArguments.Single().GetGenericTypeDefinition().Equals(typeof(KeyValuePair<,>)))
             {
-                props.Type = Constants.ObjectTypeString;
+                props.Type                 = Constants.ObjectTypeString;
                 props.AdditionalProperties = MapType(namedTypeSymbols, type.GenericTypeArguments.Single().GenericTypeArguments[1], additionalColumns, jsonPath);
             }
             else if (type.IsGenericType && type.IsEnumerableType(out Type typeParameter))
             {
-                props.Type = Constants.ArrayTypeString;
+                props.Type  = Constants.ArrayTypeString;
                 props.Items = MapType(namedTypeSymbols, typeParameter, additionalColumns, jsonPath);
             }
 
             else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
-                !type.IsAbstract &&
-                !type.IsInterface &&
-                type.Assembly == typeof(IKubernetesObject).Assembly)
+                     !type.IsAbstract &&
+                     !type.IsInterface &&
+                     type.Assembly == typeof(IKubernetesObject).Assembly)
             {
                 SetEmbeddedResourceProperties(props);
             }
@@ -587,19 +586,19 @@ namespace Neon.Operator.Analyzers
                 {
                     var x = Nullable.GetUnderlyingType(type.UnderlyingSystemType);
                 }
-                catch { }
+                catch
+                {
+                }
+
                 props.Type         = Constants.StringTypeString;
                 props.EnumProperty = type.GetMembers()
-                        .Where(static member => member.MemberType is System.Reflection.MemberTypes.Field)
-                        .Select(static member =>
-                            (object)((RoslynFieldInfo)member).GetCustomAttribute<EnumMemberAttribute>()?.Value
-                            ?? (object)member.Name.ToLower())
-                        .ToList();
+                    .Where(static member => member.MemberType is System.Reflection.MemberTypes.Field)
+                    .Select(static member => (object)((RoslynFieldInfo)member).GetCustomAttribute<EnumMemberAttribute>()?.Value ?? (object)member.Name.ToLower())
+                    .ToList();
             }
             else 
             {
-                props.Type = Constants.ObjectTypeString;
-
+                props.Type       = Constants.ObjectTypeString;
                 props.Properties = new Dictionary<string, V1JSONSchemaProps>();
 
                 foreach (var prop in type.GetProperties())
@@ -617,6 +616,7 @@ namespace Neon.Operator.Analyzers
                     .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)
                     .Select(GetPropertyName)
                     .ToList();
+
                 if (props.Required.Count == 0)
                 {
                     props.Required = null;

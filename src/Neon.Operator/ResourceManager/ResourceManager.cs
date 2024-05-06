@@ -532,6 +532,7 @@ namespace Neon.Operator.ResourceManager
                         {
                             await CreateController(scope.ServiceProvider).OnPromotionAsync(cancellationToken: watcherTcs.Token);
                         }
+
                     }).Wait();
             }
             catch (Exception e)

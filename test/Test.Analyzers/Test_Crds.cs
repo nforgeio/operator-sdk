@@ -45,7 +45,7 @@ namespace Test.Analyzers
                 .AddAssembly(typeof(RequiredAttribute).Assembly)
                 .Build();
 
-            var outFile = "examples.example.neonkube.io.yaml";
+            var outFile = "examples.example.neonkube.io.g.yaml";
 
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
@@ -74,7 +74,7 @@ namespace Test.Analyzers
                 .AddAssembly(typeof(RequiredAttribute).Assembly)
                 .Build();
 
-            var outFile = "examples.example.neonkube.io.yaml";
+            var outFile = "examples.example.neonkube.io.g.yaml";
 
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
@@ -102,7 +102,7 @@ namespace Test.Analyzers
                 .AddAssembly(typeof(RequiredAttribute).Assembly)
                 .Build();
 
-            var outFile = "generics.example.neonkube.io.yaml";
+            var outFile = "generics.example.neonkube.io.g.yaml";
 
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 
@@ -192,7 +192,7 @@ namespace TestNamespace
                 .AddAssembly(typeof(RequiredAttribute).Assembly)
                 .Build();
 
-            var outFile = "dict.example.neonkube.io.yaml";
+            var outFile = "dict.example.neonkube.io.g.yaml";
 
             var output =  File.ReadAllText(Path.Combine(tempFile.Path, outFile));
 

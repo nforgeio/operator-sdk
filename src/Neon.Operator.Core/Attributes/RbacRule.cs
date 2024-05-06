@@ -40,7 +40,6 @@ namespace Neon.Operator.Rbac
         /// <param name="resource">Specifies the Resource type.</param>
         /// <param name="verbs">Specifies the RBAC verbs.</param>
         /// <param name="scope">Specifies whether the entity is namespaced or cluster scoped.</param>
-        /// <param name="namespace">Optionally specifies a common separated list of namespaces to access.</param>
         /// <param name="resourceNames">Optionally specifies a comma separated list of the names of specific resources to be accessed.</param>/param>
         /// <param name="subResources">Optionally specifies a comma separated list of subresource names.</param>
         public RbacRule(
@@ -48,7 +47,6 @@ namespace Neon.Operator.Rbac
             string      resource,
             RbacVerb    verbs         = RbacVerb.None,
             EntityScope scope         = EntityScope.Namespaced,
-            string      @namespace    = null,
             string      resourceNames = null,
             string      subResources  = null)
         {
@@ -56,7 +54,6 @@ namespace Neon.Operator.Rbac
             this.Resource      = resource;
             this.Verbs         = verbs;
             this.Scope         = scope;
-            this.Namespace     = @namespace;
             this.ResourceNames = resourceNames;
             this.SubResources  = subResources;
         }

@@ -72,11 +72,11 @@ namespace TestKubeOperator
     }
 
     [Trait(TestTrait.Category, TestArea.NeonOperator)]
-    public class Test_DependencyInjection : IClassFixture<TestOperatorFixture>, IDisposable
+    public class Test_DependencyInjection : IClassFixture<OperatorFixture>, IDisposable
     {
-        private TestOperatorFixture fixture;
+        private OperatorFixture fixture;
 
-        public Test_DependencyInjection(TestOperatorFixture fixture)
+        public Test_DependencyInjection(OperatorFixture fixture)
         {
             this.fixture = fixture;
             this.fixture.Services.AddSingleton<Foo>(new Foo("bar"));
