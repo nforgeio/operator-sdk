@@ -27,8 +27,7 @@ namespace Neon.Operator.Analyzers
 {
     public class MutatingWebhookReceiver : ISyntaxReceiver
     {
-        public List<ClassDeclarationSyntax> MutatingWebhooks { get; }
-            = new();
+        public List<ClassDeclarationSyntax> MutatingWebhooks { get; } = new();
         public List<AttributeSyntax> Attributes { get; } = new List<AttributeSyntax>();
 
         private List<string> baseNames = new List<string>()
@@ -45,8 +44,8 @@ namespace Neon.Operator.Analyzers
                 {
                     var attributeSyntaxes = syntaxNode.DescendantNodes().OfType<AttributeSyntax>();
 
-                    if (attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute)
-                        || attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute).Replace("Attribute", ""))))
+                    if (attributeSyntaxes.Any(attributeSyntax => attributeSyntax.Name.ToFullString() == nameof(IgnoreAttribute) ||
+                        attributeSyntaxes.Any(attributeSyntax => attributeSyntax.Name.ToFullString() == nameof(IgnoreAttribute).Replace("Attribute", ""))))
                     {
                         return;
                     }
@@ -55,14 +54,17 @@ namespace Neon.Operator.Analyzers
                         .DescendantNodes()
                         .OfType<BaseListSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-                                .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
+                            .Any(genericNameSyntax => baseNames.Contains(genericNameSyntax.Identifier.ValueText)));
 
                     if (bases.Count() > 0)
                     {
                         MutatingWebhooks.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
 
             if (syntaxNode is CompilationUnitSyntax)
@@ -71,25 +73,28 @@ namespace Neon.Operator.Analyzers
                 {
                     var attributeList = ((CompilationUnitSyntax)syntaxNode).AttributeLists;
 
-                    foreach (var a in attributeList)
+                    foreach (var attributeSyntax in attributeList)
                     {
-                        var attributes = a.DescendantNodes().OfType<AttributeSyntax>();
+                        var attributes = attributeSyntax.DescendantNodes().OfType<AttributeSyntax>();
 
-                        foreach (var attr in attributes)
+                        foreach (var attribyteSyntax in attributes)
                         {
-                            var name = attr.Name;
+                            var name       = attribyteSyntax.Name;
                             var nameString = name.ToFullString();
 
-                            if (Constants.AssemblyAttributeNames.Contains(nameString)
-                                || nameString.StartsWith("OwnedEntity")
-                                || nameString.StartsWith("RequiredEntity"))
+                            if (Constants.AssemblyAttributeNames.Contains(nameString) ||
+                                nameString.StartsWith("OwnedEntity") ||
+                                nameString.StartsWith("RequiredEntity"))
                             {
-                                Attributes.Add(attr);
+                                Attributes.Add(attribyteSyntax);
                             }
                         }
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
         }
     }

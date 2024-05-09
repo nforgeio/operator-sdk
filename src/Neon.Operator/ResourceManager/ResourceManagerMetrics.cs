@@ -60,96 +60,96 @@ namespace Neon.Operator.ResourceManager
 
             ReconcileEventsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_reconcile_total",
-                    help: "Total number of reconciliations per controller.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_reconcile_total",
+                    help:          "Total number of reconciliations per controller.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             DeleteEventsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_delete_total",
-                    help: "Total number of delete events per controller.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_delete_total",
+                    help:          "Total number of delete events per controller.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             StatusModifiedTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_statusmodify_total",
-                    help: "Total number of status updates handled by the controller.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_statusmodify_total",
+                    help:          "Total number of status updates handled by the controller.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizeTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_finalize_total",
-                    help: "Total number of finalize events handled by the controller.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_finalize_total",
+                    help:          "Total number of finalize events handled by the controller.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ReconcileErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_reconcile_errors_total",
-                    help: "The number of exceptions thrown while handling reconcile events.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_reconcile_errors_total",
+                    help:          "The number of exceptions thrown while handling reconcile events.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             DeleteErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_delete_errors_total",
-                    help: "The number of exceptions thrown while handling delete events.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_delete_errors_total",
+                    help:          "The number of exceptions thrown while handling delete events.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             StatusModifiedErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_statusmodified_errors_total",
-                    help: "The number of exceptions thrown while handling status updates.",
+                    name:        $"{prefix}_statusmodified_errors_total",
+                    help:       "The number of exceptions thrown while handling status updates.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             FinalizeErrorsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_finalize_errors_total",
-                    help: "The number of exceptions thrown while handling finalize events.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_finalize_errors_total",
+                    help:          "The number of exceptions thrown while handling finalize events.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ReconcileTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_reconcile_time_seconds",
-                    help: "How long in seconds the operator spent reconciling resources.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_reconcile_time_seconds",
+                    help:          "How long in seconds the operator spent reconciling resources.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             DeleteTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_delete_time_seconds",
-                    help: "How long in seconds the operator spent deleting resources.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_delete_time_seconds",
+                    help:          "How long in seconds the operator spent deleting resources.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             StatusModifiedTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_statusmodified_time_seconds",
-                    help: "How long in seconds the operator spent processing status updated requests.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_statusmodified_time_seconds",
+                    help:          "How long in seconds the operator spent processing status updated requests.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizeTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_finalize_time_seconds",
-                    help: "How long in seconds the operator spent finalizing resources.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_finalize_time_seconds",
+                    help:          "How long in seconds the operator spent finalizing resources.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
         }

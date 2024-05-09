@@ -81,8 +81,7 @@ namespace Neon.Operator
                 })
                 .UseKestrel(options =>
                 {
-                    if (!NeonHelper.IsDevWorkstation
-                        && this.operatorHost.Certificate != null)
+                    if (!NeonHelper.IsDevWorkstation && this.operatorHost.Certificate != null)
                     {
                         options.ConfigureHttpsDefaults(options =>
                         {

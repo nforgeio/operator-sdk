@@ -37,18 +37,16 @@ namespace Neon.Operator.Analyzers
                 return true;
             }
 
-            if (type.Equals(typeof(string))
-                || type.Equals(typeof(Guid))
-                || type.Equals(typeof(TimeSpan))
-                || type.Equals(typeof(DateTime))
-                || type.Equals(typeof(DateTimeOffset))
-                )
+            if (type.Equals(typeof(string)) ||
+                type.Equals(typeof(Guid)) ||
+                type.Equals(typeof(TimeSpan)) ||
+                type.Equals(typeof(DateTime)) ||
+                type.Equals(typeof(DateTimeOffset)))
             {
                 return true;
             }
 
-            if (type.IsGenericType
-                && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+            if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
             {
                 if (type.GetGenericArguments().FirstOrDefault().IsSimpleType())
                 {
@@ -62,9 +60,8 @@ namespace Neon.Operator.Analyzers
         public static bool IsEnumerableType(this Type type, out Type typeParameter)
         {
             var genericDef = (RoslynType)type.GetGenericTypeDefinition();
-            
-            if (genericDef.IsAssignableTo(typeof(IEnumerable<>))
-                || genericDef.IsAssignableTo(typeof(IList<>)))
+
+            if (genericDef.IsAssignableTo(typeof(IEnumerable<>)) || genericDef.IsAssignableTo(typeof(IList<>)))
             {
                 typeParameter = type.GetGenericArguments().First();
             }
@@ -72,10 +69,9 @@ namespace Neon.Operator.Analyzers
             {
                 typeParameter = type
                     .GetInterfaces()
-                    .Where(t => t.IsGenericType
-                            && (t.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>))
-                                || t.GetGenericTypeDefinition().Equals(typeof(IList<>))))
-                    .Select(t => t.GetGenericArguments().FirstOrDefault())
+                    .Where(type => type.IsGenericType &&
+                        (type.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>)) || type.GetGenericTypeDefinition().Equals(typeof(IList<>))))
+                    .Select(type => type.GetGenericArguments().FirstOrDefault())
                     .FirstOrDefault();
             }
 
@@ -105,18 +101,20 @@ namespace Neon.Operator.Analyzers
             {
                 result.Description = (string)value["description"];
             }
+
             //result.DefaultProperty = value["defaultProperty"];
-            //result.Definitions = value["definitions"];
-            //result.Dependencies = value["dependencies"];
+            //result.Definitions     = value["definitions"];
+            //result.Dependencies    = value["dependencies"];
 
             if (value.ContainsKey("enum"))
             {
                 result.EnumProperty = (List<object>)value["enum"];
             }
-            //result.Example = value["example"];
+
+            //result.Example          = value["example"];
             //result.ExclusiveMaximum = value["exclusiveMaximum"];
             //result.ExclusiveMinimum = value["exclusiveMinimum"];
-            //result.ExternalDocs = value["externalDocs"];
+            //result.ExternalDocs     = value["externalDocs"];
 
             if (value.ContainsKey("format"))
             {
@@ -131,6 +129,7 @@ namespace Neon.Operator.Analyzers
             if (value.ContainsKey("items"))
             {
                 var items = value["items"];
+
                 if (items.GetType() == typeof(Dictionary<object, object>))
                 {
                     result.Items = ((Dictionary<object, object>)items).ToJsonSchemaProps();
@@ -143,6 +142,7 @@ namespace Neon.Operator.Analyzers
                     {
                         itemsResult.Add(((Dictionary<object, object>)p).ToJsonSchemaProps());
                     }
+
                     result.Items = itemsResult;
                 }
             }
@@ -255,18 +255,18 @@ namespace Neon.Operator.Analyzers
                 }
             }
 
-            //result.Not = value["additionalItems"];
-            //result.OneOf = value["additionalItems"];
-            //result.PatternProperties = value["additionalItems"];
-            //result.RefProperty = value["additionalItems"];
-            //result.Schema = value["additionalItems"];
-            //result.XKubernetesEmbeddedResource = value["additionalItems"];
-            //result.XKubernetesIntOrString = value["additionalItems"];
-            //result.XKubernetesListMapKeys = value["additionalItems"];
-            //result.XKubernetesListType = value["additionalItems"];
-            //result.XKubernetesMapType = value["additionalItems"];
+            //result.Not                              = value["additionalItems"];
+            //result.OneOf                            = value["additionalItems"];
+            //result.PatternProperties                = value["additionalItems"];
+            //result.RefProperty                      = value["additionalItems"];
+            //result.Schema                           = value["additionalItems"];
+            //result.XKubernetesEmbeddedResource      = value["additionalItems"];
+            //result.XKubernetesIntOrString           = value["additionalItems"];
+            //result.XKubernetesListMapKeys           = value["additionalItems"];
+            //result.XKubernetesListType              = value["additionalItems"];
+            //result.XKubernetesMapType               = value["additionalItems"];
             //result.XKubernetesPreserveUnknownFields = value["additionalItems"];
-            //result.XKubernetesValidations = value["additionalItems"];
+            //result.XKubernetesValidations           = value["additionalItems"];
 
             if (value.ContainsKey("allOf"))
             {
@@ -299,17 +299,21 @@ namespace Neon.Operator.Analyzers
         public static string GetGlobalTypeName(this Type t)
         {
             var sb = new StringBuilder();
+
             sb.Append("global::");
 
             if (!t.IsGenericType)
             {
                 sb.Append(t.FullName);
+
                 return sb.ToString();
             }
 
             sb.Append(t.FullName.Substring(0, t.FullName.IndexOf('`')));
             sb.Append('<');
-            bool appendComma = false;
+
+            var appendComma = false;
+
             foreach (Type arg in t.GetGenericArguments())
             {
                 if (appendComma)
@@ -320,7 +324,9 @@ namespace Neon.Operator.Analyzers
                 sb.Append(GetGlobalTypeName(arg));
                 appendComma = true;
             }
+
             sb.Append('>');
+
             return sb.ToString();
         }
     }

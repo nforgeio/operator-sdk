@@ -19,9 +19,8 @@ using System.Runtime.CompilerServices;
 
 [assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
 
-[assembly: InternalsVisibleTo("Test.Neon.Kube")]
-[assembly: InternalsVisibleTo("Test.Neon.Operator")]
 [assembly: InternalsVisibleTo("Neon.Operator")]
 [assembly: InternalsVisibleTo("Neon.Operator.XUnit")]
 [assembly: InternalsVisibleTo("Neon.Kube.Xunit")]
-
+[assembly: InternalsVisibleTo("Test.Neon.Kube")]
+[assembly: InternalsVisibleTo("Test.Neon.Operator")]

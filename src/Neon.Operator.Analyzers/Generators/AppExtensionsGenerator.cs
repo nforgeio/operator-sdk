@@ -48,19 +48,24 @@ namespace Neon.Operator.Analyzers
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
-            Assembly assembly = null;
+            var assembly     = (Assembly)null;
+
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
-                var targetAssembly = runtimeDependencies
+                var targetAssembly      = runtimeDependencies
                     .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
+                {
                     assembly = Assembly.LoadFrom(targetAssembly);
+                }
             }
             catch (Exception)
             {
+                // Initentially ignoring this.
             }
+
             return assembly;
         }
 
@@ -79,12 +84,10 @@ namespace Neon.Operator.Analyzers
             var logString           = new StringBuilder();
             bool hasErrors          = false;
 
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework))
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework) &&
+                targetFramework.StartsWith("netstandard", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (targetFramework.StartsWith("netstandard", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return;
-                }
+                return;
             }
 
             var sb = new StringBuilder();
@@ -112,7 +115,7 @@ namespace Neon.Operator.Analyzers
                 "Prometheus",
         };
 
-            sb.AppendLine($@"
+        sb.AppendLine($@"
 namespace Neon.Operator
 {{
     /// <summary>
@@ -210,12 +213,14 @@ namespace Neon.Operator
                     var webhookEntityType = webhook
                         .DescendantNodes()?
                         .OfType<BaseListSyntax>()?
-                        .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?.Any(gns =>
-                                gns.Identifier.ValueText.EndsWith(typeof(IMutatingWebhook<>).Name.Replace("`1", ""))
-                                || gns.Identifier.ValueText.EndsWith(typeof(MutatingWebhookBase<>).Name.Replace("`1", ""))
-                                || gns.Identifier.ValueText.EndsWith(typeof(IValidatingWebhook<>).Name.Replace("`1", ""))
-                                || gns.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", ""))
-                                ) == true).FirstOrDefault();
+                        .Where(decendents =>
+                            decendents.DescendantNodes()?.OfType<GenericNameSyntax>()?
+                            .Any(nameSyntax =>
+                                nameSyntax.Identifier.ValueText.EndsWith(typeof(IMutatingWebhook<>).Name.Replace("`1", "")) ||
+                                nameSyntax.Identifier.ValueText.EndsWith(typeof(MutatingWebhookBase<>).Name.Replace("`1", "")) ||
+                                nameSyntax.Identifier.ValueText.EndsWith(typeof(IValidatingWebhook<>).Name.Replace("`1", "")) ||
+                                nameSyntax.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", ""))) == true
+                            ).FirstOrDefault();
 
                     var webhookTypeIdentifier           = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
                     var sdf                             = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
@@ -241,13 +246,12 @@ namespace Neon.Operator
                     }
 
                     var webhookInterfaceType = interfaces
-                        .Where(i => i.IsGenericType && 
-                            (i.GetGenericTypeDefinition().Equals(typeof(IMutatingWebhook<>))
-                            || i.GetGenericTypeDefinition().Equals(typeof(MutatingWebhookBase<>))
-                            || i.GetGenericTypeDefinition().Equals(typeof(IValidatingWebhook<>))
-                            || i.GetGenericTypeDefinition().Equals(typeof(ValidatingWebhookBase<>))
-                            ))
-                        .Select(i => i.Name.Replace("`1", ""))
+                        .Where(@interface => @interface.IsGenericType && 
+                            (@interface.GetGenericTypeDefinition().Equals(typeof(IMutatingWebhook<>)) ||
+                             @interface.GetGenericTypeDefinition().Equals(typeof(MutatingWebhookBase<>)) ||
+                             @interface.GetGenericTypeDefinition().Equals(typeof(IValidatingWebhook<>)) ||
+                             @interface.GetGenericTypeDefinition().Equals(typeof(ValidatingWebhookBase<>))))
+                        .Select(@interface => @interface.Name.Replace("`1", ""))
                         .FirstOrDefault();
 
                     sb.Append($@"

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NgrokWebhookTunnel.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -45,15 +45,15 @@ namespace Neon.Operator.Webhooks.Ngrok
     /// </summary>
     public class NgrokWebhookTunnel : IHostedService, IDisposable
     {
-        private readonly ILogger                logger;
-        private readonly IKubernetes            k8s;
-        private readonly INgrokManager          ngrokManager;
+        private readonly ILogger            logger;
+        private readonly IKubernetes        k8s;
+        private readonly INgrokManager      ngrokManager;
         private readonly ComponentRegister  componentRegistration;
-        private readonly IServiceProvider       serviceProvider;
-        private readonly JsonClient             jsonClient;
-        private string                          tunnelNname;
-        private string                          ngrokdirectory;
-        private string                          ngrokAuthToken;
+        private readonly IServiceProvider   serviceProvider;
+        private readonly JsonClient         jsonClient;
+        private string                      tunnelNname;
+        private string                      ngrokdirectory;
+        private string                      ngrokAuthToken;
 
         /// <summary>
         /// Constructor.
@@ -64,11 +64,11 @@ namespace Neon.Operator.Webhooks.Ngrok
         /// <param name="ngrokdirectory">Optionally specifies the NGROK directory.</param>
         /// <param name="ngrokAuthToken">Optionally spefifices the NGROK authentication token.</param>
         public NgrokWebhookTunnel(
-            IKubernetes             k8s,
+            IKubernetes         k8s,
             ComponentRegister   componentRegistration,
-            IServiceProvider        serviceProvider,
-            string                  ngrokdirectory = null,
-            string                  ngrokAuthToken = null)
+            IServiceProvider    serviceProvider,
+            string              ngrokdirectory = null,
+            string              ngrokAuthToken = null)
         {
             Covenant.Requires<ArgumentNullException>(k8s != null, nameof(k8s));
             Covenant.Requires<ArgumentNullException>(componentRegistration != null, nameof(componentRegistration));
@@ -166,7 +166,7 @@ namespace Neon.Operator.Webhooks.Ngrok
                     var createMethod = typeof(IMutatingWebhook<>)
                         .MakeGenericType(mutatingWebhookRegistration.EntityType)
                         .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                        .First(m => m.Name == "Create");
+                        .First(method => method.Name == "Create");
 
                     await (Task)createMethod.Invoke(mutator, new object[] { k8s, serviceProvider.GetService<ILoggerFactory>() });
 

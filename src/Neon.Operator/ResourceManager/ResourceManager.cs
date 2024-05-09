@@ -294,10 +294,6 @@ namespace Neon.Operator.ResourceManager
                 throw new InvalidOperationException($"[{nameof(ResourceManager<TEntity, TController>)}] is already running.");
             }
 
-            //-----------------------------------------------------------------
-            // Start the leader elector if enabled.
-
-
             // Start the leader elector when enabled.
 
             ResetLeaderElector();
@@ -431,10 +427,10 @@ namespace Neon.Operator.ResourceManager
                     review.Spec                    = new V1SelfSubjectAccessReviewSpec();
                     review.Spec.ResourceAttributes = new V1ResourceAttributes()
                     {
-                        Group = metadata.Group,
-                        Version = metadata.ApiVersion,
+                        Group    = metadata.Group,
+                        Version  = metadata.ApiVersion,
                         Resource = metadata.PluralName,
-                        Verb = "watch",
+                        Verb     = "watch",
                     };
 
                     if (resourceNamespaces == null)
@@ -782,10 +778,10 @@ namespace Neon.Operator.ResourceManager
                                                 }
 
                                                 await eventQueue.RequeueAsync(
-                                                        @event,
-                                                        delay:             e.Delay,
-                                                        watchEventType:    (k8s.WatchEventType?)e.EventType,
-                                                        cancellationToken: cancellationToken);
+                                                    @event,
+                                                    delay:             e.Delay,
+                                                    watchEventType:    (k8s.WatchEventType?)e.EventType,
+                                                    cancellationToken: cancellationToken);
 
                                                 return;
 
@@ -904,10 +900,10 @@ namespace Neon.Operator.ResourceManager
                                                         }
 
                                                         await eventQueue.RequeueAsync(
-                                                        @event,
-                                                        delay:             e.Delay,
-                                                        watchEventType:    (k8s.WatchEventType?)e.EventType,
-                                                        cancellationToken: cancellationToken);
+                                                            @event,
+                                                            delay:             e.Delay,
+                                                            watchEventType:    (k8s.WatchEventType?)e.EventType,
+                                                            cancellationToken: cancellationToken);
 
                                                         return;
                                                     }
@@ -1054,7 +1050,6 @@ namespace Neon.Operator.ResourceManager
                                                 default:
 
                                                     logger?.LogDebugEx(() => $"Event is {modifiedEventType}. No action needed.");
-
                                                     break;
                                             }
 
@@ -1070,8 +1065,7 @@ namespace Neon.Operator.ResourceManager
                             }
                         }
 
-                        if (@event.Type < (k8s.WatchEventType)WatchEventType.Deleted
-                            && modifiedEventType == ModifiedEventType.Other)
+                        if (@event.Type < (k8s.WatchEventType)WatchEventType.Deleted && modifiedEventType == ModifiedEventType.Other)
                         {
                             switch (result)
                             {
@@ -1079,13 +1073,12 @@ namespace Neon.Operator.ResourceManager
 
                                     logger?.LogInformationEx(() => $@"Event type [{@event.Type}] on resource [{resource.Kind}/{resourceName}] successfully reconciled. Requeue not requested.");
                                     await eventQueue.DequeueAsync(@event, cancellationToken: cancellationToken);
-
                                     return;
                                 
                                 case RequeueEventResult requeue:
 
                                     var specificQueueTypeRequested = requeue.EventType.HasValue;
-                                    var requestedQueueType = requeue.EventType ?? WatchEventType.Modified;
+                                    var requestedQueueType         = requeue.EventType ?? WatchEventType.Modified;
 
                                     if (specificQueueTypeRequested)
                                     {
@@ -1175,6 +1168,7 @@ namespace Neon.Operator.ResourceManager
                                     break;
 
                                 default:
+
                                     break;
                             }
                         }
@@ -1218,7 +1212,7 @@ namespace Neon.Operator.ResourceManager
                                 {
                                     if (resourceCache.TryGet(ownerRef.Uid, out TEntity owner))
                                     {
-                                        logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
+                                        logger?.LogDebugEx(() => $"Dependent resource [{resource.Kind}] [{resource.Namespace()}/{resource.Name()}] queuing new event for [{typeof(TEntity)}] [{owner.Namespace()}/{owner.Name()}].");
 
                                         var newWatchEvent = new WatchEvent<TEntity>((k8s.WatchEventType)WatchEventType.Modified, owner, force: true);
 
@@ -1237,7 +1231,7 @@ namespace Neon.Operator.ResourceManager
                                     {
                                         if (resourceCache.TryGet(ownerRef.Uid, out TEntity owner))
                                         {
-                                            logger?.LogDebugEx(() => $"Dependent resource {resource.Kind} {resource.Namespace()}/{resource.Name()} queuing new event for {typeof(TEntity)} {owner.Namespace()}/{owner.Name()}.");
+                                            logger?.LogDebugEx(() => $"Dependent resource [{resource.Kind}] [{resource.Namespace()}/{resource.Name()}] queuing new event for [{typeof(TEntity)}] [{owner.Namespace()}/{owner.Name()}].");
 
                                             var newWatchEvent = new WatchEvent<TEntity>((k8s.WatchEventType)WatchEventType.Modified, owner, force: true);
 
@@ -1268,11 +1262,11 @@ namespace Neon.Operator.ResourceManager
 
                                 if (!string.IsNullOrEmpty(resource.Namespace()))
                                 {
-                                    logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    logger?.LogCriticalEx(() => $"Critical error watching: [namespace={resource.Namespace()}] [{stub.ApiGroupAndVersion}/{stub.Kind}]");
                                 }
                                 else
                                 {
-                                    logger?.LogCriticalEx(() => $"Critical error watching: {stub.ApiGroupAndVersion}/{stub.Kind}");
+                                    logger?.LogCriticalEx(() => $"Critical error watching: [{stub.ApiGroupAndVersion}/{stub.Kind}]");
                                 }
 
                                 logger?.LogCriticalEx("Terminating the pod so Kubernetes can reschedule it and we can restart the watch.");
@@ -1280,6 +1274,7 @@ namespace Neon.Operator.ResourceManager
                                 break;
 
                             default:
+
                                 break;
                         }
                     }
@@ -1304,11 +1299,11 @@ namespace Neon.Operator.ResourceManager
 
                 if (this.resourceNamespaces != null && crdCache.Get(typeof(TEntity).GetKubernetesTypeMetadata())?.Namespaced == true)
                 {
-                    foreach (var ns in resourceNamespaces)
+                    foreach (var @namespace in resourceNamespaces)
                     {
                         tasks.Add(k8s.WatchAsync<TEntity>(
                             actionAsync:        enqueueAsync, 
-                            namespaceParameter: ns, 
+                            namespaceParameter: @namespace, 
                             fieldSelector:      options.FieldSelector,
                             labelSelector:      options.LabelSelector,
                             retryDelay:         operatorSettings.WatchRetryDelay,
@@ -1332,12 +1327,12 @@ namespace Neon.Operator.ResourceManager
                     var watchMethod = typeof(KubernetesExtensions).GetMethod("WatchAsync").MakeGenericMethod(dependent.GetEntityType());
                     var args        = new object[watchMethod.GetParameters().Count()];
 
-                    args[0] = k8s;
-                    args[1] = enqueueDependentAsync;
-                    args[3] = options.FieldSelector;
-                    args[4] = options.LabelSelector;
-                    args[8] = operatorSettings.WatchRetryDelay;
-                    args[9] = cancellationToken;
+                    args[0]  = k8s;
+                    args[1]  = enqueueDependentAsync;
+                    args[3]  = options.FieldSelector;
+                    args[4]  = options.LabelSelector;
+                    args[8]  = operatorSettings.WatchRetryDelay;
+                    args[9]  = cancellationToken;
                     args[10] = logger;
 
                     if (this.resourceNamespaces != null && crdCache.Get(dependent.GetEntityType().GetKubernetesTypeMetadata())?.Namespaced == false)

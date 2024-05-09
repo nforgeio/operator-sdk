@@ -128,8 +128,6 @@ namespace Neon.Operator
 
                 return;
             }
-
-            
         }
 
         /// <inheritdoc/>
@@ -178,8 +176,7 @@ namespace Neon.Operator
         {
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
-            if (File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.cert")
-                && File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.key"))
+            if (File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.cert") && File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.key"))
             {
                 logger?.LogInformationEx(() => "Loading OLM Certificate.");
 
@@ -233,8 +230,8 @@ namespace Neon.Operator
                     logger?.LogDebugEx(() => KubernetesHelper.JsonSerialize(certificate));
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
-                        body: certificate,
-                        name: certificate.Name(),
+                        body:               certificate,
+                        name:               certificate.Name(),
                         namespaceParameter: certificate.Namespace());
 
                     logger?.LogInformationEx(() => "Webhook certificate created.");
@@ -290,74 +287,74 @@ namespace Neon.Operator
 
             rbac.Build();
 
-            foreach (var sa in rbac.ServiceAccounts)
+            foreach (var serviceAccount in rbac.ServiceAccounts)
             {
-                logger?.LogInformationEx(() => $"Creating ServiceAccount {sa.Namespace()}/{sa.Name()}.");
+                logger?.LogInformationEx(() => $"Creating ServiceAccount [{serviceAccount.Namespace()}/{serviceAccount.Name()}].");
 
-                var serviceAccounts = await k8s.CoreV1.ListNamespacedServiceAccountAsync(sa.Namespace(), fieldSelector: $"metadata.name={sa.Name()}");
+                var serviceAccounts = await k8s.CoreV1.ListNamespacedServiceAccountAsync(serviceAccount.Namespace(), fieldSelector: $"metadata.name={serviceAccount.Name()}");
                 
                 if (serviceAccounts.Items.Any())
                 {
-                    await k8s.CoreV1.DeleteNamespacedServiceAccountAsync(sa.Name(), sa.Namespace());
+                    await k8s.CoreV1.DeleteNamespacedServiceAccountAsync(serviceAccount.Name(), serviceAccount.Namespace());
                 }
 
-                await k8s.CoreV1.CreateNamespacedServiceAccountAsync(sa, sa.Namespace());
+                await k8s.CoreV1.CreateNamespacedServiceAccountAsync(serviceAccount, serviceAccount.Namespace());
             }
 
-            foreach (var cr in rbac.ClusterRoles)
+            foreach (var clusterRole in rbac.ClusterRoles)
             {
-                logger?.LogInformationEx(() => $"Creating ClusterRole {cr.Name()}.");
+                logger?.LogInformationEx(() => $"Creating ClusterRole [{clusterRole.Name()}].");
 
-                var clusterRoles = await k8s.RbacAuthorizationV1.ListClusterRoleAsync(fieldSelector: $"metadata.name={cr.Name()}");
+                var clusterRoles = await k8s.RbacAuthorizationV1.ListClusterRoleAsync(fieldSelector: $"metadata.name={clusterRole.Name()}");
 
                 if (clusterRoles.Items.Any())
                 {
-                    await k8s.RbacAuthorizationV1.DeleteClusterRoleAsync(cr.Name());
+                    await k8s.RbacAuthorizationV1.DeleteClusterRoleAsync(clusterRole.Name());
                 }
 
-                await k8s.RbacAuthorizationV1.CreateClusterRoleAsync(cr);
+                await k8s.RbacAuthorizationV1.CreateClusterRoleAsync(clusterRole);
             }
 
-            foreach (var crb in rbac.ClusterRoleBindings)
+            foreach (var clusterRoleBinding in rbac.ClusterRoleBindings)
             {
-                logger?.LogInformationEx(() => $"Creating ClusterRoleBinding {crb.Name()}.");
+                logger?.LogInformationEx(() => $"Creating ClusterRoleBinding [{clusterRoleBinding.Name()}].");
 
-                var clusterRoleBindings = await k8s.RbacAuthorizationV1.ListClusterRoleBindingAsync(fieldSelector: $"metadata.name={crb.Name()}");
+                var clusterRoleBindings = await k8s.RbacAuthorizationV1.ListClusterRoleBindingAsync(fieldSelector: $"metadata.name={clusterRoleBinding.Name()}");
 
                 if (clusterRoleBindings.Items.Any())
                 {
-                    await k8s.RbacAuthorizationV1.DeleteClusterRoleBindingAsync(crb.Name());
+                    await k8s.RbacAuthorizationV1.DeleteClusterRoleBindingAsync(clusterRoleBinding.Name());
                 }
 
-                await k8s.RbacAuthorizationV1.CreateClusterRoleBindingAsync(crb);
+                await k8s.RbacAuthorizationV1.CreateClusterRoleBindingAsync(clusterRoleBinding);
             }
 
-            foreach (var r in rbac.Roles)
+            foreach (var role in rbac.Roles)
             {
-                logger?.LogInformationEx(() => $"Creating Role {r.Namespace()}/{r.Name()}.");
+                logger?.LogInformationEx(() => $"Creating Role [{role.Namespace()}/{role.Name()}].");
 
-                var roles = await k8s.RbacAuthorizationV1.ListNamespacedRoleAsync(r.Namespace(), fieldSelector: $"metadata.name={r.Name()}");
+                var roles = await k8s.RbacAuthorizationV1.ListNamespacedRoleAsync(role.Namespace(), fieldSelector: $"metadata.name={role.Name()}");
 
                 if (roles.Items.Any())
                 {
-                    await k8s.RbacAuthorizationV1.DeleteNamespacedRoleAsync(r.Name(), r.Namespace());
+                    await k8s.RbacAuthorizationV1.DeleteNamespacedRoleAsync(role.Name(), role.Namespace());
                 }
 
-                await k8s.RbacAuthorizationV1.CreateNamespacedRoleAsync(r, r.Namespace());
+                await k8s.RbacAuthorizationV1.CreateNamespacedRoleAsync(role, role.Namespace());
             }
 
-            foreach (var rb in rbac.RoleBindings)
+            foreach (var roleBinding in rbac.RoleBindings)
             {
-                logger?.LogInformationEx(() => $"Creating RoleBinding {rb.Namespace()}/{rb.Name()}.");
+                logger?.LogInformationEx(() => $"Creating RoleBinding [{roleBinding.Namespace()}/{roleBinding.Name()}].");
 
-                var roleBindings = await k8s.RbacAuthorizationV1.ListNamespacedRoleBindingAsync(rb.Namespace(), fieldSelector: $"metadata.name={rb.Name()}");
+                var roleBindings = await k8s.RbacAuthorizationV1.ListNamespacedRoleBindingAsync(roleBinding.Namespace(), fieldSelector: $"metadata.name={roleBinding.Name()}");
 
                 if (roleBindings.Items.Any())
                 {
-                    await k8s.RbacAuthorizationV1.DeleteNamespacedRoleBindingAsync(rb.Name(), rb.Namespace());
+                    await k8s.RbacAuthorizationV1.DeleteNamespacedRoleBindingAsync(roleBinding.Name(), roleBinding.Namespace());
                 }
 
-                await k8s.RbacAuthorizationV1.CreateNamespacedRoleBindingAsync(rb, rb.Namespace());
+                await k8s.RbacAuthorizationV1.CreateNamespacedRoleBindingAsync(roleBinding, roleBinding.Namespace());
             }
         }
     }

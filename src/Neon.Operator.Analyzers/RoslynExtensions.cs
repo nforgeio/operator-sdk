@@ -40,6 +40,7 @@ namespace Neon.Operator.Analyzers
             {
                 return ((LiteralExpressionSyntax)syntax).Token.Value;
             }
+
             if (syntax is InvocationExpressionSyntax)
             {
                 var expression = ((InvocationExpressionSyntax)syntax).Expression;
@@ -49,24 +50,24 @@ namespace Neon.Operator.Analyzers
                     if (((IdentifierNameSyntax)expression).Identifier.ValueText == "nameof")
                     {
                         var arg = ((InvocationExpressionSyntax)syntax).ArgumentList.Arguments.First();
+
                         return arg.GetLastToken().Value;
                     }
                 }
 
                 return null;
             }
+
             if (syntax is MemberAccessExpressionSyntax)
             {
-                var s = (MemberAccessExpressionSyntax)syntax;
-
-                var c = metadataLoadContext.ResolveType((IdentifierNameSyntax)s.Expression);
-
-                var member = c.GetMembers().Where(m => m.Name == s.Name.Identifier.ValueText).FirstOrDefault();
+                var aes    = (MemberAccessExpressionSyntax)syntax;
+                var type   = metadataLoadContext.ResolveType((IdentifierNameSyntax)aes.Expression);
+                var member = type.GetMembers().Where(m => m.Name == aes.Name.Identifier.ValueText).FirstOrDefault();
 
                 return ((RoslynFieldInfo)member).FieldSymbol.ConstantValue;
             }
-            if (syntax is BinaryExpressionSyntax
-                    && ((BinaryExpressionSyntax)syntax).Kind() == SyntaxKind.BitwiseOrExpression)
+
+            if (syntax is BinaryExpressionSyntax && ((BinaryExpressionSyntax)syntax).Kind() == SyntaxKind.BitwiseOrExpression)
             {
                 return ((BinaryExpressionSyntax)syntax).GetEnumValue(metadataLoadContext);
             }
@@ -83,6 +84,7 @@ namespace Neon.Operator.Analyzers
         {
             int left;
             int right;
+
             if (s.Left is BinaryExpressionSyntax)
             {
                 left = ((BinaryExpressionSyntax)s.Left).GetEnumValue(metadataLoadContext);
@@ -91,6 +93,7 @@ namespace Neon.Operator.Analyzers
             {
                 left = s.Left.GetExpressionValue<int>(metadataLoadContext);
             }
+
             if (s.Right is BinaryExpressionSyntax)
             {
                 right = ((BinaryExpressionSyntax)s.Right).GetEnumValue(metadataLoadContext);
@@ -110,7 +113,7 @@ namespace Neon.Operator.Analyzers
                 return string.Empty;
             }
 
-            var sb = new StringBuilder(s.MetadataName);
+            var sb   = new StringBuilder(s.MetadataName);
             var last = s;
 
             s = s.ContainingSymbol;
@@ -128,6 +131,7 @@ namespace Neon.Operator.Analyzers
 
                 sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
                 //sb.Insert(0, s.MetadataName);
+
                 s = s.ContainingSymbol;
             }
 
@@ -137,6 +141,7 @@ namespace Neon.Operator.Analyzers
         private static bool IsRootNamespace(ISymbol symbol)
         {
             INamespaceSymbol s = null;
+
             return ((s = symbol as INamespaceSymbol) != null) && s.IsGlobalNamespace;
         }
 
@@ -173,8 +178,8 @@ namespace Neon.Operator.Analyzers
         }
 
         public static T GetAttribute<T>(
-            MetadataLoadContext metadataLoadContext,
-            Compilation compilation,
+            MetadataLoadContext   metadataLoadContext,
+            Compilation           compilation,
             List<AttributeSyntax> attributes)
         {
             try
@@ -218,15 +223,13 @@ namespace Neon.Operator.Analyzers
             {
                 IEnumerable<AttributeSyntax> syntax = null;
 
-                syntax = attributes
-                    .Where(a => a.Name.ToFullString() == typeof(T).Name);
+                syntax = attributes.Where(a => a.Name.ToFullString() == typeof(T).Name);
 
                 if (syntax == null || syntax.Count() == 0)
                 {
                     var name = typeof(T).Name.Replace("Attribute", "");
 
-                    syntax = attributes
-                        .Where(a => a.Name.ToFullString() == name);
+                    syntax = attributes.Where(a => a.Name.ToFullString() == name);
                 }
 
                 if (syntax == null || syntax.Count() == 0)
@@ -234,9 +237,9 @@ namespace Neon.Operator.Analyzers
                     return result;
                 }
 
-                foreach (var s in syntax)
+                foreach (var attributeSyntax in syntax)
                 {
-                    result.Add(s, s.GetCustomAttribute<T>(metadataLoadContext, compilation));
+                    result.Add(attributeSyntax, attributeSyntax.GetCustomAttribute<T>(metadataLoadContext, compilation));
                 }
 
                 return result;

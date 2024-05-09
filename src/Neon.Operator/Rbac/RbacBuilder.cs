@@ -55,30 +55,31 @@ namespace Neon.Operator.Rbac
         {
             Covenant.Requires<ArgumentNullException>(serviceProvider != null, nameof(serviceProvider));
 
-            this.serviceProvider        = serviceProvider;
-            this.@namespace             = @namespace;
-            this.operatorSettings       = serviceProvider.GetRequiredService<OperatorSettings>();
-            this.componentRegister      = serviceProvider.GetRequiredService<ComponentRegister>();
-            this.ServiceAccounts        = new List<V1ServiceAccount>();
-            this.ClusterRoles           = new List<V1ClusterRole>();
-            this.ClusterRoleBindings    = new List<V1ClusterRoleBinding>();
-            this.Roles                  = new List<V1Role>();
-            this.RoleBindings           = new List<V1RoleBinding>();
+            this.serviceProvider     = serviceProvider;
+            this.@namespace          = @namespace;
+            this.operatorSettings    = serviceProvider.GetRequiredService<OperatorSettings>();
+            this.componentRegister   = serviceProvider.GetRequiredService<ComponentRegister>();
+            this.ServiceAccounts     = new List<V1ServiceAccount>();
+            this.ClusterRoles        = new List<V1ClusterRole>();
+            this.ClusterRoleBindings = new List<V1ClusterRoleBinding>();
+            this.Roles               = new List<V1Role>();
+            this.RoleBindings        = new List<V1RoleBinding>();
         }
 
         public RbacBuilder(string assemblyPath, OperatorSettings operatorSettings)
         {
             Covenant.Requires<ArgumentNullException>(assemblyPath != null, nameof(assemblyPath));
 
-            this.@namespace            = operatorSettings.PodNamespace;
-            this.operatorSettings      = operatorSettings;
-            this.ServiceAccounts       = new List<V1ServiceAccount>();
-            this.ClusterRoles          = new List<V1ClusterRole>();
-            this.ClusterRoleBindings   = new List<V1ClusterRoleBinding>();
-            this.Roles                 = new List<V1Role>();
-            this.RoleBindings          = new List<V1RoleBinding>();
+            this.@namespace          = operatorSettings.PodNamespace;
+            this.operatorSettings    = operatorSettings;
+            this.ServiceAccounts     = new List<V1ServiceAccount>();
+            this.ClusterRoles        = new List<V1ClusterRole>();
+            this.ClusterRoleBindings = new List<V1ClusterRoleBinding>();
+            this.Roles               = new List<V1Role>();
+            this.RoleBindings        = new List<V1RoleBinding>();
 
             var assemblyScanner = new AssemblyScanner();
+
             assemblyScanner.Add(assemblyPath);
 
             this.componentRegister = assemblyScanner.ComponentRegister;

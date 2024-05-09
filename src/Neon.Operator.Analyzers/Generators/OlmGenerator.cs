@@ -194,7 +194,7 @@ namespace Neon.Operator.Analyzers.Generators
                 context.ReportDiagnostic(
                     Diagnostic.Create(MissingRequiredAttributes,
                     Location.None,
-                    string.Join(", ", missingRequired.Select(x => x.Name))));
+                    string.Join(", ", missingRequired.Select(type => type.Name))));
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorLeaderElectionDisabled", out var leaderElectionString))
@@ -259,47 +259,47 @@ namespace Neon.Operator.Analyzers.Generators
                 {
                     rbacAttributes.Add(
                         new RbacRule(
-                            apiGroup: attribute.ApiGroup,
-                            resource: attribute.Resource,
-                            verbs: attribute.Verbs,
-                            scope: attribute.Scope,
+                            apiGroup:      attribute.ApiGroup,
+                            resource:      attribute.Resource,
+                            verbs:         attribute.Verbs,
+                            scope:         attribute.Scope,
                             resourceNames: attribute.ResourceNames,
-                            subResources: attribute.SubResources));
+                            subResources:  attribute.SubResources));
                 }
 
                 var rbacGenericAttr = crSystemType.CustomAttributes?
                     .Where(ca=>ca.AttributeType.IsGenericType)?
                     .Where(ca=>ca.AttributeType.GetGenericTypeDefinition().Equals(typeof(RbacRuleAttribute<>)));
 
-                foreach (var r in rbacGenericAttr)
+                foreach (var attr in rbacGenericAttr)
                 {
-                    var args       = r.NamedArguments;
-                    var etype      = r.AttributeType.GenericTypeArguments.FirstOrDefault();
+                    var args       = attr.NamedArguments;
+                    var etype      = attr.AttributeType.GenericTypeArguments.FirstOrDefault();
                     var entityType = metadataLoadContext.ResolveType(etype.FullName);
                     var k8sAttr    = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
                     var apiGroup   = k8sAttr.Group;
                     var resource   = k8sAttr.PluralName;
                     var rule       = new RbacRule(apiGroup, resource);
 
-                    foreach (var p in r.NamedArguments)
+                    foreach (var arg in attr.NamedArguments)
                     {
-                        var propertyInfo = typeof(RbacRule).GetProperty(p.MemberInfo.Name);
+                        var propertyInfo = typeof(RbacRule).GetProperty(arg.MemberInfo.Name);
 
                         if (propertyInfo != null)
                         {
-                            propertyInfo.SetValue(rule, p.TypedValue.Value);
+                            propertyInfo.SetValue(rule, arg.TypedValue.Value);
                             continue;
                         }
 
-                        var fieldInfo = typeof(RbacRule).GetField(p.MemberInfo.Name);
+                        var fieldInfo = typeof(RbacRule).GetField(arg.MemberInfo.Name);
 
                         if (fieldInfo != null)
                         {
-                            fieldInfo.SetValue(rule, p.TypedValue.Value);
+                            fieldInfo.SetValue(rule, arg.TypedValue.Value);
                             continue;
                         }
 
-                        throw new Exception($"No field or property {p}");
+                        throw new Exception($"No field or property {arg}");
                     }
 
                     rbacAttributes.Add(rule);
@@ -359,18 +359,22 @@ namespace Neon.Operator.Analyzers.Generators
                 Url  = provider?.Url
             };
 
-            csv.Spec.Maintainers = maintainers?.Select(m => new Maintainer()
-            {
-                Name  = m.Value.Name,
-                Email = m.Value.Email
-            }).ToList();
+            csv.Spec.Maintainers = maintainers?
+                .Select(maintainer => new Maintainer()
+                {
+                    Name  = maintainer.Value.Name,
+                    Email = maintainer.Value.Email
+                })
+                .ToList();
 
-            csv.Spec.Links = links?.Select(l => new Link()
-            {
-                Name = l.Value.Name,
-                Url  = l.Value.Url
+            csv.Spec.Links = links?
+                .Select(link => new Link()
+                {
+                    Name = link.Value.Name,
+                    Url  = link.Value.Url
 
-            }).ToList();
+                })
+                .ToList();
 
             if (ownedEntities.Count() > 0)
             {
@@ -388,26 +392,26 @@ namespace Neon.Operator.Analyzers.Generators
 
             foreach (var mode in installModeAttrs)
             {
-                foreach (var im in mode.Value.Type.GetTypes())
+                foreach (var installMode in mode.Value.Type.GetTypes())
                 {
-                    if (installModes.Any(i => i.Type == im))
+                    if (installModes.Any(i => i.Type == installMode))
                     {
                         context.ReportDiagnostic(
                             Diagnostic.Create(
                                 descriptor:  InstallModeDuplicateError,
                                 location:    mode.Key.GetLocation(),
-                                messageArgs: [im]));
+                                messageArgs: [installMode]));
                     }
 
                     installModes.Add(new InstallMode()
                     {
                         Supported = mode.Value.Supported,
-                        Type      = im
+                        Type      = installMode
                     });
                 }
             }
-            csv.Spec.InstallModes = installModes;
 
+            csv.Spec.InstallModes             = installModes;
             csv.Spec.Install                  = new NamedInstallStrategy();
             csv.Spec.Install.Strategy         = "deployment";
             csv.Spec.Install.Spec             = new StrategyDetailsDeployment();
@@ -416,7 +420,7 @@ namespace Neon.Operator.Analyzers.Generators
                 new StrategyDeploymentPermission()
                 {
                     ServiceAccountName = operatorName?.Name,
-                    Rules = rbacAttributes.Where(attr =>
+                    Rules              = rbacAttributes.Where(attr =>
                         attr.Scope == EntityScope.Namespaced)
                             .GroupBy(
                                 attr => new
@@ -432,14 +436,15 @@ namespace Neon.Operator.Analyzers.Generators
                                     ApiGroups:     group.Select(attr => attr.ApiGroup).ToList(),
                                     Resources:     group.Select(attr => attr.Resource).ToList(),
                                     SubResources:  group.SelectMany(attr => (attr.SubResources?.Split(',')
-                                                                                    .Distinct()
-                                                                                    .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())))
+                                        .Distinct()
+                                        .Where(subResource => !string.IsNullOrEmpty(subResource))
+                                        .Select(subResource => $"{attr.Resource}/{subResource}")) ?? Array.Empty<string>())))
                             .Select(
                                 group => new V1PolicyRule
                                 {
-                                    ApiGroups     = group.ApiGroups.Distinct().OrderBy(x => x).ToList(),
-                                    Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
-                                    ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
+                                    ApiGroups     = group.ApiGroups.Distinct().OrderBy(apiGroup => apiGroup).ToList(),
+                                    Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(subResource => subResource).ToList(),
+                                    ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(resourceName => resourceName).ToList() : null,
                                     Verbs         = group.Verbs.ToStrings(),
                                 })
                             .Distinct(new PolicyRuleComparer())
@@ -452,34 +457,35 @@ namespace Neon.Operator.Analyzers.Generators
                 new StrategyDeploymentPermission()
                 {
                     ServiceAccountName = operatorName?.Name,
-                    Rules = rbacAttributes
-                    .Where(attr => attr.Scope == EntityScope.Cluster)
-                    .GroupBy(attr => new
-                    {
-                        ApiGroups     = attr.ApiGroup,
-                        ResourceNames = attr.ResourceNames?.Split(',').Distinct().ToList(),
-                        Verbs         = attr.Verbs,
-                    })
-                    .Select(
-                        group => (
-                            Verbs:         group.Key.Verbs,
-                            ResourceNames: group.Key.ResourceNames,
-                            ApiGroups:     group.Select(attr => attr.ApiGroup).ToList(),
-                            Resources:     group.Select(attr => attr.Resource).ToList(),
-                            SubResources:  group.SelectMany(attr => (attr.SubResources?.Split(',')
-                                                                            .Distinct()
-                                                                            .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())
-                            ))
-                    .Select(
-                        group => new V1PolicyRule
+                    Rules              = rbacAttributes
+                        .Where(attr => attr.Scope == EntityScope.Cluster)
+                        .GroupBy(attr => new
                         {
-                            ApiGroups     = group.ApiGroups.Distinct().OrderBy(x => x).ToList(),
-                            Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
-                            ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
-                            Verbs         = group.Verbs.ToStrings(),
+                            ApiGroups     = attr.ApiGroup,
+                            ResourceNames = attr.ResourceNames?.Split(',').Distinct().ToList(),
+                            Verbs         = attr.Verbs,
                         })
-                    .Distinct(new PolicyRuleComparer())
-                    .ToList()
+                        .Select(
+                            group => (
+                                Verbs:         group.Key.Verbs,
+                                ResourceNames: group.Key.ResourceNames,
+                                ApiGroups:     group.Select(attr => attr.ApiGroup).ToList(),
+                                Resources:     group.Select(attr => attr.Resource).ToList(),
+                                SubResources:  group.SelectMany(attr => (attr.SubResources?.Split(',')
+                                    .Distinct()
+                                    .Where(subResource => !string.IsNullOrEmpty(subResource))
+                                    .Select(subResource => $"{attr.Resource}/{subResource}")) ?? Array.Empty<string>())
+                                ))
+                        .Select(
+                            group => new V1PolicyRule
+                            {
+                                ApiGroups     = group.ApiGroups.Distinct().OrderBy(apiGroup => apiGroup).ToList(),
+                                Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(subResource => subResource).ToList(),
+                                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(resourceName => resourceName).ToList() : null,
+                                Verbs         = group.Verbs.ToStrings(),
+                            })
+                        .Distinct(new PolicyRuleComparer())
+                        .ToList()
                 }
             ];
 
@@ -487,7 +493,7 @@ namespace Neon.Operator.Analyzers.Generators
             [
                 new StrategyDeploymentSpec()
                 {
-                    Name = operatorName?.Name,
+                    Name  = operatorName?.Name,
                     Label = new Dictionary<string, string>()
                     {
                         { Constants.Labels.Name, operatorName?.Name },
@@ -616,8 +622,7 @@ namespace Neon.Operator.Analyzers.Generators
 
                 foreach (var webhook in webhooks)
                 {
-                    var webhookNs = webhook.GetNamespace();
-
+                    var webhookNs         = webhook.GetNamespace();
                     var webhookSystemType = metadataLoadContext.ResolveType($"{webhookNs}.{webhook.Identifier.ValueText}");
                     var assemblySymbol    = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
                     var members           = assemblySymbol.GlobalNamespace.GetNamespaceMembers();
@@ -633,10 +638,12 @@ namespace Neon.Operator.Analyzers.Generators
                     var webhookEntityType = webhook
                         .DescendantNodes()?
                         .OfType<BaseListSyntax>()?
-                        .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?.Any(gns => gns.Identifier.ValueText.EndsWith("IValidatingWebhook")
-                            || gns.Identifier.ValueText.EndsWith("ValidatingWebhookBase") == true
-                            || gns.Identifier.ValueText.EndsWith("IMutatingWebhook")
-                            || gns.Identifier.ValueText.EndsWith("MutatingWebhookBase")) == true).FirstOrDefault();
+                        .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?
+                            .Any(gns => gns.Identifier.ValueText.EndsWith("IValidatingWebhook") ||
+                                gns.Identifier.ValueText.EndsWith("ValidatingWebhookBase") == true ||
+                                gns.Identifier.ValueText.EndsWith("IMutatingWebhook") ||
+                                gns.Identifier.ValueText.EndsWith("MutatingWebhookBase")) == true)
+                        .FirstOrDefault();
 
                     var webhookTypeIdentifier           = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
                     var sdf                             = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
@@ -659,13 +666,15 @@ namespace Neon.Operator.Analyzers.Generators
                                 FailurePolicy           = webhookAttribute.FailurePolicy.ToMemberString(),
                                 SideEffects             = webhookAttribute.SideEffects.ToMemberString(),
 
-                                Rules = webhookRules.Select(r => new V1RuleWithOperations()
-                                {
-                                    ApiGroups   = r.ApiGroups.ToList(),
-                                    ApiVersions = r.ApiVersions.ToList(),
-                                    Operations  = r.Operations.ToList(),
-                                    Resources   = r.Resources.ToList(),
-                                }).ToList(),
+                                Rules = webhookRules
+                                    .Select(rules => new V1RuleWithOperations()
+                                    {
+                                        ApiGroups   = rules.ApiGroups.ToList(),
+                                        ApiVersions = rules.ApiVersions.ToList(),
+                                        Operations  = rules.Operations.ToList(),
+                                        Resources   = rules.Resources.ToList(),
+                                    })
+                                    .ToList(),
 
                                 WebHookPath = CreateEndpoint(entitySystemType, webhookSystemType, ToWebhookAdmissionType(componentType.ComponentType)),
                             }
@@ -693,7 +702,7 @@ namespace Neon.Operator.Analyzers.Generators
 
             AnalyzerHelper.WriteFileWhenDifferent(csvPath, outputString);
 
-            if (maintainers?.Any(m => m.Value.Reviewer) == true || updateGraph != null)
+            if (maintainers?.Any(maintainer => maintainer.Value.Reviewer) == true || updateGraph != null)
             {
                 var ci = new Ci();
 
@@ -702,14 +711,15 @@ namespace Neon.Operator.Analyzers.Generators
                     ci.UpdateGraph = updateGraph.UpdateGraph;
                 }
 
-                if (maintainers?.Any(m => m.Value.Reviewer) == true)
+                if (maintainers?.Any(reviewer => reviewer.Value.Reviewer) == true)
                 {
                     ci.AddReviewers = true;
 
-                    // check that github is set for all reviewers
-                    if(maintainers.Any(m => m.Value.Reviewer && string.IsNullOrEmpty(m.Value.GitHub)))
+                    // check that github is set for all reviewers.
+
+                    if(maintainers.Any(maintainer => maintainer.Value.Reviewer && string.IsNullOrEmpty(maintainer.Value.GitHub)))
                     {
-                        foreach (var maintainer in maintainers.Where(m => m.Value.Reviewer && string.IsNullOrEmpty(m.Value.GitHub)))
+                        foreach (var maintainer in maintainers.Where(maintainer => maintainer.Value.Reviewer && string.IsNullOrEmpty(maintainer.Value.GitHub)))
                         {
                             context.ReportDiagnostic(
                                 diagnostic:  Diagnostic.Create(
@@ -719,13 +729,13 @@ namespace Neon.Operator.Analyzers.Generators
                         }
                     }
 
-                    ci.Reviewers.AddRange(maintainers.Where(m => m.Value.Reviewer).Select(m => m.Value.GitHub));
+                    ci.Reviewers.AddRange(maintainers.Where(maintainer => maintainer.Value.Reviewer).Select(reviewer => reviewer.Value.GitHub));
                 }
 
                 if (reviewers?.Any() == true)
                 {
                     ci.AddReviewers = true;
-                    ci.Reviewers.AddRange(reviewers.SelectMany(r=> r.Value.GetReviewers()).Distinct());
+                    ci.Reviewers.AddRange(reviewers.SelectMany(reviewer => reviewer.Value.GetReviewers()).Distinct());
                 }
 
                 var outputStringCi  = KubernetesHelper.YamlSerialize(ci);
@@ -762,6 +772,7 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 
             AnalyzerHelper.WriteFileWhenDifferent(dockerfilePath, dockerFile);
         }
+
         public static WebhookAdmissionType ToWebhookAdmissionType(OperatorComponentType componentType) => componentType switch
         {
             OperatorComponentType.ValidationWebhook => WebhookAdmissionType.ValidatingAdmissionWebhook,
@@ -803,8 +814,7 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             {
                 var results            = new List<CrdDescription>();
                 var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
-                var ownedEntities      = assemblyAttributes
-                    .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(OwnedEntityAttribute).Namespace}.OwnedEntity"));
+                var ownedEntities      = assemblyAttributes.Where(attr => attr.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(OwnedEntityAttribute).Namespace}.OwnedEntity"));
 
                 var jsonStrings = new List<string>();
 
@@ -814,30 +824,30 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                     var entityType = metadataLoadContext.ResolveType(etype);
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
-                    var ownedAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                        .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "OwnedEntity"
-                          && ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name)
+                    var ownedAttribute = attributes
+                        .Where(attr => attr.Name is GenericNameSyntax)
+                        .Where(attr => ((GenericNameSyntax)attr.Name).Identifier.ValueText == "OwnedEntity" &&
+                            ((IdentifierNameSyntax)((GenericNameSyntax)attr.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name)
                         .First();
 
                     var exampleJson = ownedAttribute
                         .ArgumentList
                         .Arguments
-                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.ExampleJson))
-                        .FirstOrDefault()
-                        ?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .Where(attr => attr.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.ExampleJson))
+                        .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var exampleYaml = ownedAttribute
                         .ArgumentList
                         .Arguments
-                        .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.ExampleYaml))
+                        .Where(attributeArgSyntax => attributeArgSyntax.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.ExampleYaml))
                         .FirstOrDefault() ?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     if (!string.IsNullOrEmpty(exampleJson) && !string.IsNullOrEmpty(exampleYaml))
                     {
                         context.ReportDiagnostic(
                             diagnostic: Diagnostic.Create(
-                                descriptor: OwnedAttributeExampleError,
-                                location: ownedAttribute.GetLocation(),
+                                descriptor:  OwnedAttributeExampleError,
+                                location:    ownedAttribute.GetLocation(),
                                 messageArgs: [entityType.Name]));
                     }
 
@@ -905,22 +915,23 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
                     var ownedAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                        .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "OwnedEntity" &&
-                            ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+                        .Where(attr => ((GenericNameSyntax)attr.Name).Identifier.ValueText == "OwnedEntity" &&
+                            ((IdentifierNameSyntax)((GenericNameSyntax)attr.Name).TypeArgumentList.Arguments
+                        .First()).Identifier.ValueText == entityType.Name);
 
                     var description = ownedAttribute
                         .First().ArgumentList.Arguments
-                            .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.Description))
-                            .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .Where(arg => arg.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.Description))
+                        .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var displayName = ownedAttribute
                         .First().ArgumentList.Arguments
-                            .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.DisplayName))
-                            .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .Where(arg => arg.NameEquals.Name.Identifier.ValueText == nameof(OwnedEntityAttribute.DisplayName))
+                        .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var dependents = entityType.CustomAttributes
-                        .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
-                        .Select(a => a.AttributeType.GenericTypeArguments.First())
+                        .Where(attr => attr.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
+                        .Select(attr => attr.AttributeType.GenericTypeArguments.First())
                         .ToList();
 
                     var crdDescription = new CrdDescription()
@@ -942,12 +953,14 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 
                     if (dependents?.Count > 0)
                     {
-                        crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
-                        {
-                            Kind    = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
-                            Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
-                            Name    = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
-                        }).ToList();
+                        crdDescription.Resources = dependents?.Select(dependent =>
+                            new ApiResourceReference()
+                            {
+                                Kind    = dependent.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
+                                Version = dependent.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
+                                Name    = dependent.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
+                            })
+                            .ToList();
                     }
                     
                     results.Add(crdDescription);
@@ -968,8 +981,7 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             {
                 var results            = new List<CrdDescription>();
                 var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
-                var requiredEntities   = assemblyAttributes
-                    .Where(a => a.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(RequiredEntityAttribute).Namespace}.RequiredEntity"));
+                var requiredEntities   = assemblyAttributes.Where(attr => attr.AttributeClass.GetFullMetadataName().StartsWith($"{typeof(RequiredEntityAttribute).Namespace}.RequiredEntity"));
 
                 foreach (var entity in requiredEntities)
                 {
@@ -977,23 +989,23 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                     var entityType = metadataLoadContext.ResolveType(etype);
                     var metadata   = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
 
-                    var requiredAttribute = attributes.Where(a => a.Name is GenericNameSyntax)
-                        .Where(a => ((GenericNameSyntax)a.Name).Identifier.ValueText == "RequiredEntity" &&
-                            ((IdentifierNameSyntax)((GenericNameSyntax)a.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
+                    var requiredAttribute = attributes.Where(attrSyntax => attrSyntax.Name is GenericNameSyntax)
+                        .Where(attrSyntax => ((GenericNameSyntax)attrSyntax.Name).Identifier.ValueText == "RequiredEntity" &&
+                            ((IdentifierNameSyntax)((GenericNameSyntax)attrSyntax.Name).TypeArgumentList.Arguments.First()).Identifier.ValueText == entityType.Name);
 
                     var description = requiredAttribute
                         .First().ArgumentList.Arguments
-                            .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.Description))
-                            .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .Where(attrArgSyntax => attrArgSyntax.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.Description))
+                        .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var displayName = requiredAttribute
                         .First().ArgumentList.Arguments
-                           .Where(a => a.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.DisplayName))
-                            .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
+                        .Where(attrArgSyntax => attrArgSyntax.NameEquals.Name.Identifier.ValueText == nameof(RequiredEntityAttribute.DisplayName))
+                        .FirstOrDefault()?.Expression.GetExpressionValue<string>(metadataLoadContext);
 
                     var dependents = entityType.CustomAttributes
-                        .Where(a => a.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
-                        .Select(a => a.AttributeType.GenericTypeArguments.First())
+                        .Where(attr => attr.AttributeType.GetGenericTypeDefinition().Equals(typeof(DependentResourceAttribute<>)))
+                        .Select(attr => attr.AttributeType.GenericTypeArguments.First())
                         .ToList();
 
                     var crdDescription = new CrdDescription()
@@ -1013,12 +1025,14 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                         crdDescription.DisplayName = displayName;
                     }
 
-                    crdDescription.Resources = dependents?.Select(d => new ApiResourceReference()
-                    {
-                        Kind    = d.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
-                        Version = d.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
-                        Name    = d.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
-                    }).ToList();
+                    crdDescription.Resources = dependents?
+                        .Select(dpendenct => new ApiResourceReference()
+                        {
+                            Kind    = dpendenct.GetCustomAttribute<KubernetesEntityAttribute>().Kind,
+                            Version = dpendenct.GetCustomAttribute<KubernetesEntityAttribute>().ApiVersion,
+                            Name    = dpendenct.GetCustomAttribute<KubernetesEntityAttribute>().PluralName
+                        })
+                        .ToList();
 
                     results.Add(crdDescription);
                 }
@@ -1056,10 +1070,12 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
             switch (webhookAdmissionType)
             {
                 case WebhookAdmissionType.MutatingAdmissionWebhook:
+
                     builder.Append("/mutate");
                     break;
 
                 case WebhookAdmissionType.ValidatingAdmissionWebhook:
+
                     builder.Append("/validate");
                     break;
             }
@@ -1082,7 +1098,8 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
 
             T attribute;
 
-            // Check for constructor arguments
+            // Check for constructor arguments.
+
             if (attributeData.ArgumentList.Arguments.Any(a => a.NameEquals == null) &&
                 typeof(T).GetConstructors().Any(c => c.GetParameters().Length > 0))
             {
@@ -1098,23 +1115,26 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                 attribute = (T)Activator.CreateInstance(typeof(T));
             }
 
-            // check and et named arguments
-            foreach (var p in attributeData.ArgumentList.Arguments.Where(a => a.NameEquals != null))
+            // Check and et named arguments.
+
+            foreach (var arg in attributeData.ArgumentList.Arguments.Where(a => a.NameEquals != null))
             {
-                var propertyName = p.NameEquals.Name.Identifier.ValueText;
+                var propertyName = arg.NameEquals.Name.Identifier.ValueText;
 
                 object value = null;
-                //if (p.Expression is BinaryExpressionSyntax
-                //    && ((BinaryExpressionSyntax)p.Expression).Kind() == SyntaxKind.BitwiseOrExpression)
+
+                //if (arg.Expression is BinaryExpressionSyntax && ((BinaryExpressionSyntax)arg.Expression).Kind() == SyntaxKind.BitwiseOrExpression)
                 //{
-                //    value = ((BinaryExpressionSyntax)p.Expression).GetEnumValue(metadataLoadContext);
+                //    value = ((BinaryExpressionSyntax)arg.Expression).GetEnumValue(metadataLoadContext);
                 //}
                 //else
                 //{
                 //}
-                value = p.Expression.GetExpressionValue(metadataLoadContext);
+
+                value = arg.Expression.GetExpressionValue(metadataLoadContext);
 
                 var propertyInfo = typeof(T).GetProperty(propertyName);
+
                 if (propertyInfo != null)
                 {
                     propertyInfo.SetValue(attribute, value);
@@ -1122,13 +1142,14 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
                 }
 
                 var fieldInfo = typeof(T).GetField(propertyName);
+
                 if (fieldInfo != null)
                 {
                     fieldInfo.SetValue(attribute, value);
                     continue;
                 }
 
-                throw new Exception($"No field or property {p}");
+                throw new Exception($"No field or property [{arg}]");
             }
 
             return attribute;

@@ -38,13 +38,19 @@ namespace Neon.K8s.Core.YamlConverters
             switch (eventInfo.Source.Value)
             {
                 // Floating point numbers should always render at least one zero (e.g. 1.0f => '1.0' not '1')
+
                 case double d:
+
                     emitter.Emit(new Scalar(d.ToString("0.0######################")));
                     break;
+
                 case float f:
+
                     emitter.Emit(new Scalar(f.ToString("0.0######################")));
                     break;
+
                 default:
+
                     base.Emit(eventInfo, emitter);
                     break;
             }

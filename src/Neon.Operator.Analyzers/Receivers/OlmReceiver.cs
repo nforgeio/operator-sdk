@@ -28,19 +28,13 @@ namespace Neon.Operator.Analyzers.Receivers
 {
     public class OlmReceiver : ISyntaxReceiver
     {
-        public List<ClassDeclarationSyntax> ClassesToRegister { get; }
-            = new();
-
-        public List<ClassDeclarationSyntax> ControllersToRegister { get; }
-            = new();
-
-        public List<ClassDeclarationSyntax> Webhooks { get; }
-            = new();
-
+        public List<ClassDeclarationSyntax> ClassesToRegister { get; }  = new();
+        public List<ClassDeclarationSyntax> ControllersToRegister { get; } = new();
+        public List<ClassDeclarationSyntax> Webhooks { get; } = new();
         public bool HasMutatingWebhooks { get; set; } = false;
         public bool HasValidatingWebhooks { get; set; } = false;
 
-        private static string[] attributes = new string[]
+        private static string[] attributes = 
         {
             "RbacRule",
             "Webhook",
@@ -81,19 +75,22 @@ namespace Neon.Operator.Analyzers.Receivers
 
                         foreach (var attr in attributes)
                         {
-                            var name = attr.Name;
+                            var name       = attr.Name;
                             var nameString = name.ToFullString();
 
-                            if (Constants.AssemblyAttributeNames.Contains(nameString)
-                                || nameString.StartsWith("OwnedEntity")
-                                || nameString.StartsWith("RequiredEntity"))
+                            if (Constants.AssemblyAttributeNames.Contains(nameString) ||
+                                nameString.StartsWith("OwnedEntity") ||
+                                nameString.StartsWith("RequiredEntity"))
                             {
                                 Attributes.Add(attr);
                             }
                         }
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
 
             if (syntaxNode is ClassDeclarationSyntax)
@@ -104,16 +101,17 @@ namespace Neon.Operator.Analyzers.Receivers
                         .DescendantNodes()
                         .OfType<AttributeSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-                                .Any(gns => attributes.Contains(gns.Identifier.ValueText))
-                                || attributes.Contains(@base.Name.ToString()));
-
+                            .Any(gns => attributes.Contains(gns.Identifier.ValueText)) || attributes.Contains(@base.Name.ToString()));
 
                     if (bases.Count() > 0)
                     {
                         ClassesToRegister.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
 
                 try
                 {
@@ -121,7 +119,7 @@ namespace Neon.Operator.Analyzers.Receivers
                         .DescendantNodes()
                         .OfType<BaseListSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-                                .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
+                            .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
 
 
                     if (bases.Count() > 0)
@@ -129,7 +127,10 @@ namespace Neon.Operator.Analyzers.Receivers
                         ControllersToRegister.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
 
             if (!HasMutatingWebhooks)
@@ -139,11 +140,10 @@ namespace Neon.Operator.Analyzers.Receivers
                     try
                     {
                         var bases = syntaxNode
-                        .DescendantNodes()
-                        .OfType<BaseListSyntax>()?
-                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                            .DescendantNodes()
+                            .OfType<BaseListSyntax>()?
+                            .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
                                 .Any(gns => mutatingWebhookBaseNames.Contains(gns.Identifier.ValueText)));
-
 
                         if (bases.Count() > 0)
                         {
@@ -151,7 +151,10 @@ namespace Neon.Operator.Analyzers.Receivers
                             Webhooks.Add((ClassDeclarationSyntax)syntaxNode);
                         }
                     }
-                    catch { }
+                    catch
+                    {
+                        // Intyentionally ignored
+                    }
                 }
             }
 
@@ -162,9 +165,9 @@ namespace Neon.Operator.Analyzers.Receivers
                     try
                     {
                         var bases = syntaxNode
-                        .DescendantNodes()
-                        .OfType<BaseListSyntax>()?
-                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                            .DescendantNodes()
+                            .OfType<BaseListSyntax>()?
+                            .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
                                 .Any(gns => validatingWebhookBaseNames.Contains(gns.Identifier.ValueText)));
 
 
@@ -174,7 +177,10 @@ namespace Neon.Operator.Analyzers.Receivers
                             Webhooks.Add((ClassDeclarationSyntax)syntaxNode);
                         }
                     }
-                    catch { }
+                    catch
+                    {
+                        // Intentionally ignored
+                    }
                 }
             }
         }

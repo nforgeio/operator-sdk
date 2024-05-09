@@ -883,23 +883,17 @@ namespace Neon.K8s
         /// <param name="k8s">The <see cref="ICustomObjectsOperations"/> instance.</param>
         /// <param name="object">The cluster custom object to replace the status for.</param>
         /// <param name="namespaceParameter">The namespace of the cluster custom object.</param>
-        /// <param name="gracePeriodSeconds">The duration in seconds before the object should be deleted.</param>
-        /// <param name="orphanDependents">Determines whether to orphan the dependents of the object.</param>
-        /// <param name="propagationPolicy">The propagation policy for the object deletion.</param>
         /// <param name="dryRun">The dry run option for the operation.</param>
         /// <param name="fieldManager">The field manager for the operation.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The replaced cluster custom object.</returns>
         public static async Task<T> ReplaceClusterCustomObjectStatusAsync<T>(
-            this ICustomObjectsOperations k8s,
-            T @object,
-            string namespaceParameter,
-            int? gracePeriodSeconds = null,
-            bool? orphanDependents = null,
-            string propagationPolicy = null,
-            string dryRun = null,
-            string fieldManager = null,
-            CancellationToken cancellationToken = default)
+            this ICustomObjectsOperations   k8s,
+            T                               @object,
+            string                          namespaceParameter,
+            string                          dryRun            = null,
+            string                          fieldManager      = null,
+            CancellationToken               cancellationToken = default)
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
@@ -910,14 +904,14 @@ namespace Neon.K8s
             var typeMetadata = typeof(T).GetKubernetesTypeMetadata();
 
             var result = await k8s.ReplaceClusterCustomObjectStatusAsync(
-                            body:              @object,
-                            group:             typeMetadata.Group,
-                            version:           typeMetadata.ApiVersion,
-                            plural:            typeMetadata.PluralName,
-                            name:              @object.Name(),
-                            dryRun:            dryRun,
-                            fieldManager:      fieldManager,
-                            cancellationToken: cancellationToken);
+                body:              @object,
+                group:             typeMetadata.Group,
+                version:           typeMetadata.ApiVersion,
+                plural:            typeMetadata.PluralName,
+                name:              @object.Name(),
+                dryRun:            dryRun,
+                fieldManager:      fieldManager,
+                cancellationToken: cancellationToken);
 
             return ((JsonElement)result).Deserialize<T>(options: serializeOptions);
         }

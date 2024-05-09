@@ -57,6 +57,9 @@ namespace Neon.Operator.Builder
     /// </summary>
     public class OperatorBuilder : IOperatorBuilder
     {
+        private ComponentRegister       componentRegister;
+        private OperatorSettings        operatorSettings;
+
         /// <summary>
         /// Identifies startup health probing.
         /// </summary>
@@ -72,9 +75,6 @@ namespace Neon.Operator.Builder
         /// </summary>
         public const string ReadinessHealthProbeTag = "readiness";
 
-        private ComponentRegister       componentRegister;
-        private OperatorSettings        operatorSettings;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -83,7 +83,7 @@ namespace Neon.Operator.Builder
         {
             Covenant.Requires<ArgumentNullException>(services != null, nameof(Service));
 
-            Services              = services;
+            Services          = services;
             componentRegister = new ComponentRegister();
         }
 
@@ -98,6 +98,7 @@ namespace Neon.Operator.Builder
             if (string.IsNullOrEmpty(operatorSettings.PodNamespace))
             {
                 var nsFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
+
                 if (File.Exists(nsFile))
                 {
                     operatorSettings.PodNamespace = File.ReadAllText(nsFile).Trim();
@@ -112,16 +113,15 @@ namespace Neon.Operator.Builder
                 }
             }
 
-            if (string.IsNullOrEmpty(operatorSettings.WatchNamespace)
-                && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WATCH_NAMESPACE")))
+            if (string.IsNullOrEmpty(operatorSettings.WatchNamespace) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WATCH_NAMESPACE")))
             {
                 operatorSettings.PodNamespace = Environment.GetEnvironmentVariable("WATCH_NAMESPACE");
             }
 
             if (!Services.Any(service => service.ServiceType == typeof(IKubernetes)))
             {
-                var k8sClientConfig = (KubernetesClientConfiguration)Services.Where(service =>
-                    service.ServiceType == typeof(KubernetesClientConfiguration)).FirstOrDefault()?.ImplementationInstance ?? KubernetesClientConfiguration.BuildDefaultConfig();
+                var k8sClientConfig = (KubernetesClientConfiguration)Services.Where(
+                    service => service.ServiceType == typeof(KubernetesClientConfiguration)).FirstOrDefault()?.ImplementationInstance ?? KubernetesClientConfiguration.BuildDefaultConfig();
 
                 if (!k8sClientConfig.SkipTlsVerify && k8sClientConfig.SslCaCerts == null)
                 {
@@ -132,7 +132,8 @@ namespace Neon.Operator.Builder
 
                 var loggerFactory = (ILoggerFactory)Services.Where(service => service.ServiceType == typeof(ILoggerFactory)).FirstOrDefault()?.ImplementationInstance;
 
-                KubernetesRetryHandler retryHandler = null;
+                KubernetesRetryHandler retryHandler;
+
                 if (loggerFactory != null)
                 {
                     retryHandler = new KubernetesRetryHandler(new LoggingHttpMessageHandler(loggerFactory.CreateLogger<IKubernetes>()));
@@ -233,8 +234,7 @@ namespace Neon.Operator.Builder
                                 options.MaxConcurrentReconciles = controllerAttribute.MaxConcurrentReconciles;
                             }
 
-                            if (options.FieldSelector == null
-                                && controllerAttribute?.FieldSelector != null)
+                            if (options.FieldSelector == null && controllerAttribute?.FieldSelector != null)
                             {
                                 options.FieldSelector = controllerAttribute.FieldSelector;
                             }

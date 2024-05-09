@@ -46,18 +46,18 @@ namespace Neon.Operator.Analyzers
     [Generator]
     public class CustomResourceDefinitionGenerator : ISourceGenerator
     {
+        private static readonly string[]            IgnoredProperties = { "metadata", "apiversion", "kind" };
+        private Dictionary<string, StringBuilder>   logs;
+
         internal static readonly DiagnosticDescriptor TooManyStorageVersionsError =
             new DiagnosticDescriptor(id: "NO10001",
                 title:              "One and only one version must be marked as the storage version",
-                messageFormat:      "'{0}' has {1} versions marked for storage",
+                messageFormat:      "[{0}] has [{1}] versions marked for storage",
                 category:           "NeonOperatorSdk",
                 defaultSeverity:    DiagnosticSeverity.Error,
                 isEnabledByDefault: true);
 
-        private static readonly string[]            IgnoredProperties = { "metadata", "apiversion", "kind" };
         public static XmlDocumentationProvider      DocumentationProvider { get; set; } = new XmlDocumentationProvider();
-
-        private Dictionary<string, StringBuilder>   logs;
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -83,6 +83,7 @@ namespace Neon.Operator.Analyzers
             }
             catch (Exception)
             {
+                // Intentionally ignored.
             }
 
             return assembly;
@@ -90,10 +91,10 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            logs = new Dictionary<string, StringBuilder>();
-
             var processName   = System.Diagnostics.Process.GetCurrentProcess().MainModule.ModuleName;
             var shouldRunLive = processName.Contains("VBCSCompiler") || processName.Contains("testhost") || processName.Contains("dotnet");
+
+            logs = new Dictionary<string, StringBuilder>();
 
             if (!shouldRunLive)
             {
@@ -131,6 +132,7 @@ namespace Neon.Operator.Analyzers
             }
 
             string crdOutputDirectory = null;
+
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
                 crdOutputDirectory = projectDirectory;
@@ -200,15 +202,15 @@ namespace Neon.Operator.Analyzers
                     }
                 }
 
-                foreach (var cr in customResources)
+                foreach (var custpomResource in customResources)
                 {
                     try
                     {
-                        var crTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.Name == cr.Identifier.ValueText);
+                        var crTypeIdentifiers = namedTypeSymbols.Where(ntm => ntm.Name == custpomResource.Identifier.ValueText);
 
-                        if (cr.TypeParameterList != null)
+                        if (custpomResource.TypeParameterList != null)
                         {
-                            crTypeIdentifiers = crTypeIdentifiers.Where(ntm => ntm.TypeArguments.Length == cr.TypeParameterList.Parameters.Count);
+                            crTypeIdentifiers = crTypeIdentifiers.Where(ntm => ntm.TypeArguments.Length == custpomResource.TypeParameterList.Parameters.Count);
                         }
 
                         var crTypeIdentifier     = crTypeIdentifiers.SingleOrDefault();
@@ -256,12 +258,12 @@ namespace Neon.Operator.Analyzers
                                 Status = implementsStatus ? new object() : null,
                                 Scale  = scaleAttr != null
                                     ? new V1CustomResourceSubresourceScale()
-                                    {
-                                        LabelSelectorPath  = scaleAttr.LabelSelectorPath,
-                                        SpecReplicasPath   = scaleAttr.SpecReplicasPath,
-                                        StatusReplicasPath = scaleAttr.StatusReplicasPath,
-                                    }
-                                : null
+                                      {
+                                          LabelSelectorPath  = scaleAttr.LabelSelectorPath,
+                                          SpecReplicasPath   = scaleAttr.SpecReplicasPath,
+                                          StatusReplicasPath = scaleAttr.StatusReplicasPath,
+                                      }
+                                    : null
                             },
                             additionalPrinterColumns: additionalPrinterColumns);
 
@@ -526,7 +528,6 @@ namespace Neon.Operator.Analyzers
                 props.Type  = Constants.ArrayTypeString;
                 props.Items = MapType(namedTypeSymbols, typeParameter, additionalColumns, jsonPath);
             }
-
             else if (typeof(IKubernetesObject).IsAssignableFrom(type) &&
                      !type.IsAbstract &&
                      !type.IsInterface &&

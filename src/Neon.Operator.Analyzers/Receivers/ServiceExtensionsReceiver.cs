@@ -27,6 +27,7 @@ namespace Neon.Operator.Analyzers.Receivers
     internal class ServiceExtensionsReceiver : ISyntaxReceiver
     {
         public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new();
+
         private List<string> baseNames = new List<string>()
         {
             "IMutatingWebhook",
@@ -46,18 +47,20 @@ namespace Neon.Operator.Analyzers.Receivers
                 try
                 {
                     var bases = syntaxNode
-                    .DescendantNodes()
-                    .OfType<BaseListSyntax>()?
-                    .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                        .DescendantNodes()
+                        .OfType<BaseListSyntax>()?
+                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
                             .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
-
 
                     if (bases.Count() > 0)
                     {
                         ClassesToRegister.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
         }
     }

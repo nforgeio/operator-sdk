@@ -39,13 +39,14 @@ namespace k8s.Models
             var status = new V1Status();
 
             var originalProp = typeof(V1Status).GetProperty("_original", System.Reflection.BindingFlags.NonPublic);
+
             originalProp.SetValue(status, obj);
 
             var hasObjectProp = typeof(V1Status).GetProperty("HasObject", System.Reflection.BindingFlags.Public);
+
             hasObjectProp.SetValue(status, true);
 
             return status;
-
         }
 
         public override void Write(Utf8JsonWriter writer, V1Status value, JsonSerializerOptions options)
@@ -53,7 +54,7 @@ namespace k8s.Models
             if (value.HasObject)
             {
                 var originalProp = typeof(V1Status).GetProperty("_original", System.Reflection.BindingFlags.NonPublic);
-                var obj = (JsonElement)originalProp.GetValue(value);
+                var obj          = (JsonElement)originalProp.GetValue(value);
 
                 writer.WriteRawValue(JsonSerializer.Serialize(obj, options: options));
             }

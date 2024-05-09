@@ -27,8 +27,7 @@ namespace Neon.Operator.Analyzers
 {
     public class ValidatingWebhookReceiver : ISyntaxReceiver
     {
-        public List<ClassDeclarationSyntax> ValidatingWebhooks { get; }
-            = new();
+        public List<ClassDeclarationSyntax> ValidatingWebhooks { get; } = new();
         public List<AttributeSyntax> Attributes { get; } = new List<AttributeSyntax>();
 
         private List<string> baseNames = new List<string>()
@@ -45,8 +44,8 @@ namespace Neon.Operator.Analyzers
                 {
                     var attributeSyntaxes = syntaxNode.DescendantNodes().OfType<AttributeSyntax>();
 
-                    if (attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute)
-                        || attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute).Replace("Attribute", ""))))
+                    if (attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute) ||
+                        attributeSyntaxes.Any(a => a.Name.ToFullString() == nameof(IgnoreAttribute).Replace("Attribute", ""))))
                     {
                         return;
                     }
@@ -55,13 +54,17 @@ namespace Neon.Operator.Analyzers
                         .DescendantNodes()
                         .OfType<BaseListSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-                                .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
+                            .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
+
                     if (bases.Count() > 0)
                     {
                         ValidatingWebhooks.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
 
             if (syntaxNode is CompilationUnitSyntax)
@@ -76,19 +79,22 @@ namespace Neon.Operator.Analyzers
 
                         foreach (var attr in attributes)
                         {
-                            var name = attr.Name;
+                            var name       = attr.Name;
                             var nameString = name.ToFullString();
 
-                            if (Constants.AssemblyAttributeNames.Contains(nameString)
-                                || nameString.StartsWith("OwnedEntity")
-                                || nameString.StartsWith("RequiredEntity"))
+                            if (Constants.AssemblyAttributeNames.Contains(nameString) ||
+                                nameString.StartsWith("OwnedEntity") ||
+                                nameString.StartsWith("RequiredEntity"))
                             {
                                 Attributes.Add(attr);
                             }
                         }
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
         }
     }

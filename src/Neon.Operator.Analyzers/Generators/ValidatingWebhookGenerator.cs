@@ -50,19 +50,23 @@ namespace Neon.Operator.Analyzers
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
-            Assembly assembly = null;
+            var assembly     = (Assembly)null;
+
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
-                var targetAssembly = runtimeDependencies
-                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+                var targetAssembly      = runtimeDependencies.FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
+                {
                     assembly = Assembly.LoadFrom(targetAssembly);
+                }
             }
             catch (Exception)
             {
+                // Intentionally ignored.
             }
+
             return assembly;
         }
 
@@ -153,17 +157,17 @@ namespace Neon.Operator.Analyzers
                 operatorName = nameAttribute.Name;
             }
 
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var operatorNs))
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorNamespace", out var opNamespace))
             {
-                if (!string.IsNullOrEmpty(operatorNs))
+                if (!string.IsNullOrEmpty(opNamespace))
                 {
-                    operatorNamespace = operatorNs;
+                    operatorNamespace = opNamespace;
                 }
             }
 
             if (string.IsNullOrEmpty(operatorName))
             {
-                throw new Exception("OperatorName not defined.");
+                throw new Exception("[OperatorName] not defined.");
             }
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.NeonOperatorCertManagerDisabled", out var certManagerString))
@@ -190,13 +194,10 @@ namespace Neon.Operator.Analyzers
 
                     try
                     {
-                        var webhookNs = webhook.GetNamespace();
-
+                        var webhookNs         = webhook.GetNamespace();
                         var webhookSystemType = metadataLoadContext.ResolveType($"{webhookNs}.{webhook.Identifier.ValueText}");
-
-                        IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
-                        var members = assemblySymbol.GlobalNamespace.
-                             GetNamespaceMembers();
+                        var assemblySymbol    = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
+                        var members           = assemblySymbol.GlobalNamespace.GetNamespaceMembers();
 
                         //var webhookAttribute = webhookSystemType.GetCustomAttributes();
 
@@ -205,27 +206,23 @@ namespace Neon.Operator.Analyzers
                         //    return null;
                         //}
 
-                        var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols.SelectMany(
-                            ras => ras.GlobalNamespace.GetNamespaceMembers())
+                        var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols
+                            .SelectMany(ras => ras.GlobalNamespace.GetNamespaceMembers())
                             .SelectMany(nsm => nsm.GetTypeMembers());
 
                         var webhookEntityType = webhook
                             .DescendantNodes()?
                             .OfType<BaseListSyntax>()?
-                            .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?.Any(gns =>
-                                gns.Identifier.ValueText.EndsWith("IValidatingWebhook")
-                                || gns.Identifier.ValueText.EndsWith("ValidatingWebhookBase")) == true).FirstOrDefault();
+                            .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?
+                                .Any(gns => gns.Identifier.ValueText.EndsWith("IValidatingWebhook") || gns.Identifier.ValueText.EndsWith("ValidatingWebhookBase")) == true)
+                            .FirstOrDefault();
 
-                        var webhookTypeIdentifier          = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
-
-                        var sdf = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
-
-                        var webhookTypeIdentifierNamespace = webhookTypeIdentifier.GetNamespace();
-
+                        var webhookTypeIdentifier           = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
+                        var sdf                             = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+                        var webhookTypeIdentifierNamespace  = webhookTypeIdentifier.GetNamespace();
                         var webhookEntityTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == webhookTypeIdentifier.Identifier.ValueText).SingleOrDefault();
                         var webhookEntityFullyQualifiedName = webhookEntityTypeIdentifier.ToDisplayString(sdf);
-
-                        var entitySystemType = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
+                        var entitySystemType                = metadataLoadContext.ResolveType(webhookEntityTypeIdentifier);
 
                         CreateYaml(
                             operatorName:                    operatorName,
@@ -332,7 +329,6 @@ namespace Neon.Operator.Analyzers
             }
 
             builder.Append($"/{webhookImplementation.Name}");
-
             builder.Append("/validate");
 
             return builder.ToString().ToLowerInvariant();
@@ -349,14 +345,13 @@ namespace Neon.Operator.Analyzers
             bool                   certManagerDisabled,
             string                 webhookOutputDirectory)
         {
-            var webhookAttribute = webhookSystemType.GetCustomAttribute<WebhookAttribute>();
-
+            var webhookAttribute     = webhookSystemType.GetCustomAttribute<WebhookAttribute>();
             var webhookConfiguration = new V1ValidatingWebhookConfiguration().Initialize();
+
             webhookConfiguration.Metadata.Name = webhookAttribute.Name;
 
             if (!certManagerDisabled)
             {
-
                 webhookConfiguration.Metadata.Annotations = webhookConfiguration.Metadata.EnsureAnnotations();
 
                 if (!string.IsNullOrEmpty(operatorNamespace))
@@ -423,6 +418,7 @@ namespace Neon.Operator.Analyzers
                     validatingWebhook.NamespaceSelector.MatchLabels.Add(selector.Key, selector.Value);
                 }
             }
+
             var objectSelectorExpressions = webhookSystemType.GetCustomAttributes<ObjectSelectorExpressionAttribute>();
             var objectSelectorLabels      = webhookSystemType.GetCustomAttributes<ObjectSelectorLabelAttribute>();
 
@@ -483,11 +479,10 @@ namespace Neon.Operator.Analyzers
             string                    webhookEntityFullyQualifiedName)
         {
             var metadata = webhookEntityTypeIdentifier.GetAttributes();
-
             var builder  = new StringBuilder();
-
-            var k8sattr = metadata.Where(attr => attr.AttributeClass.MetadataName.EndsWith("KubernetesEntityAttribute")).Single();
+            var k8sattr  = metadata.Where(attr => attr.AttributeClass.MetadataName.EndsWith("KubernetesEntityAttribute")).Single();
             var attrDict = new Dictionary<string, string>();
+
             foreach (var kvp in k8sattr.NamedArguments)
             {
                 attrDict.Add(kvp.Key, kvp.Value.Value.ToString());
@@ -521,7 +516,6 @@ namespace Neon.Operator.Analyzers
 
             builder.Append("mutate");
 
-
             var route = builder.ToString().ToLowerInvariant();
 
             var usings = new HashSet<string>()
@@ -549,9 +543,10 @@ namespace Neon.Operator.Analyzers
             sb.AppendLine();
 
             var lastUsingRoot = "";
-            foreach (var u in usings)
+
+            foreach (var @using in usings)
             {
-                var usingRoot = u.Split('.').First();
+                var usingRoot = @using.Split('.').First();
 
                 if (!string.IsNullOrEmpty(lastUsingRoot) && usingRoot != lastUsingRoot)
                 {
@@ -560,7 +555,7 @@ namespace Neon.Operator.Analyzers
 
                 lastUsingRoot = usingRoot;
 
-                sb.AppendLine($"using {u};");
+                sb.AppendLine($"using {@using};");
             }
 
             var controllerClassName = $"{webhook.Identifier.ValueText}Controller";

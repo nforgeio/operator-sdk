@@ -48,7 +48,6 @@ namespace Neon.Operator.Cache
         {
             cache           = new ConcurrentDictionary<string, TValue>();
             finalizingCache = new ConcurrentDictionary<string, TValue>();
-
             comparelogLogic = new CompareLogic(new ComparisonConfig()
             {
                 AutoClearCache = false,
@@ -110,7 +109,7 @@ namespace Neon.Operator.Cache
         {
             var id = entity.Metadata.Uid;
 
-            logger?.LogDebugEx(() => $"Adding {typeof(TValue)}/{id} to cache.");
+            logger?.LogDebugEx(() => $"Adding [{typeof(TValue)}/{id}] to cache.");
 
             result = CompareEntity(entity);
 
@@ -145,7 +144,7 @@ namespace Neon.Operator.Cache
             {
                 var id = entity.Metadata.Uid;
 
-                logger?.LogDebugEx(() => $"Adding {typeof(TValue)}/{id} to cache.");
+                logger?.LogDebugEx(() => $"Adding [{typeof(TValue)}/{id}] to cache.");
 
                 cache.AddOrUpdate(
                     key: id,
@@ -167,7 +166,7 @@ namespace Neon.Operator.Cache
         {
             var id = entity.Metadata.Uid;
 
-            logger?.LogDebugEx(() => $"Adding {typeof(TValue)}/{id} to cache.");
+            logger?.LogDebugEx(() => $"Adding [{typeof(TValue)}/{id}] to cache.");
 
             cache.AddOrUpdate(
                 key: id,
@@ -217,8 +216,7 @@ namespace Neon.Operator.Cache
             
             if (!cache.ContainsKey(id))
             {
-                if (entity.DeletionTimestamp() != null
-                    && entity.Finalizers().Count > 0)
+                if (entity.DeletionTimestamp() != null && entity.Finalizers().Count > 0)
                 {
                     logger?.LogDebugEx(() => "Resource is being finalized.");
 
@@ -229,7 +227,7 @@ namespace Neon.Operator.Cache
             }
 
             var cachedEntity = Get(id);
-            var comparison = comparelogLogic.Compare(entity, cachedEntity);
+            var comparison   = comparelogLogic.Compare(entity, cachedEntity);
 
             if (comparison.AreEqual)
             {
@@ -237,7 +235,7 @@ namespace Neon.Operator.Cache
                 return ModifiedEventType.NoChanges;
             }
 
-            if (comparison.Differences.All(d => d.PropertyName.Split('.')[0] == "Status"))
+            if (comparison.Differences.All(diff => diff.PropertyName.Split('.')[0] == "Status"))
             {
                 logger?.LogDebugEx(() => "Status update detected.");
 
@@ -251,8 +249,7 @@ namespace Neon.Operator.Cache
                 return ModifiedEventType.FinalizerUpdate;
             }
 
-            if (entity.DeletionTimestamp() != null
-                && entity.Finalizers().Count > 0)
+            if (entity.DeletionTimestamp() != null && entity.Finalizers().Count > 0)
             {
                 logger?.LogDebugEx(() => "Resource is being finalized.");
 

@@ -29,8 +29,7 @@ namespace Neon.Operator
         /// </summary>
         /// <param name="builder">Specifies the trace provider builder.</param>
         /// <returns>The <see cref="TracerProviderBuilder"/>.</returns>
-        public static TracerProviderBuilder AddKubernetesOperatorInstrumentation(
-            this TracerProviderBuilder builder)
+        public static TracerProviderBuilder AddKubernetesOperatorInstrumentation(this TracerProviderBuilder builder)
         {
             builder.AddSource(TraceContext.ActivitySourceName);
 

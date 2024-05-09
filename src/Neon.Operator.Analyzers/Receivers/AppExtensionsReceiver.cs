@@ -27,13 +27,19 @@ namespace Neon.Operator.Analyzers.Receivers
 {
     internal class AppExtensionsReceiver : ISyntaxReceiver
     {
-        public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();
-        public bool DoesAddOperator { get; private set; } = false;
+        //---------------------------------------------------------------------
+        // Static members
 
-        private static string[] classAttributes = new string[] 
+        private static string[] classAttributes = 
         {
             "Webhook"
         };
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        public List<ClassDeclarationSyntax> ClassesToRegister { get; } = new List<ClassDeclarationSyntax>();
+        public bool DoesAddOperator { get; private set; } = false;
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
@@ -42,6 +48,7 @@ namespace Neon.Operator.Analyzers.Receivers
                 try
                 {
                     InvocationExpressionSyntax methodSyntax = (InvocationExpressionSyntax)syntaxNode;
+
                     if (((MemberAccessExpressionSyntax)methodSyntax.Expression).Name.Identifier.ValueText == "UseKubernetesOperator")
                     {
                         DoesAddOperator = true;
@@ -49,7 +56,7 @@ namespace Neon.Operator.Analyzers.Receivers
                 }
                 catch
                 {
-                    // pass
+                    // Intentionally ignored.
                 }
             }
 
@@ -59,7 +66,7 @@ namespace Neon.Operator.Analyzers.Receivers
 
                 foreach (var attribute in attributeSyntaxes)
                 {
-                    var name = attribute.Name;
+                    var name       = attribute.Name;
                     var nameString = name.ToFullString();
 
                     if (classAttributes.Contains(nameString))

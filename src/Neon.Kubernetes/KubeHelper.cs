@@ -15,7 +15,6 @@ namespace Neon.K8s
     /// </summary>
     public static class KubeHelper
     {
-
         /// <summary>
         /// Constructs an <b>initialized</b> Kubernetes object of a specific type.
         /// </summary>
@@ -51,9 +50,8 @@ namespace Neon.K8s
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            var metadata            = typeof(T).GetKubernetesTypeMetadata();
-
-            var obj = new T();
+            var metadata = typeof(T).GetKubernetesTypeMetadata();
+            var obj      = new T();
 
             obj.ApiVersion = String.IsNullOrEmpty(metadata.Group) ? metadata.ApiVersion : $"{metadata.Group}/{metadata.ApiVersion}";
             obj.Kind       = metadata.Kind;
@@ -86,14 +84,13 @@ namespace Neon.K8s
 
             if (config.SslCaCerts == null)
             {
-                var store = new X509Store(
-                            StoreName.CertificateAuthority,
-                            StoreLocation.CurrentUser);
+                var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
 
                 config.SslCaCerts = store.Certificates;
             }
 
-            KubernetesRetryHandler retryHandler = null;
+            KubernetesRetryHandler retryHandler;
+
             if (loggerFactory == null)
             {
                 retryHandler = new KubernetesRetryHandler();
@@ -103,8 +100,7 @@ namespace Neon.K8s
                 retryHandler = new KubernetesRetryHandler(new LoggingHttpMessageHandler(loggerFactory.CreateLogger<IKubernetes>()));
             }
 
-            var k8s = new k8s.Kubernetes(config, retryHandler);
-            return k8s;
+            return new k8s.Kubernetes(config, retryHandler);
         }
     }
 }

@@ -58,6 +58,7 @@ namespace Neon.Operator.Util
                 if (string.IsNullOrEmpty(Name))
                 {
                     var hostFile = File.ReadAllText("/etc/hostname");
+
                     if (File.Exists(hostFile))
                     {
                         Name = File.ReadAllText(hostFile).Trim();
@@ -70,10 +71,11 @@ namespace Neon.Operator.Util
 
                 if (string.IsNullOrEmpty(Namespace))
                 {
-                    var nsFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
-                    if (File.Exists(nsFile))
+                    const string namespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
+
+                    if (File.Exists(namespacePath))
                     {
-                        Namespace = File.ReadAllText(nsFile).Trim();
+                        Namespace = File.ReadAllText(namespacePath).Trim();
                     }
                     else
                     {

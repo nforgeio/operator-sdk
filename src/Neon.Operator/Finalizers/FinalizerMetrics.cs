@@ -31,8 +31,15 @@ namespace Neon.Operator.Finalizers
     internal class FinalizerMetrics<TEntity> : IFinalizerMetrics<TEntity>
         where TEntity : IKubernetesObject<V1ObjectMeta>
     {
+        //---------------------------------------------------------------------
+        // Static members
         private const string prefix = "operator_finalizer";
+
         private static readonly string[] LabelNames = { "operator", "finalizer", "kind", "group", "version" };
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         public ICounter RegistrationsTotal { get; }
         public IHistogram RegistrationTimeSeconds { get; }
         public ICounter RemovalsTotal { get; }
@@ -40,6 +47,7 @@ namespace Neon.Operator.Finalizers
         public IGauge FinalizingCount { get; }
         public ICounter FinalizedTotal { get; }
         public IHistogram FinalizeTimeSeconds { get; }
+
         public FinalizerMetrics(
             OperatorSettings operatorSettings,
             Type finalizerType) 
@@ -49,56 +57,56 @@ namespace Neon.Operator.Finalizers
 
             RegistrationsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_registrations_total",
-                    help: "The total number of finalizer registrations.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_registrations_total",
+                    help:          "The total number of finalizer registrations.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RegistrationTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_registration_time_seconds",
-                    help: "The time taken to register finalizers.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_registration_time_seconds",
+                    help:          "The time taken to register finalizers.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RemovalsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_removals_total",
-                    help: "The total number of finalizer removals. Incremented after the finalizer has been run on a resource.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_removals_total",
+                    help:          "The total number of finalizer removals. Incremented after the finalizer has been run on a resource.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RemovalTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_removal_time_seconds",
-                    help: "The time taken to remove finalizers from resources. This is after the resource has been finalized and is being removed via the apiserver.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_removal_time_seconds",
+                    help:          "The time taken to remove finalizers from resources. This is after the resource has been finalized and is being removed via the apiserver.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizingCount = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_finalizing_count",
-                    help: "The number of finalizers currently running.",
+                    name:       $"{prefix}_finalizing_count",
+                    help:       "The number of finalizers currently running.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             FinalizedTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_finalized_total",
-                    help: "The total number of resources finalized.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_finalized_total",
+                    help:          "The total number of resources finalized.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             FinalizeTimeSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_finalize_time_seconds",
-                    help: "The time taken to finalize resources.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_finalize_time_seconds",
+                    help:         "The time taken to finalize resources.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
         }

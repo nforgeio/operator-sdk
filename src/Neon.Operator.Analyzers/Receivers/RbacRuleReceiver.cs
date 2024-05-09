@@ -69,16 +69,17 @@ namespace Neon.Operator.Analyzers
                         .DescendantNodes()
                         .OfType<AttributeSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-                                .Any(gns => attributes.Contains(gns.Identifier.ValueText))
-                                || attributes.Contains(@base.Name.ToString()));
-
+                            .Any(gns => attributes.Contains(gns.Identifier.ValueText)) || attributes.Contains(@base.Name.ToString()));
 
                     if (bases.Count() > 0)
                     {
                         ClassesToRegister.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
 
                 try
                 {
@@ -86,15 +87,17 @@ namespace Neon.Operator.Analyzers
                         .DescendantNodes()
                         .OfType<BaseListSyntax>()?
                         .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
-                                .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
-
+                            .Any(gns => baseNames.Contains(gns.Identifier.ValueText)));
 
                     if (bases.Count() > 0)
                     {
                         ControllersToRegister.Add((ClassDeclarationSyntax)syntaxNode);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
 
             if (syntaxNode is CompilationUnitSyntax)
@@ -109,19 +112,22 @@ namespace Neon.Operator.Analyzers
 
                         foreach (var attr in attributes)
                         {
-                            var name = attr.Name;
+                            var name       = attr.Name;
                             var nameString = name.ToFullString();
 
-                            if (Constants.AssemblyAttributeNames.Contains(nameString)
-                                || nameString.StartsWith("OwnedEntity")
-                                || nameString.StartsWith("RequiredEntity"))
+                            if (Constants.AssemblyAttributeNames.Contains(nameString) ||
+                                nameString.StartsWith("OwnedEntity") ||
+                                nameString.StartsWith("RequiredEntity"))
                             {
                                 AssemblyAttributes.Add(attr);
                             }
                         }
                     }
                 }
-                catch { }
+                catch
+                {
+                    // Intentionally ignored
+                }
             }
 
             if (!HasMutatingWebhooks)
@@ -131,18 +137,20 @@ namespace Neon.Operator.Analyzers
                     try
                     {
                         var bases = syntaxNode
-                        .DescendantNodes()
-                        .OfType<BaseListSyntax>()?
-                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                            .DescendantNodes()
+                            .OfType<BaseListSyntax>()?
+                            .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
                                 .Any(gns => mutatingWebhookBaseNames.Contains(gns.Identifier.ValueText)));
-
 
                         if (bases.Count() > 0)
                         {
                             HasMutatingWebhooks = true;
                         }
                     }
-                    catch { }
+                    catch
+                    {
+                        // Intentionally ignored
+                    }
                 }
             }
 
@@ -153,18 +161,20 @@ namespace Neon.Operator.Analyzers
                     try
                     {
                         var bases = syntaxNode
-                        .DescendantNodes()
-                        .OfType<BaseListSyntax>()?
-                        .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
+                            .DescendantNodes()
+                            .OfType<BaseListSyntax>()?
+                            .Where(@base => @base.DescendantNodes().OfType<GenericNameSyntax>()
                                 .Any(gns => validatingWebhookBaseNames.Contains(gns.Identifier.ValueText)));
-
 
                         if (bases.Count() > 0)
                         {
                             HasValidatingWebhooks = true;
                         }
                     }
-                    catch { }
+                    catch
+                    {
+                        // Intentionally ignored
+                    }
                 }
             }
         }

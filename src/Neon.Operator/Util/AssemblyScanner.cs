@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,8 +18,8 @@ namespace Neon.Operator.Util
 
         public AssemblyScanner()
         {
-            this.ComponentRegister     = new ComponentRegister();
-            this.EntityTypes           = new List<Type>();
+            this.ComponentRegister = new ComponentRegister();
+            this.EntityTypes       = new List<Type>();
         }
 
         public void Add(Assembly assembly)
@@ -54,9 +54,8 @@ namespace Neon.Operator.Util
             }
 
             var types = assemblyTypes
-                .Where(type => type.GetInterfaces().Count() > 0
-                        && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
-                    .Any())).ToList();
+                .Where(type => type.GetInterfaces().Count() > 0 && type.GetInterfaces().Any(@interface => @interface.GetCustomAttributes<OperatorComponentAttribute>()
+                .Any())).ToList();
 
             foreach (var type in types)
             {
@@ -68,8 +67,7 @@ namespace Neon.Operator.Util
                 {
                     case OperatorComponentType.Controller:
 
-                        if (type.GetCustomAttribute<ResourceControllerAttribute>()?.Ignore == true
-                                || type == typeof(ResourceControllerBase<>))
+                        if (type.GetCustomAttribute<ResourceControllerAttribute>()?.Ignore == true || type == typeof(ResourceControllerBase<>))
                         {
                             break;
                         }
@@ -77,7 +75,6 @@ namespace Neon.Operator.Util
                         var entityTypes = type.GetInterfaces()
                             .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().IsEquivalentTo(typeof(IResourceController<>)))
                             .Select(@interface => @interface.GenericTypeArguments[0]);
-
 
                         foreach (var entityType in entityTypes)
                         {

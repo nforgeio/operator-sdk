@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    ResourceCacheMetrics.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -40,23 +40,23 @@ namespace Neon.Operator.Cache
 
             ItemsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_items_total",
-                    help: "The total number of cached items", 
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_items_total",
+                    help:          "The total number of cached items", 
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             ItemsCount = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_items_count",
-                    help: "The current number of cached items",
+                    name:        $"{prefix}_items_count",
+                    help:       "The current number of cached items",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             HitsTotal  = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_hits_total",
-                    help: "The total number of cache hits",
+                    name:       $"{prefix}_hits_total",
+                    help:       "The total number of cache hits",
                     labelNames: LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);

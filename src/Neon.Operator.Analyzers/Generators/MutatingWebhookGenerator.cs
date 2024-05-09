@@ -54,7 +54,8 @@ namespace Neon.Operator.Analyzers
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
-            Assembly assembly = null;
+            var assembly     = (Assembly) null;
+
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
@@ -67,6 +68,7 @@ namespace Neon.Operator.Analyzers
             }
             catch (Exception)
             {
+                // Intentionally ignored
             }
 
             return assembly;
@@ -81,24 +83,25 @@ namespace Neon.Operator.Analyzers
             }
 #pragma warning restore RS1035 // Do not use APIs banned for analyzers
             //System.Diagnostics.Debugger.Launch();
+
             logs = new Dictionary<string, StringBuilder>();
 
-            var metadataLoadContext       = new MetadataLoadContext(context.Compilation);
-            var mutatingWebhooks          = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.MutatingWebhooks;
-            var attributes                = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.Attributes;
-            var nameAttribute             = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
+            var metadataLoadContext = new MetadataLoadContext(context.Compilation);
+            var mutatingWebhooks    = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.MutatingWebhooks;
+            var attributes          = ((MutatingWebhookReceiver)context.SyntaxReceiver)?.Attributes;
+            var nameAttribute       = RoslynExtensions.GetAttribute<NameAttribute>(metadataLoadContext, context.Compilation, attributes);
 
             if (mutatingWebhooks.Count == 0)
             {
                 return;
             }
 
-            var namedTypeSymbols          = context.Compilation.GetNamedTypeSymbols();
-            bool certManagerDisabled      = false;
-            bool autoRegisterWebhooks     = false;
-            string operatorName           = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
-            string operatorNamespace      = null;
-            string webhookOutputDirectory = null;
+            var namedTypeSymbols       = context.Compilation.GetNamedTypeSymbols();
+            var certManagerDisabled    = false;
+            var autoRegisterWebhooks   = false;
+            var operatorName           = Regex.Replace(context.Compilation.AssemblyName, @"([a-z])([A-Z])", "$1-$2").ToLower();
+            var operatorNamespace      = (string)null;
+            var webhookOutputDirectory = (string)null;
 
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.MSBuildProjectDirectory", out var projectDirectory))
             {
@@ -216,7 +219,8 @@ namespace Neon.Operator.Analyzers
                                 .OfType<BaseListSyntax>()?
                                 .Where(dn => dn.DescendantNodes()?.OfType<GenericNameSyntax>()?.Any(gns =>
                                     gns.Identifier.ValueText.EndsWith("IMutatingWebhook") ||
-                                    gns.Identifier.ValueText.EndsWith("MutatingWebhookBase")) == true).FirstOrDefault();
+                                    gns.Identifier.ValueText.EndsWith("MutatingWebhookBase")) == true)
+                                .FirstOrDefault();
 
                             var webhookTypeIdentifier           = webhookEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
                             var sdf                             = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);

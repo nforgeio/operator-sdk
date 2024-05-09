@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    NgrokTunnelRequest.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -23,8 +23,10 @@ namespace Neon.Operator.Webhooks.Ngrok
     {
         [JsonProperty("addr")]
         public string Addr { get; set; }
+
         [JsonProperty("proto")]
         public string Proto { get; set; }
+
         [JsonProperty("name")]
         public string Name { get; set; }
     }

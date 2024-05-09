@@ -58,7 +58,7 @@ namespace Neon.Operator.Analyzers
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
                 var targetAssembly      = runtimeDependencies
-                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+                    .FirstOrDefault(assembly => Path.GetFileNameWithoutExtension(assembly).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
                 {
@@ -67,6 +67,7 @@ namespace Neon.Operator.Analyzers
             }
             catch (Exception)
             {
+                // Intentionally ignored
             }
 
             return assembly;
@@ -291,13 +292,13 @@ namespace Neon.Operator.Analyzers
                         new RbacRule(
                             apiGroup: "cert-manager.io",
                             resource: "certificates",
-                            verbs: RbacVerb.All,
-                            scope: EntityScope.Namespaced));
+                            verbs:    RbacVerb.All,
+                            scope:    EntityScope.Namespaced));
 
                     attributes.Add(
                         new RbacRule<V1Secret>(
-                            verbs: RbacVerb.Watch,
-                            scope: EntityScope.Namespaced,
+                            verbs:         RbacVerb.Watch,
+                            scope:         EntityScope.Namespaced,
                             resourceNames: $"{operatorName}-webhook-tls"));
                 }
 
@@ -333,38 +334,38 @@ namespace Neon.Operator.Analyzers
                     }
 
                     var rbacGenericAttr = crSystemType.CustomAttributes?
-                        .Where(ca=>ca.AttributeType.IsGenericType)?
-                        .Where(ca=>ca.AttributeType.GetGenericTypeDefinition().Equals(typeof(RbacRuleAttribute<>)));
+                        .Where(ca => ca.AttributeType.IsGenericType)?
+                        .Where(ca => ca.AttributeType.GetGenericTypeDefinition().Equals(typeof(RbacRuleAttribute<>)));
 
-                    foreach (var r in rbacGenericAttr)
+                    foreach (var attr in rbacGenericAttr)
                     {
-                        var args       = r.NamedArguments;
-                        var etype      = r.AttributeType.GenericTypeArguments.FirstOrDefault();
+                        var args       = attr.NamedArguments;
+                        var etype      = attr.AttributeType.GenericTypeArguments.FirstOrDefault();
                         var entityType = metadataLoadContext.ResolveType(etype.FullName);
                         var k8sAttr    = entityType.GetCustomAttribute<KubernetesEntityAttribute>();
                         var apiGroup   = k8sAttr.Group;
                         var resource   = k8sAttr.PluralName;
                         var rule       = new RbacRule(apiGroup, resource);
 
-                        foreach (var p in r.NamedArguments)
+                        foreach (var arg in attr.NamedArguments)
                         {
-                            var propertyInfo = typeof(RbacRule).GetProperty(p.MemberInfo.Name);
+                            var propertyInfo = typeof(RbacRule).GetProperty(arg.MemberInfo.Name);
 
                             if (propertyInfo != null)
                             {
-                                propertyInfo.SetValue(rule, p.TypedValue.Value);
+                                propertyInfo.SetValue(rule, arg.TypedValue.Value);
                                 continue;
                             }
 
-                            var fieldInfo = typeof(RbacRule).GetField(p.MemberInfo.Name);
+                            var fieldInfo = typeof(RbacRule).GetField(arg.MemberInfo.Name);
 
                             if (fieldInfo != null)
                             {
-                                fieldInfo.SetValue(rule, p.TypedValue.Value);
+                                fieldInfo.SetValue(rule, arg.TypedValue.Value);
                                 continue;
                             }
 
-                            throw new Exception($"No field or property {p}");
+                            throw new Exception($"No field or property [{arg}]");
                         }
 
                         attributes.Add(rule);
@@ -377,7 +378,7 @@ namespace Neon.Operator.Analyzers
                     {
                         ApiGroups     = attr.ApiGroup,
                         ResourceNames = attr.ResourceNames?.Split(',').Distinct().ToList(),
-                        Verbs         = attr.Verbs,
+                        Verbs         = attr.Verbs
                     })
                     .Select(
                         group => (
@@ -386,15 +387,15 @@ namespace Neon.Operator.Analyzers
                             ApiGroups:     group.Select(attr => attr.ApiGroup).ToList(),
                             Resources:     group.Select(attr => attr.Resource).ToList(),
                             SubResources:  group.SelectMany(attr => (attr.SubResources?.Split(',')
-                                                                            .Distinct()
-                                                                            .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())
+                                .Distinct()
+                                .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())
                             ))
                     .Select(
                         group => new V1PolicyRule
                         {
-                            ApiGroups     = group.ApiGroups.Distinct().OrderBy(x => x).ToList(),
-                            Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
-                            ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
+                            ApiGroups     = group.ApiGroups.Distinct().OrderBy(apiGroup => apiGroup).ToList(),
+                            Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(subResource => subResource).ToList(),
+                            ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(resourceName => resourceName).ToList() : null,
                             Verbs         = group.Verbs.ToStrings(),
                         })
                     .Distinct(new PolicyRuleComparer());
@@ -404,10 +405,10 @@ namespace Neon.Operator.Analyzers
                     var clusterRole = new V1ClusterRole().Initialize();
 
                     clusterRole.Metadata.Name = operatorName;
-                    clusterRole.Rules = clusterRules
-                        .OrderBy(pr => pr.ApiGroups.First())
-                        .ThenBy(pr => pr.Resources.First())
-                        .ThenBy(pr => pr.ResourceNames?.First())
+                    clusterRole.Rules         = clusterRules
+                        .OrderBy(policyRule => policyRule.ApiGroups.First())
+                        .ThenBy(policyRule => policyRule.Resources.First())
+                        .ThenBy(policyRule => policyRule.ResourceNames?.First())
                         .ToList();
 
                     clusterRoles.Add(clusterRole);
@@ -443,14 +444,14 @@ namespace Neon.Operator.Analyzers
                                 ApiGroups:     group.Select(attr => attr.ApiGroup).ToList(),
                                 Resources:     group.Select(attr => attr.Resource).ToList(),
                                 SubResources:  group.SelectMany(attr => (attr.SubResources?.Split(',')
-                                                                                .Distinct()
-                                                                                .Where(x => !string.IsNullOrEmpty(x)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())))
+                                    .Distinct()
+                                    .Where(subResource => !string.IsNullOrEmpty(subResource)).Select(sr => $"{attr.Resource}/{sr}")) ?? Array.Empty<string>())))
                         .Select(
                             group => new V1PolicyRule
                             {
-                                ApiGroups     = group.ApiGroups.Distinct().OrderBy(x => x).ToList(),
-                                Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(x => x).ToList(),
-                                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(x => x).ToList() : null,
+                                ApiGroups     = group.ApiGroups.Distinct().OrderBy(apiGroup => apiGroup).ToList(),
+                                Resources     = group.Resources.Union(group.SubResources).Distinct().OrderBy(subResource => subResource).ToList(),
+                                ResourceNames = group.ResourceNames?.Count() > 0 ? group.ResourceNames.OrderBy(resourceName => resourceName).ToList() : null,
                                 Verbs         = group.Verbs.ToStrings(),
                             })
                         .Distinct(new PolicyRuleComparer())
@@ -464,9 +465,9 @@ namespace Neon.Operator.Analyzers
 
                         namespacedRole.Metadata.Name = operatorName;
                         namespacedRole.Rules         = namespaceRules[@namespace]
-                            .OrderBy(pr => pr.ApiGroups.First())
-                            .ThenBy(pr => pr.Resources.First())
-                            .ThenBy(pr => pr.ResourceNames?.First())
+                            .OrderBy(policyRule => policyRule.ApiGroups.First())
+                            .ThenBy(policyRule => policyRule.Resources.First())
+                            .ThenBy(policyRule => policyRule.ResourceNames?.First())
                             .ToList();
 
                         if (!string.IsNullOrEmpty(operatorNamespace))
@@ -517,44 +518,44 @@ namespace Neon.Operator.Analyzers
                     AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
-                foreach (var cr in clusterRoles)
+                foreach (var clusterRole in clusterRoles)
                 {
                     var sbYaml = new StringBuilder();
 
                     sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
-                    sbYaml.AppendLine(KubernetesYaml.Serialize(cr));
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(clusterRole));
 
-                    var outputPath = Path.Combine(rbacOutputDirectory, $"clusterrole-{cr.Name()}{Constants.GeneratedYamlExtension}");
+                    var outputPath = Path.Combine(rbacOutputDirectory, $"clusterrole-{clusterRole.Name()}{Constants.GeneratedYamlExtension}");
 
                     AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
-                foreach (var crb in clusterRoleBindings)
+                foreach (var clusterRoleBinding in clusterRoleBindings)
                 {
                     var sbYaml = new StringBuilder();
 
                     sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
-                    sbYaml.AppendLine(KubernetesYaml.Serialize(crb));
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(clusterRoleBinding));
 
-                    var outputPath = Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{crb.Name()}{Constants.GeneratedYamlExtension}");
+                    var outputPath = Path.Combine(rbacOutputDirectory, $"clusterrolebinding-{clusterRoleBinding.Name()}{Constants.GeneratedYamlExtension}");
 
                     AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
-                foreach (var r in roles)
+                foreach (var role in roles)
                 {
                     var sbYaml = new StringBuilder();
 
                     sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
-                    sbYaml.AppendLine(KubernetesYaml.Serialize(r));
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(role));
 
                     var rNameString = new StringBuilder();
 
-                    rNameString.Append($"role-{r.Name()}");
+                    rNameString.Append($"role-{role.Name()}");
 
-                    if (!string.IsNullOrEmpty(r.Metadata.NamespaceProperty))
+                    if (!string.IsNullOrEmpty(role.Metadata.NamespaceProperty))
                     {
-                        rNameString.Append($"-{r.Namespace()}");
+                        rNameString.Append($"-{role.Namespace()}");
                     }
 
                     rNameString.Append(Constants.GeneratedYamlExtension);
@@ -564,20 +565,20 @@ namespace Neon.Operator.Analyzers
                     AnalyzerHelper.WriteFileWhenDifferent(outputPath, sbYaml);
                 }
 
-                foreach (var rb in roleBindings)
+                foreach (var roleBinding in roleBindings)
                 {
                     var sbYaml = new StringBuilder();
 
                     sbYaml.AppendLine(Constants.AutoGeneratedYamlHeader);
-                    sbYaml.AppendLine(KubernetesYaml.Serialize(rb));
+                    sbYaml.AppendLine(KubernetesYaml.Serialize(roleBinding));
 
                     var rbNameString = new StringBuilder();
 
-                    rbNameString.Append($"rolebinding-{rb.Name()}");
+                    rbNameString.Append($"rolebinding-{roleBinding.Name()}");
 
-                    if (!string.IsNullOrEmpty(rb.Metadata.NamespaceProperty))
+                    if (!string.IsNullOrEmpty(roleBinding.Metadata.NamespaceProperty))
                     {
-                        rbNameString.Append($"-{rb.Namespace()}");
+                        rbNameString.Append($"-{roleBinding.Namespace()}");
                     }
 
                     rbNameString.Append(Constants.GeneratedYamlExtension);
@@ -646,12 +647,12 @@ namespace Neon.Operator.Analyzers
 
     public sealed class PolicyRuleComparer : IEqualityComparer<V1PolicyRule>
     {
-        public bool Equals(V1PolicyRule x, V1PolicyRule y)
+        public bool Equals(V1PolicyRule rule1, V1PolicyRule role2)
         {
-            return x.ApiGroups.Except(y.ApiGroups).Any()
-                && x.ResourceNames.Except(y.ResourceNames).Any()
-                && x.Verbs.Except(y.Verbs).Any()
-                && x.Resources.Except(y.Resources).Any();
+            return rule1.ApiGroups.Except(role2.ApiGroups).Any() &&
+                rule1.ResourceNames.Except(role2.ResourceNames).Any() &&
+                rule1.Verbs.Except(role2.Verbs).Any() &&
+                rule1.Resources.Except(role2.Resources).Any();
         }
 
         public int GetHashCode(V1PolicyRule obj)

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    EventQueueMetrics.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright © 2005-2024 by NEONFORGE LLC.  All rights reserved.
@@ -57,68 +57,68 @@ namespace Neon.Operator.EventQueue
 
             AddsTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_adds_total",
-                    help: "The total number of queued items.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_adds_total",
+                    help:          "The total number of queued items.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             RetriesTotal = Metrics
                 .CreateCounter(
-                    name: $"{prefix}_retries_total",
-                    help: "The total number of retries.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_retries_total",
+                    help:          "The total number of retries.",
+                    labelNames:    LabelNames,
                     configuration: new CounterConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             Depth = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_depth", 
-                    help: "The current depth of the event queue.",
+                    name:       $"{prefix}_depth", 
+                    help:       "The current depth of the event queue.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             QueueDurationSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_queue_duration_seconds",
-                    help: "How long in seconds an item stays in the event queue before being handled by the controller.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_queue_duration_seconds",
+                    help:          "How long in seconds an item stays in the event queue before being handled by the controller.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             WorkDurationSeconds = Metrics
                 .CreateHistogram(
-                    name: $"{prefix}_work_duration_seconds",
-                    help: "How long in seconds it takes to process an item from the queue.",
-                    labelNames: LabelNames,
+                    name:          $"{prefix}_work_duration_seconds",
+                    help:          "How long in seconds it takes to process an item from the queue.",
+                    labelNames:    LabelNames,
                     configuration: new HistogramConfiguration() { ExemplarBehavior = operatorSettings.ExemplarBehavior })
                 .WithLabels(labelValues);
 
             UnfinishedWorkSeconds = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_unfinished_work_seconds",
-                    help: "The amount of seconds that work is in progress without completing. Large values indicate stuck threads.",
+                    name:       $"{prefix}_unfinished_work_seconds",
+                    help:       "The amount of seconds that work is in progress without completing. Large values indicate stuck threads.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             LongestRunningProcessorSeconds = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_longest_running_processor_seconds",
-                    help: "The amount of seconds that work is in progress without completing. Large values indicate stuck threads.",
+                    name:       $"{prefix}_longest_running_processor_seconds",
+                    help:       "The amount of seconds that work is in progress without completing. Large values indicate stuck threads.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             ActiveWorkers = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_active_workers",
-                    help: "The number of currently active reconcilers.",
+                    name:       $"{prefix}_active_workers",
+                    help:       "The number of currently active reconcilers.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
 
             MaxActiveWorkers = Metrics
                 .CreateGauge(
-                    name: $"{prefix}_max_active_workers",
-                    help: "Total number of reconciliations per controller.",
+                    name:        $"{prefix}_max_active_workers",
+                    help:       "Total number of reconciliations per controller.",
                     labelNames: LabelNames)
                 .WithLabels(labelValues);
         }

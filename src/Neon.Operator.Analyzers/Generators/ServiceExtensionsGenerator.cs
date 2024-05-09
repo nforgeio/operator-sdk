@@ -47,6 +47,7 @@ namespace Neon.Operator.Analyzers
         {
             //System.Diagnostics.Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new ServiceExtensionsReceiver());
+
             baseNames = new List<Type>()
             {
                 typeof(IMutatingWebhook<>),
@@ -66,19 +67,25 @@ namespace Neon.Operator.Analyzers
         public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             var assemblyName = new AssemblyName(args.Name);
+
             Assembly assembly = null;
+
             try
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
                 var targetAssembly = runtimeDependencies
-                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+                    .FirstOrDefault(assemblyPath => Path.GetFileNameWithoutExtension(assemblyPath).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
+                {
                     assembly = Assembly.LoadFrom(targetAssembly);
+                }
             }
             catch (Exception)
             {
+                // Intentionally ignored.
             }
+
             return assembly;
         }
 
@@ -158,7 +165,9 @@ namespace Neon.Operator
                 foreach (var component in ((ServiceExtensionsReceiver)context.SyntaxReceiver)?.ClassesToRegister)
                 {
                     var componentNs = component.GetNamespace();
+
                     usings.Add(componentNs);
+
                     var componentSystemType = metadataLoadContext.ResolveType($"{componentNs}.{component.Identifier.ValueText}");
 
                     var ignoreAttribute = componentSystemType.GetCustomAttribute<IgnoreAttribute>();
@@ -183,45 +192,41 @@ namespace Neon.Operator
                     }
 
                     var componentInterfaceType = (OperatorComponentType)interfaces
-                        .Where(i =>
-                            i.IsGenericType && baseNames.Any(bn => bn.FullName == i.FullName))
-                        .Select(i => i.CustomAttributes?
-                                        .Where(a => a.AttributeType.Equals(typeof(OperatorComponentAttribute)))
-                                        .FirstOrDefault().NamedArguments.First().TypedValue)
+                        .Where(@interface =>@interface.IsGenericType && baseNames.Any(bn => bn.FullName == @interface.FullName))
+                        .Select(type => type.CustomAttributes?
+                            .Where(a => a.AttributeType.Equals(typeof(OperatorComponentAttribute)))
+                            .FirstOrDefault().NamedArguments.First().TypedValue)
                         .FirstOrDefault().Value.Value;
 
-                    IAssemblySymbol assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
-                    var members = assemblySymbol.GlobalNamespace.
-                            GetNamespaceMembers();
+                    var assemblySymbol = context.Compilation.SourceModule.ReferencedAssemblySymbols.Last();
+                    var members        = assemblySymbol.GlobalNamespace.GetNamespaceMembers();
 
-                    var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols.SelectMany(
-                        ras => ras.GlobalNamespace.GetNamespaceMembers())
+                    var typeMembers = context.Compilation.SourceModule.ReferencedAssemblySymbols
+                        .SelectMany(ras => ras.GlobalNamespace.GetNamespaceMembers())
                         .SelectMany(nsm => nsm.GetTypeMembers());
 
                     var componentEntityType = component
                         .DescendantNodes()?
                         .OfType<BaseListSyntax>()?
-                        .Where(dn => dn.DescendantNodes()
-                                ?.OfType<GenericNameSyntax>()
-                                ?.Any(gns => gns.Identifier.ValueText.EndsWith(typeof(IMutatingWebhook<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(MutatingWebhookBase<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(IValidatingWebhook<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(IResourceController).Name)
-                                            || gns.Identifier.ValueText.EndsWith(typeof(IResourceController<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(ResourceControllerBase<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(IResourceFinalizer<>).Name.Replace("`1", ""))
-                                            || gns.Identifier.ValueText.EndsWith(typeof(ResourceFinalizerBase<>).Name.Replace("`1", ""))
-                                            ) == true).FirstOrDefault();
+                        .Where(dn => dn.DescendantNodes()?
+                            .OfType<GenericNameSyntax>()?
+                            .Any(gns => gns.Identifier.ValueText.EndsWith(typeof(IMutatingWebhook<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(MutatingWebhookBase<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(IValidatingWebhook<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(ValidatingWebhookBase<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(IResourceController).Name) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(IResourceController<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(ResourceControllerBase<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(IResourceFinalizer<>).Name.Replace("`1", "")) ||
+                            gns.Identifier.ValueText.EndsWith(typeof(ResourceFinalizerBase<>).Name.Replace("`1", ""))) == true)
+                        .FirstOrDefault();
 
-                    var componentTypeIdentifier          = componentEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
-
-                    var componentTypeIdentifierNamespace = componentTypeIdentifier.GetNamespace();
-
+                    var componentTypeIdentifier           = componentEntityType.DescendantNodes().OfType<IdentifierNameSyntax>().Single();
+                    var componentTypeIdentifierNamespace  = componentTypeIdentifier.GetNamespace();
                     var componentEntityTypeIdentifier     = namedTypeSymbols.Where(ntm => ntm.MetadataName == componentTypeIdentifier.Identifier.ValueText).SingleOrDefault();
                     var componentEntityFullyQualifiedName = componentEntityTypeIdentifier.ToDisplayString(DisplayFormat.NameAndContainingTypesAndNamespaces);
+                    var entitySystemType                  = metadataLoadContext.ResolveType(componentEntityTypeIdentifier);
 
-                    var entitySystemType = metadataLoadContext.ResolveType(componentEntityTypeIdentifier);
                     usings.Add(entitySystemType.Namespace);
 
                     switch (componentInterfaceType)
@@ -323,9 +328,10 @@ namespace Neon.Operator
                 sb.AppendLine();
 
                 var lastUsingRoot = "";
-                foreach (var u in usings)
+
+                foreach (var @using in usings)
                 {
-                    var usingRoot = u.Split('.').First();
+                    var usingRoot = @using.Split('.').First();
 
                     if (!string.IsNullOrEmpty(lastUsingRoot) && usingRoot != lastUsingRoot)
                     {
@@ -334,12 +340,12 @@ namespace Neon.Operator
 
                     lastUsingRoot = usingRoot;
 
-                    sb.AppendLine($"using {u};");
+                    sb.AppendLine($"using {@using};");
                 }
+
                 var source = sb.ToString() + classSource;
 
                 context.AddSource($"ServiceCollectionExtensions.g.cs", SourceText.From(source, Encoding.UTF8, SourceHashAlgorithm.Sha256));
-
             }
         }
     }

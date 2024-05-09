@@ -57,6 +57,7 @@ namespace Neon.K8s.Core.YamlConverters
         public void WriteYaml(IEmitter emitter, object value, Type type)
         {
             var obj = (byte[])value;
+
             emitter?.Emit(new Scalar(Encoding.UTF8.GetString(obj)));
         }
     }

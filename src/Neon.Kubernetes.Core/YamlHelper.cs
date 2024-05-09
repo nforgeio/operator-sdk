@@ -49,6 +49,7 @@ namespace Neon.K8s.Core
                 .WithTypeConverter(new ByteArrayStringYamlConverter())
                 .WithTypeConverter(new ResourceQuantityYamlConverter())
                 .WithOverridesFromJsonPropertyAttributes();
+
         private static IDeserializer GetDeserializer(bool strict, bool stringTypeDeserialization = true)
         {
             var builder = CommonDeserializerBuilder;
@@ -86,16 +87,16 @@ namespace Neon.K8s.Core
 
         private static readonly IDictionary<string, Type> ModelTypeMap = typeof(KubernetesEntityAttribute).Assembly
             .GetTypes()
-            .Where(t => t.GetCustomAttributes(typeof(KubernetesEntityAttribute), true).Any())
+            .Where(type => type.GetCustomAttributes(typeof(KubernetesEntityAttribute), true).Any())
             .ToDictionary(
-                t =>
+                type =>
                 {
-                    var attr = (KubernetesEntityAttribute)t.GetCustomAttribute(
-                        typeof(KubernetesEntityAttribute), true);
+                    var attr        = (KubernetesEntityAttribute)type.GetCustomAttribute(typeof(KubernetesEntityAttribute), true);
                     var groupPrefix = string.IsNullOrEmpty(attr.Group) ? "" : $"{attr.Group}/";
+
                     return $"{groupPrefix}{attr.ApiVersion}/{attr.Kind}";
                 },
-                t => t);
+                type => type);
 
         /// <summary>
         /// Deserialize a YAML string into a Kubernetes object.
@@ -108,6 +109,7 @@ namespace Neon.K8s.Core
         public static TValue YamlDeserialize<TValue>(string yaml, bool strict = false, bool stringTypeDeserialization = true)
         {
             using var reader = new StringReader(yaml);
+
             return GetDeserializer(strict, stringTypeDeserialization).Deserialize<TValue>(new MergingParser(new Parser(reader)));
         }
 
@@ -122,6 +124,7 @@ namespace Neon.K8s.Core
         public static TValue YamlDeserialize<TValue>(Stream yaml, bool strict = false, bool stringTypeDeserialization = true)
         {
             using var reader = new StreamReader(yaml);
+
             return GetDeserializer(strict, stringTypeDeserialization).Deserialize<TValue>(new MergingParser(new Parser(reader)));
         }
 
@@ -138,8 +141,8 @@ namespace Neon.K8s.Core
             }
 
             var stringBuilder = new StringBuilder();
-            var writer = new StringWriter(stringBuilder);
-            var emitter = new Emitter(writer);
+            var writer        = new StringWriter(stringBuilder);
+            var emitter       = new Emitter(writer);
 
             emitter.Emit(new StreamStart());
             emitter.Emit(new DocumentStart());
@@ -158,9 +161,7 @@ namespace Neon.K8s.Core
             // Get all the concrete model types from the code generated namespace.
             var types = typeof(KubernetesEntityAttribute).Assembly
                 .ExportedTypes
-                .Where(type => type.Namespace == targetNamespace &&
-                               !type.IsInterface &&
-                               !type.IsAbstract);
+                .Where(type => type.Namespace == targetNamespace && !type.IsInterface && !type.IsAbstract);
 
             // Map any JsonPropertyAttribute instances to YamlMemberAttribute instances.
             foreach (var type in types)
@@ -168,12 +169,14 @@ namespace Neon.K8s.Core
                 foreach (var property in type.GetProperties())
                 {
                     var jsonAttribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+
                     if (jsonAttribute == null)
                     {
                         continue;
                     }
 
                     var yamlAttribute = new YamlMemberAttribute { Alias = jsonAttribute.Name, ApplyNamingConventions = false };
+
                     builder.WithAttributeOverride(type, property.Name, yamlAttribute);
                 }
             }

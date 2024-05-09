@@ -66,7 +66,7 @@ namespace Neon.Operator.Analyzers
         public const string DoubleTypeString   = "double";
         public const string DateTimeTypeString = "date-time";
 
-        public const int DefaultWebhookPort    = 5000;
+        public const int DefaultWebhookPort = 5000;
 
         public static List<string> AssemblyAttributeNames { get; }
 

@@ -39,8 +39,8 @@ namespace Neon.Operator.Cache
     /// </summary>
     internal class CrdCache : ICrdCache
     {
-        private readonly ILogger<CrdCache>                                        logger;
-        private readonly ConcurrentDictionary<string, V1APIResource> cache;
+        private readonly ILogger<CrdCache>                              logger;
+        private readonly ConcurrentDictionary<string, V1APIResource>    cache;
 
         /// <summary>
         /// Constructor.
@@ -48,9 +48,8 @@ namespace Neon.Operator.Cache
         /// <param name="loggerFactory">Optionally specifies a logger factory.</param>
         public CrdCache(ILoggerFactory loggerFactory = null) 
         {
-
-            this.cache   = new ConcurrentDictionary<string, V1APIResource>();
-            this.logger  = loggerFactory?.CreateLogger<CrdCache>();
+            this.cache  = new ConcurrentDictionary<string, V1APIResource>();
+            this.logger = loggerFactory?.CreateLogger<CrdCache>();
         }
 
         /// <inheritdoc/>
@@ -72,6 +71,7 @@ namespace Neon.Operator.Cache
             sb.Append(metadata.ApiVersion);
             sb.Append('/');
             sb.Append(metadata.PluralName);
+
             return sb.ToString();
         }
 
@@ -88,6 +88,7 @@ namespace Neon.Operator.Cache
             sb.Append(version);
             sb.Append('/');
             sb.Append(pluralName);
+
             return sb.ToString();
         }
 
@@ -101,18 +102,14 @@ namespace Neon.Operator.Cache
         {
             Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
-            var result = cache.GetValueOrDefault(CreateKey(metadata));
-
-            return result;
+            return cache.GetValueOrDefault(CreateKey(metadata));
         }
 
         /// <inheritdoc/>
         public V1APIResource Get<TResource>()
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            var result = cache.GetValueOrDefault(CreateKey(typeof(TResource).GetKubernetesTypeMetadata()));
-
-            return result;
+            return cache.GetValueOrDefault(CreateKey(typeof(TResource).GetKubernetesTypeMetadata()));
         }
 
         /// <inheritdoc/>
@@ -130,7 +127,7 @@ namespace Neon.Operator.Cache
 
             var id = CreateKey(group, version, resource.Name);
 
-            logger?.LogDebugEx(() => $"Adding {id} to cache.");
+            logger?.LogDebugEx(() => $"Adding [{id}] to cache.");
 
             cache.AddOrUpdate(
                 key: id,
