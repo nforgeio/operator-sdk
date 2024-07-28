@@ -35,7 +35,7 @@
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="System.Text.Json" Version="8.0.3" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="System.Text.Json" Version="8.0.4" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="2.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="YamlDotNet" Version="15.1.2" GeneratePathProperty="true" PrivateAssets="all" />
     </ItemGroup>
