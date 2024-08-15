@@ -23,12 +23,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Fractions" Version="7.7.1" GeneratePathProperty="true" />
+        <PackageReference Include="Fractions" Version="8.0.3" GeneratePathProperty="true" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" GeneratePathProperty="true" />
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.9.2" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.10.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="NJsonSchema" Version="11.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="NJsonSchema" Version="10.9.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="System.Reflection.MetadataLoadContext" Version="8.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="KubernetesClient.Models" Version="12.0.16" GeneratePathProperty="true" PrivateAssets="all" />
