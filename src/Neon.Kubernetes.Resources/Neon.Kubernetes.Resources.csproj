@@ -13,7 +13,6 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>kubernetes operator sdk neonkube k8s</PackageTags>
         <PackageReleaseNotes>https://github.com/nforgeio/operator-sdk/releases</PackageReleaseNotes>
-        <DebugType>full</DebugType>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
