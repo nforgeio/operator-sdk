@@ -54,8 +54,7 @@ namespace TestNamespace
 
             var syntax = testCompilation.Compilation.SyntaxTrees
                 .FirstOrDefault()
-                .GetRoot()
-                .DescendantNodes()
+                .GetRoot(Xunit.TestContext.Current.CancellationToken).DescendantNodes()
                 .OfType<BinaryExpressionSyntax>()
                 .FirstOrDefault();
 
@@ -86,8 +85,7 @@ namespace TestNamespace
 
             var syntax = testCompilation.Compilation.SyntaxTrees
                 .FirstOrDefault()
-                .GetRoot()
-                .DescendantNodes()
+                .GetRoot(Xunit.TestContext.Current.CancellationToken).DescendantNodes()
                 .OfType<BinaryExpressionSyntax>()
                 .FirstOrDefault();
 

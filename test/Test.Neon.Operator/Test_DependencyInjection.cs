@@ -89,8 +89,7 @@ namespace TestKubeOperator
         public async Task FooExists()
         {
             var controller = fixture.Operator.GetController<TestDiController>();
-
-            var config = new V1ConfigMap().Initialize();
+            var config     = new V1ConfigMap().Initialize();
 
             config.Metadata.Name = "foo";
             config.Metadata.NamespaceProperty = "bar";
@@ -100,12 +99,13 @@ namespace TestKubeOperator
             fixture.AddResource(config);
 
             var resource = new V1TestResource();
+
             resource.Spec = new TestSpec()
             {
                 Message = "I'm the parent object"
             };
 
-            var result = await controller.ReconcileAsync(resource);
+            var result = await controller.ReconcileAsync(resource, Xunit.TestContext.Current.CancellationToken);
 
             result.Should().Be(null);
             controller.Foo.Should().NotBeNull();

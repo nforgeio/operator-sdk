@@ -273,8 +273,7 @@ using Neon.Operator.OperatorLifecycleManager;
                 .Compilation
                 .SyntaxTrees
                 .First()
-                .GetRoot()
-                .DescendantNodes()
+                .GetRoot(Xunit.TestContext.Current.CancellationToken).DescendantNodes()
                 .OfType<AttributeSyntax>()
                 .Last();
 
@@ -308,8 +307,7 @@ using Neon.Operator.OperatorLifecycleManager;
                 .Compilation
                 .SyntaxTrees
                 .First()
-                .GetRoot()
-                .DescendantNodes()
+                .GetRoot(Xunit.TestContext.Current.CancellationToken).DescendantNodes()
                 .OfType<AttributeSyntax>()
                 .Last();
 
@@ -459,8 +457,7 @@ spec:
                 .Compilation
                 .SyntaxTrees
                 .First()
-                .GetRoot()
-                .DescendantNodes()
+                .GetRoot(Xunit.TestContext.Current.CancellationToken).DescendantNodes()
                 .OfType<AttributeSyntax>()
                 .Last();
 

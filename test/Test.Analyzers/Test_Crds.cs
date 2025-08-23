@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 
 using FluentAssertions;
-
 using k8s.Models;
 
 using Microsoft.CodeAnalysis;
@@ -15,7 +14,7 @@ using Neon.Operator.Attributes;
 using Neon.Roslyn.Xunit;
 using Neon.Xunit;
 
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Test.Analyzers
 {

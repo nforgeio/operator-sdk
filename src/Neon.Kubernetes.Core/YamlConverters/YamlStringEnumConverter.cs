@@ -33,21 +33,11 @@ namespace Neon.Kubernetes.Core.YamlConverters
     /// </summary>
     public class YamlStringEnumConverter : IYamlTypeConverter
     {
-        /// <summary>
-        /// Returns true if the type is an enum.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public bool Accepts(Type type) => type.IsEnum;
 
-        /// <summary>
-        /// Reads a string from the parser and converts it to an enum value.
-        /// </summary>
-        /// <param name="parser"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        /// <exception cref="YamlException"></exception>
-        public object ReadYaml(IParser parser, Type type)
+        /// <inheritdoc/>
+        public object ReadYaml(IParser parser, Type type, ObjectDeserializer deserializer)
         {
             var parsedEnum         = parser.Consume<Scalar>();
             var serializableValues = type.GetMembers()
@@ -62,13 +52,8 @@ namespace Neon.Kubernetes.Core.YamlConverters
             return Enum.Parse(type, serializableValues[parsedEnum.Value].Name);
         }
 
-        /// <summary>
-        /// Writes an enum value to the emitter as a string.
-        /// </summary>
-        /// <param name="emitter"></param>
-        /// <param name="value"></param>
-        /// <param name="type"></param>
-        public void WriteYaml(IEmitter emitter, object value, Type type)
+        /// <inheritdoc/>
+        public void WriteYaml(IEmitter emitter, object value, Type type, ObjectSerializer serializer)
         {
             var enumMember = type.GetMember(value.ToString()).FirstOrDefault();
             var yamlValue  = enumMember?.GetCustomAttributes<EnumMemberAttribute>(true).Select(ema => ema.Value).FirstOrDefault() ?? value.ToString();

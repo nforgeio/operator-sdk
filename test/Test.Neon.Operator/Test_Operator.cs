@@ -58,17 +58,16 @@ namespace Test.Neon.Operator
             fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestResourceController>();
+            var resource   = new V1TestResource();
 
-            var resource = new V1TestResource();
             resource.Spec = new TestSpec()
             {
                 Message = "I'm the parent object"
             };
 
-            await controller.ReconcileAsync(resource);
+            await controller.ReconcileAsync(resource, Xunit.TestContext.Current.CancellationToken);
 
             Assert.Contains(fixture.Resources, r => r.Metadata.Name == "child-object");
-
             Assert.Single(fixture.Resources);
         }
 
@@ -96,21 +95,25 @@ namespace Test.Neon.Operator
 
             fixture.AddResource<V1TestDatabase>(resource);
 
-            await controller.ReconcileAsync(resource);
+            await controller.ReconcileAsync(resource, Xunit.TestContext.Current.CancellationToken);
 
             fixture.Resources.Count.Should().Be(3);
 
             var updatedResource = fixture.GetResource<V1TestDatabase>(resource.Name(), resource.Namespace());
+
             updatedResource.Status.Status.Should().Be("reconciled");
 
             // verify statefulset
+
             var statefulSet = fixture.GetResource<V1StatefulSet>(resource.Name(), resource.Namespace());
 
             statefulSet.Should().NotBeNull();
             statefulSet.Spec.Replicas.Should().Be(resource.Spec.Servers);
 
             // verify service
-            var service     = fixture.GetResource<V1Service>(resource.Name(), resource.Namespace());
+
+            var service = fixture.GetResource<V1Service>(resource.Name(), resource.Namespace());
+
             service.Should().NotBeNull();
         }
 
@@ -119,15 +122,17 @@ namespace Test.Neon.Operator
         {
             fixture.ClearResources();
 
-            var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
-            var resourceList = await fixture.KubernetesClient.CustomObjects.GetAPIResourcesAsync(meta.Group, meta.ApiVersion);
+            var meta         = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
+            var resourceList = await fixture.KubernetesClient.CustomObjects.GetAPIResourcesAsync(meta.Group, meta.ApiVersion, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+
             resourceList.Resources.Should().HaveCount(3);
 
             meta = typeof(V1StatefulSet).GetKubernetesTypeMetadata();
-            resourceList = await fixture.KubernetesClient.CustomObjects.GetAPIResourcesAsync(meta.Group, meta.ApiVersion);
+
+            resourceList = await fixture.KubernetesClient.CustomObjects.GetAPIResourcesAsync(meta.Group, meta.ApiVersion, cancellationToken: Xunit.TestContext.Current.CancellationToken);
             resourceList.Resources.Should().HaveCount(1);
 
-            resourceList = await fixture.KubernetesClient.CoreV1.GetAPIResourcesAsync();
+            resourceList = await fixture.KubernetesClient.CoreV1.GetAPIResourcesAsync(cancellationToken: Xunit.TestContext.Current.CancellationToken);
             resourceList.Resources.Should().HaveCount(1);
         }
 
@@ -178,10 +183,10 @@ namespace Test.Neon.Operator
 
             patch.Replace(path => path.Status.Conditions, resource.Status.Conditions);
 
-            resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(
-                patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
-                name: resource.Name(),
-                namespaceParameter: resource.Namespace());
+            resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
+                name:               resource.Name(),
+                namespaceParameter: resource.Namespace(),
+                cancellationToken:  Xunit.TestContext.Current.CancellationToken);
 
             resource.Status.Conditions.Should().HaveCount(1);
         }
@@ -234,10 +239,10 @@ namespace Test.Neon.Operator
 
             patch.Replace(path => path.Status.Conditions, resource.Status.Conditions);
 
-            resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(
-                patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
-                name: resource.Name(),
-                namespaceParameter: resource.Namespace());
+            resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
+                name:               resource.Name(),
+                namespaceParameter: resource.Namespace(),
+                cancellationToken:  Xunit.TestContext.Current.CancellationToken);
 
             resource.Status.Conditions.Should().HaveCount(1);
 
@@ -295,10 +300,10 @@ namespace Test.Neon.Operator
 
             patch.Replace(path => path.Status.DictValues, resource.Status.DictValues);
 
-            resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(
-                patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
-                name: resource.Name(),
-                namespaceParameter: resource.Namespace());
+            resource = await fixture.KubernetesClient.CustomObjects.PatchNamespacedCustomObjectStatusAsync<V1TestDatabase>(patch: OperatorHelper.ToV1Patch<V1TestDatabase>(patch),
+                name:               resource.Name(),
+                namespaceParameter: resource.Namespace(),
+                cancellationToken:  Xunit.TestContext.Current.CancellationToken);
 
             resource.Status.DictValues.Should().HaveCount(1);
         }
@@ -309,6 +314,7 @@ namespace Test.Neon.Operator
             fixture.ClearResources();
 
             var co = new V1TestDatabase().Initialize();
+
             co.Metadata.Name = "test";
             co.Metadata.NamespaceProperty = "test";
             co.Spec = new TestDatabaseSpec()
@@ -327,7 +333,9 @@ namespace Test.Neon.Operator
             co.Status.Status = "bar";
 
             var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
-            await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace());
+
+            await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace(),
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             fixture.GetResource<V1TestDatabase>(co.Name(), co.Namespace()).Status.Status.Should().Be("bar");
         }
@@ -338,23 +346,25 @@ namespace Test.Neon.Operator
             fixture.ClearResources();
 
             var co = new V1TestDatabase().Initialize();
+
             co.Metadata.Name = "test";
             co.Metadata.NamespaceProperty = "test";
             co.Spec = new TestDatabaseSpec()
             {
-                Image = "",
+                Image   = "",
                 Servers = 1,
             };
 
             fixture.AddResource(co);
 
-            co = KubernetesHelper.JsonClone(co);
-            co.Status = new TestDatabaseStatus();
-
+            co               = KubernetesHelper.JsonClone(co);
+            co.Status        = new TestDatabaseStatus();
             co.Status.Status = "bar";
 
             var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
-            await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace());
+
+            await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace(),
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             fixture.GetResource<V1TestDatabase>(co.Name(), co.Namespace()).Status.Status.Should().Be("bar");
         }

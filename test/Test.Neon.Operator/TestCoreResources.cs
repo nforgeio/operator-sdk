@@ -42,6 +42,7 @@ namespace TestKubeOperator
         public TestCoreResources(OperatorFixture fixture)
         {
             this.fixture = fixture;
+
             fixture.RegisterType<V1ConfigMap>();
             fixture.RegisterType<V1Service>();
             fixture.RegisterType<V1StatefulSet>();
@@ -66,7 +67,7 @@ namespace TestKubeOperator
 
             fixture.AddResource<V1ConfigMap>(configMap);
 
-            var result = await fixture.KubernetesClient.CoreV1.ReadNamespacedConfigMapAsync(configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            var result = await fixture.KubernetesClient.CoreV1.ReadNamespacedConfigMapAsync(configMap.Metadata.Name, configMap.Metadata.NamespaceProperty, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             result.Should().NotBeNull();
         }
@@ -77,6 +78,7 @@ namespace TestKubeOperator
             fixture.ClearResources();
 
             var service = new V1Service().Initialize();
+
             service.Metadata.Name = "test";
             service.Metadata.NamespaceProperty = "test-ns";
             service.Spec = new V1ServiceSpec()
@@ -99,14 +101,16 @@ namespace TestKubeOperator
                 InternalTrafficPolicy = "Cluster"
 
             };
+
             fixture.AddResource<V1Service>(service);
 
-            var serviceList = await fixture.KubernetesClient.CoreV1.ListNamespacedServiceAsync(service.Metadata.NamespaceProperty);
+            var serviceList = await fixture.KubernetesClient.CoreV1.ListNamespacedServiceAsync(service.Metadata.NamespaceProperty, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             serviceList.Items.Should().HaveCount(1);
 
             service = await fixture.KubernetesClient.CoreV1.ReadNamespacedServiceAsync(name: service.Metadata.Name,
-                namespaceParameter: service.Metadata.NamespaceProperty);
+                namespaceParameter: service.Metadata.NamespaceProperty,
+                cancellationToken:  Xunit.TestContext.Current.CancellationToken);
 
             service.Should().NotBeNull();
         }
@@ -117,16 +121,20 @@ namespace TestKubeOperator
             fixture.ClearResources();
 
             var configMap = new V1ConfigMap().Initialize();
+
             configMap.Metadata = new V1ObjectMeta()
             {
                 Name = "test",
                 NamespaceProperty = "test",
             };
+
             configMap.Data = new Dictionary<string, string>() { { "foo", "bar" } };
 
-            await fixture.KubernetesClient.CoreV1.CreateNamespacedConfigMapAsync(configMap, configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.CoreV1.CreateNamespacedConfigMapAsync(configMap, configMap.Metadata.Name, configMap.Metadata.NamespaceProperty,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             var created = fixture.GetResource<V1ConfigMap>(configMap.Metadata.Name,configMap.Metadata.NamespaceProperty);
+
             created.Should().NotBeNull();
             created.Data.Should().ContainKey("foo");
 
@@ -151,6 +159,7 @@ namespace TestKubeOperator
             fixture.AddResource<V1ConfigMap>(configMap);
 
             var config2 = new V1ConfigMap().Initialize();
+
             config2.Metadata.Name = "test-2";
             config2.Metadata.NamespaceProperty = "test";
 
@@ -158,9 +167,11 @@ namespace TestKubeOperator
 
             configMap.Data.Add("bar", "baz");
 
-            await fixture.KubernetesClient.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.CoreV1.ReplaceNamespacedConfigMapAsync(configMap, configMap.Metadata.Name, configMap.Metadata.NamespaceProperty,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             var updated = fixture.GetResource<V1ConfigMap>(configMap.Metadata.Name,configMap.Metadata.NamespaceProperty);
+
             updated.Should().NotBeEquivalentTo(configMap);
             updated.Data.Should().ContainKey("foo");
             updated.Data.Should().ContainKey("bar");
@@ -187,6 +198,7 @@ namespace TestKubeOperator
             fixture.AddResource<V1ConfigMap>(configMap);
 
             var config2 = new V1ConfigMap().Initialize();
+
             config2.Metadata.Name = "test-2";
             config2.Metadata.NamespaceProperty = "test";
 
@@ -196,9 +208,11 @@ namespace TestKubeOperator
 
             patch.Add(path => path.Data["bar"], "baz");
 
-            await fixture.KubernetesClient.CoreV1.PatchNamespacedConfigMapAsync(OperatorHelper.ToV1Patch<V1ConfigMap>(patch), configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.CoreV1.PatchNamespacedConfigMapAsync(OperatorHelper.ToV1Patch<V1ConfigMap>(patch), configMap.Metadata.Name, configMap.Metadata.NamespaceProperty,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             var updated = fixture.GetResource<V1ConfigMap>(configMap.Metadata.Name,configMap.Metadata.NamespaceProperty);
+
             updated.Should().NotBeEquivalentTo(configMap);
             updated.Data.Should().ContainKey("foo");
             updated.Data.Should().ContainKey("bar");
@@ -226,14 +240,17 @@ namespace TestKubeOperator
             fixture.AddResource<V1ConfigMap>(configMap);
 
             var config2 = new V1ConfigMap().Initialize();
+
             config2.Metadata.Name = "test-2";
             config2.Metadata.NamespaceProperty = "test";
 
             fixture.AddResource(config2);
 
-            await fixture.KubernetesClient.CoreV1.DeleteNamespacedConfigMapAsync(configMap.Metadata.Name, configMap.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.CoreV1.DeleteNamespacedConfigMapAsync(configMap.Metadata.Name, configMap.Metadata.NamespaceProperty,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             var deleted = fixture.GetResource<V1ConfigMap>(configMap.Metadata.Name,configMap.Metadata.NamespaceProperty);
+
             deleted.Should().BeNull();
 
             fixture.Resources.Should().HaveCount(1);
@@ -245,6 +262,7 @@ namespace TestKubeOperator
             fixture.ClearResources();
 
             var statefulSet = new V1StatefulSet().Initialize();
+
             statefulSet.Metadata.Name = "test";
             statefulSet.Metadata.NamespaceProperty = "test-ns";
             statefulSet.Spec = new V1StatefulSetSpec()
@@ -254,11 +272,12 @@ namespace TestKubeOperator
 
             fixture.AddResource(statefulSet);
 
-            await fixture.KubernetesClient.AppsV1.DeleteNamespacedStatefulSetAsync(statefulSet.Metadata.Name, statefulSet.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.AppsV1.DeleteNamespacedStatefulSetAsync(statefulSet.Metadata.Name, statefulSet.Metadata.NamespaceProperty,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             var deleted = fixture.GetResource<V1StatefulSet>(statefulSet.Metadata.Name,statefulSet.Metadata.NamespaceProperty);
-            deleted.Should().BeNull();
 
+            deleted.Should().BeNull();
             fixture.Resources.Should().HaveCount(0);
         }
 
@@ -294,9 +313,10 @@ namespace TestKubeOperator
 
             fixture.AddResource(service2);
 
-            await fixture.KubernetesClient.CoreV1.DeleteNamespacedServiceAsync(service.Metadata.Name, service.Metadata.NamespaceProperty);
+            await fixture.KubernetesClient.CoreV1.DeleteNamespacedServiceAsync(service.Metadata.Name, service.Metadata.NamespaceProperty, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
             var deleted = fixture.GetResource<V1Service>(service.Metadata.Name,service.Metadata.NamespaceProperty);
+
             deleted.Should().BeNull();
 
             fixture.Resources.Should().HaveCount(1);
@@ -308,6 +328,7 @@ namespace TestKubeOperator
             fixture.ClearResources();
 
             var job = new V1Job().Initialize();
+
             job.Metadata.Name = "test";
             job.Metadata.NamespaceProperty = "test";
             job.Spec = new V1JobSpec()
@@ -328,7 +349,8 @@ namespace TestKubeOperator
                 }
             };
 
-            await fixture.KubernetesClient.BatchV1.CreateNamespacedJobAsync(job, job.Metadata.NamespaceProperty);
+            var v1Job = await fixture.KubernetesClient.BatchV1.CreateNamespacedJobAsync(job, job.Metadata.NamespaceProperty,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken);
         }
     }
 }

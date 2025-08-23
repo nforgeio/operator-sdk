@@ -27,12 +27,14 @@ namespace Neon.K8s.Core.YamlConverters
 {
     internal class ByteArrayStringYamlConverter : IYamlTypeConverter
     {
+        /// <inheritdoc/>
         public bool Accepts(Type type)
         {
             return type == typeof(byte[]);
         }
 
-        public object ReadYaml(IParser parser, Type type)
+        /// <inheritdoc/>
+        public object ReadYaml(IParser parser, Type type, ObjectDeserializer deserializer)
         {
             if (parser?.Current is Scalar scalar)
             {
@@ -54,7 +56,8 @@ namespace Neon.K8s.Core.YamlConverters
             throw new InvalidOperationException(parser.Current?.ToString());
         }
 
-        public void WriteYaml(IEmitter emitter, object value, Type type)
+        /// <inheritdoc/>
+        public void WriteYaml(IEmitter emitter, object value, Type type, ObjectSerializer serializer)
         {
             var obj = (byte[])value;
 

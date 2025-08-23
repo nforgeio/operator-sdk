@@ -37,11 +37,13 @@ using Neon.Operator.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using Newtonsoft.Json.Serialization;
 
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NJsonSchema.Generation.TypeMappers;
+using NJsonSchema.NewtonsoftJson.Generation;
 
 using YamlDotNet.Serialization;
 
@@ -89,18 +91,15 @@ namespace Neon.Operator.Entities
                 }
             }
 
-            jsonSchemaGeneratorSettings = new JsonSchemaGeneratorSettings()
+            jsonSchemaGeneratorSettings = new NewtonsoftJsonSchemaGeneratorSettings()
             {
-                SchemaType  = SchemaType.OpenApi3,
-                TypeMappers =
-                {
-                    new ObjectTypeMapper(typeof(V1ObjectMeta), new JsonSchema { Type = JsonObjectType.Object}),
-                },
+                SchemaType         = SchemaType.OpenApi3,
                 SerializerSettings = serializerSettings,
-                
+                TypeMappers        =
+                {
+                    new ObjectTypeMapper(typeof(V1ObjectMeta), new NJsonSchema.JsonSchema { Type = JsonObjectType.Object}),
+                }
             };
-
-
         }
 
         /// <summary>
@@ -119,9 +118,9 @@ namespace Neon.Operator.Entities
         {
             Covenant.Requires<ArgumentNullException>(resourceType != null, nameof(resourceType));
 
-            var scope            = GetScope(resourceType) ?? EntityScope.Namespaced;
+            var scope = GetScope(resourceType) ?? EntityScope.Namespaced;
 
-            entity               ??= resourceType.GetTypeInfo().GetCustomAttribute<KubernetesEntityAttribute>();
+            entity          ??= resourceType.GetTypeInfo().GetCustomAttribute<KubernetesEntityAttribute>();
 
             try
             {
@@ -286,11 +285,12 @@ namespace Neon.Operator.Entities
 
             // Start with JsonSchema.
 
-            var g = new JsonSchemaGenerator(jsonSchemaGeneratorSettings);
+            var generator = new NJsonSchema.Generation.JsonSchemaGenerator(jsonSchemaGeneratorSettings);
 
-            g.Generate(resourceType);
+            generator.Generate(resourceType);
 
-            var schema = JsonSchema.FromType(resourceType, jsonSchemaGeneratorSettings);
+            var schema = NJsonSchema.JsonSchema.FromType(resourceType, jsonSchemaGeneratorSettings);
+
             // Convert to JToken to make alterations.
 
             // $todo(marcusbooyah):
