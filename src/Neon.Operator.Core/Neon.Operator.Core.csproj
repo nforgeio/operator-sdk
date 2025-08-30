@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -17,6 +17,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="CompareNETObjects" Version="4.84.0" />
         <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" />
         <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
@@ -24,7 +25,9 @@
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
         <PackageReference Include="NJsonSchema" Version="11.4.0" />
         <PackageReference Include="NJsonSchema.NewtonsoftJson" Version="11.4.0" />  
-        <PackageReference Include="prometheus-net" Version="8.2.1" PrivateAssets="all" />
+        <PackageReference Include="prometheus-net" Version="8.2.1" PrivateAssets="all" />  
+        <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+        <PackageReference Include="System.Collections.Immutable" Version="$(DotNetVersion)" />
         <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="2.0.0" />
     </ItemGroup>
 
@@ -34,11 +37,13 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
             </ItemGroup>
         </Otherwise>
     </Choose>
@@ -47,6 +52,10 @@
         <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
         <None Include="README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\neonSDK\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
     </ItemGroup>
     
 </Project>

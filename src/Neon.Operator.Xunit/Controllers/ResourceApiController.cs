@@ -31,7 +31,6 @@ using Microsoft.AspNetCore.Mvc;
 
 using Neon.Common;
 using Neon.K8s;
-using Neon.K8s.Core;
 using Neon.Tasks;
 
 using OpenTelemetry.Resources;
@@ -299,7 +298,7 @@ namespace Neon.Operator.Xunit
                     return Ok(existing);
                 }
 
-                return Content(KubernetesHelper.JsonSerialize(status), "application/json");
+                return Content(KubernetesJsonHelper.JsonSerialize(status), "application/json");
             }
 
             throw new TypeNotRegisteredException(Version, Plural);

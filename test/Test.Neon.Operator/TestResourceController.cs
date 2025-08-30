@@ -24,7 +24,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.K8s;
-using Neon.Operator.Controllers;
+using Neon.Operator;
 
 namespace Test.Neon.Operator
 {

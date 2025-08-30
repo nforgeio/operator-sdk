@@ -15,9 +15,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
+[assembly: AssemblyProduct("OperatorSDK")]
+[assembly: AssemblyCompany("NEONFORGE LLC")]
+[assembly: AssemblyCopyright("Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.")]
+
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug")]
+#else
+[assembly: AssemblyConfiguration("Release")]
+#endif
 
 [assembly: InternalsVisibleTo("Neon.Operator")]
 [assembly: InternalsVisibleTo("Neon.Operator.XUnit")]

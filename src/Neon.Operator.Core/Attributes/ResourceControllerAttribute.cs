@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Used to exclude a component from assembly scanning when building the operator.

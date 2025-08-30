@@ -32,7 +32,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-using Neon.K8s.Core;
+using Neon.K8s;
 
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -61,7 +61,7 @@ namespace Neon.Operator.Analyzers
 
                 try
                 {
-                    crd = KubernetesHelper.YamlDeserialize<V1CustomResourceDefinition>(file.GetText()?.ToString(), stringTypeDeserialization: false);
+                    crd = KubernetesYamlHelper.YamlDeserialize<V1CustomResourceDefinition>(file.GetText()?.ToString(), stringTypeDeserialization: false);
                 }
                 catch
                 {

@@ -18,9 +18,7 @@
 using System;
 using System.Diagnostics.Contracts;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// <para>

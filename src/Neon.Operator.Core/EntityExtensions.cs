@@ -25,8 +25,6 @@ using System.Text.Json.Nodes;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Core.Exceptions;
-
 namespace Neon.Operator
 {
     /// <summary>

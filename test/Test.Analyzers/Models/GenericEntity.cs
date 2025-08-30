@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
+using Neon.Operator;
 
 namespace Test_Analyzers.Models
 {

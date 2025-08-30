@@ -20,9 +20,7 @@ using System.Collections.Generic;
 
 using k8s.Models;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Rbac
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes an RBAC rule.

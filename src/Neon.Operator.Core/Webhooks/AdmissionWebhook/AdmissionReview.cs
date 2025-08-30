@@ -17,7 +17,7 @@
 
 using k8s;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// $todo(marcusbooyah): Documentation

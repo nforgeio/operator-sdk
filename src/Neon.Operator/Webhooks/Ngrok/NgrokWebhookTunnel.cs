@@ -32,13 +32,12 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Operator.Builder;
 using Neon.Net;
 using Neon.Tasks;
 
 using NgrokSharp;
 
-namespace Neon.Operator.Webhooks.Ngrok
+namespace Neon.Operator
 {
     /// <summary>
     /// Implements a Ngrok tunnel for debugging webhooks.

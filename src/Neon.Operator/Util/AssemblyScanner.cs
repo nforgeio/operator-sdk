@@ -3,13 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.Builder;
-using Neon.Operator.Controllers;
-using Neon.Operator.Finalizers;
-using Neon.Operator.Webhooks;
-
-namespace Neon.Operator.Util
+namespace Neon.Operator
 {
     internal class AssemblyScanner
     {

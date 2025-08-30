@@ -18,7 +18,7 @@
 using System;
 using System.Diagnostics.Contracts;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes an admission webhook and the resources and operations to which it applies.

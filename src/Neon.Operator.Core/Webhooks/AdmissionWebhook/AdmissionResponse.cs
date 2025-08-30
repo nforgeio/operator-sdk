@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// $todo(marcusbooyah): Documentation

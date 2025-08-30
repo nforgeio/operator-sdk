@@ -23,7 +23,7 @@ using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Neon.Operator.Finalizers
+namespace Neon.Operator
 {
     /// <summary>
     /// Finalizer manager.

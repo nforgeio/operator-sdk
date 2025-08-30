@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Neon
+namespace Neon.Operator
 {
     /// <summary>
     /// Neon build constants.
@@ -51,7 +51,7 @@ namespace Neon
         /// release scripts to match.
         /// </note>
         /// </summary>
-        public const string OperatorSdkVersion = "2024.02.22-dev-01";
+        public const string OperatorSdkVersion = "3.0.0";
 
         /// <summary>
         /// The product license.

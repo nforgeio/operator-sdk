@@ -23,8 +23,8 @@ using FluentAssertions;
 using k8s;
 using k8s.Models;
 
-using Neon.K8s.Core;
-using Neon.Operator.Util;
+using Neon.K8s;
+using Neon.Operator;
 using Neon.Operator.Xunit;
 using Neon.Xunit;
 

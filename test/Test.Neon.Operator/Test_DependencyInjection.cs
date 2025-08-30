@@ -27,7 +27,7 @@ using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Operator.Controllers;
+using Neon.Operator;
 using Neon.Operator.Xunit;
 using Neon.Xunit;
 

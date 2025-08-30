@@ -17,7 +17,7 @@
 
 using Microsoft.AspNetCore.Http;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Represents the result of a validation webhook.

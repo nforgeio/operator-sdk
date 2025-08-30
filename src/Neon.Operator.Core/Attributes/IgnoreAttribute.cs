@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Indicates the class should be ignored.

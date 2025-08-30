@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Used for versiond custom resources.

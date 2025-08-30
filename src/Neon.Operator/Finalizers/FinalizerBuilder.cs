@@ -24,9 +24,9 @@ using k8s.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Operator.Builder;
+using Neon.Operator;
 
-namespace Neon.Operator.Finalizers
+namespace Neon.Operator
 {
     internal class FinalizerBuilder : IFinalizerBuilder
     {

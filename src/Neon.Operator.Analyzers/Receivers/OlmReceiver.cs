@@ -21,9 +21,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.OperatorLifecycleManager;
-
 namespace Neon.Operator.Analyzers.Receivers
 {
     public class OlmReceiver : ISyntaxReceiver

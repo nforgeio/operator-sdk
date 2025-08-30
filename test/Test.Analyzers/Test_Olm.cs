@@ -31,9 +31,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.K8s.Core;
+using Neon.K8s;
+using Neon.Operator;
 using Neon.Operator.Analyzers.Generators;
-using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn.Xunit;
 using Neon.Xunit;
@@ -137,7 +137,7 @@ culpa qui officia deserunt mollit anim id est laborum."";
 
             var output = File.ReadAllText(outFile);
 
-            var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
+            var outCsv = KubernetesYamlHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
 
             outCsv.Metadata.Name.Should().Be($"{name}.v{version}");
 
@@ -326,7 +326,7 @@ using Neon.Operator.OperatorLifecycleManager;
             example.Spec = new TestSpec();
             example.Spec.Message = "test message";
 
-            var exampleJson = KubernetesHelper.JsonSerialize(example);
+            var exampleJson         = KubernetesJsonHelper.JsonSerialize(example);
             var escapedExampleJson = exampleJson.Replace("\"", "\\\"");
             var source = $@"
 using Neon.Operator.OperatorLifecycleManager;
@@ -350,7 +350,7 @@ using Test.Analyzers;
 
             var output = File.ReadAllText(outFile);
 
-            var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
+            var outCsv = KubernetesYamlHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
 
             outCsv.Metadata.Annotations["alm-examples"].Should().Be($"[{exampleJson}]");
         }
@@ -364,7 +364,7 @@ using Test.Analyzers;
             example.Spec = new TestSpec();
             example.Spec.Message = "test message";
 
-            var exampleJson = KubernetesHelper.JsonSerialize(example);
+            var exampleJson = KubernetesJsonHelper.JsonSerialize(example);
 
             var source = $@"
 using Neon.Operator.OperatorLifecycleManager;
@@ -405,7 +405,7 @@ spec:
 
             var output = File.ReadAllText(outFile);
 
-            var outCsv = KubernetesHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
+            var outCsv = KubernetesYamlHelper.YamlDeserialize<V1ClusterServiceVersion>(output);
 
             outCsv.Metadata.Annotations["alm-examples"].Should().Be($"[{exampleJson}]");
         }
@@ -418,7 +418,7 @@ spec:
             example.Spec = new TestSpec();
             example.Spec.Message = "test message";
 
-            var exampleJson = KubernetesHelper.JsonSerialize(example).Replace("\"", "\\\"");
+            var exampleJson = KubernetesJsonHelper.JsonSerialize(example).Replace("\"", "\\\"");
 
             var source = $@"
 using Neon.Operator.OperatorLifecycleManager;

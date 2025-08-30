@@ -22,7 +22,7 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Operator.Core.Exceptions
+namespace Neon.Operator
 {
     internal class UnauthorizedException : Exception
     {

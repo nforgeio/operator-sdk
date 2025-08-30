@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Specifies that the data must match the regex value.

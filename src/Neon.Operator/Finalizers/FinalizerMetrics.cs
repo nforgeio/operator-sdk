@@ -22,7 +22,7 @@ using k8s.Models;
 
 using Prometheus;
 
-namespace Neon.Operator.Finalizers
+namespace Neon.Operator
 {
     /// <summary>
     /// 

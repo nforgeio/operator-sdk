@@ -22,9 +22,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Controllers
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes the interface used to implement Neon based operator controllers.

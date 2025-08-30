@@ -32,10 +32,9 @@ using k8s.Models;
 using Microsoft.CodeAnalysis;
 
 using Neon.Common;
+using Neon.Operator;
 using Neon.Operator.Analyzers.Receivers;
-using Neon.Operator.Attributes;
 using Neon.Operator.OperatorLifecycleManager;
-using Neon.Operator.Webhooks;
 using Neon.Roslyn;
 
 using MetadataLoadContext      = Neon.Roslyn.MetadataLoadContext;
@@ -477,7 +476,7 @@ namespace Neon.Operator.Analyzers
                 props.XKubernetesPreserveUnknownFields = true;
             }
 
-            var rangeAttribute = info.GetCustomAttribute<Attributes.RangeAttribute>();
+            var rangeAttribute = info.GetCustomAttribute<RangeAttribute>();
 
             if (rangeAttribute != null)
             {

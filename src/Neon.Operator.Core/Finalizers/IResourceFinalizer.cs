@@ -21,9 +21,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Finalizers
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a ginalizer manager.

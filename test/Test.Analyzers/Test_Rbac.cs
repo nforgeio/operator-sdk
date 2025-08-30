@@ -24,8 +24,8 @@ using k8s.Models;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Operator;
 using Neon.Operator.Analyzers;
-using Neon.Operator.Attributes;
 using Neon.Roslyn.Xunit;
 using Neon.Xunit;
 
@@ -45,8 +45,6 @@ using k8s.Models;
 using Microsoft.AspNetCore.Hosting;
 
 using Neon.Operator;
-using Neon.Operator.Attributes;
-using Neon.Operator.Rbac;
 
 namespace TestOperator.Foo.Bar
 {{

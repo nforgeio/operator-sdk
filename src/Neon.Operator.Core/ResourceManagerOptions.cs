@@ -19,10 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.Rbac;
-
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Specifies options for a resource manager.

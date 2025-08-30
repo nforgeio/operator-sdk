@@ -17,7 +17,7 @@
 
 using System.Runtime.Serialization;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// <para>

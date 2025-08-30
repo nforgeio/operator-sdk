@@ -27,7 +27,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 using Neon.Common;
-using Neon.K8s.Core;
+using Neon.K8s;
 
 namespace Neon.Operator.Xunit
 {

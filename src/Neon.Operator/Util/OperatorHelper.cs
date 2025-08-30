@@ -26,7 +26,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Neon.Operator.Util
+namespace Neon.Operator
 {
     /// <summary>
     /// Useful utilities for the operator SDK.

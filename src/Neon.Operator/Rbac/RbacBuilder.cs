@@ -27,14 +27,9 @@ using k8s.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
-using Neon.Operator.Attributes;
-using Neon.Operator.Builder;
-using Neon.Operator.ResourceManager;
-using Neon.Operator.Util;
-using Neon.Operator.Webhooks;
 using Neon.K8s.Resources.CertManager;
 
-namespace Neon.Operator.Rbac
+namespace Neon.Operator
 {
     /// <summary>
     /// Handles building of RBAC rules.

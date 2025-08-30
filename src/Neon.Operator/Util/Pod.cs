@@ -20,7 +20,7 @@ using System.IO;
 
 using Neon.Common;
 
-namespace Neon.Operator.Util
+namespace Neon.Operator
 {
     /// <summary>
     /// Abstracts access to the host pod properties.

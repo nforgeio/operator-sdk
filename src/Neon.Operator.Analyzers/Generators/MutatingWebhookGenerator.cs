@@ -33,8 +33,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 using Neon.Common;
-using Neon.Operator.Attributes;
-using Neon.Operator.Webhooks;
+using Neon.Operator;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
@@ -534,7 +533,6 @@ namespace Neon.Operator.Analyzers
                 "Microsoft.Extensions.Logging",
                 "Neon.Diagnostics",
                 "Neon.Operator",
-                "Neon.Operator.Webhooks",
                 "Prometheus",
                 entitySystemType.Namespace,
                 webhookEntityFullyQualifiedName.TrimEnd('.').Remove(webhookEntityFullyQualifiedName.LastIndexOf('.') + 1).TrimEnd('.'),

@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Operator.Finalizers
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a finalizer builder.

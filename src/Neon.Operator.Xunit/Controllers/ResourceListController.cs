@@ -31,8 +31,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Neon.Common;
 using Neon.K8s;
-using Neon.K8s.Core;
-using Neon.Operator.Attributes;
+using Neon.Operator;
 using Neon.Tasks;
 
 namespace Neon.Operator.Xunit

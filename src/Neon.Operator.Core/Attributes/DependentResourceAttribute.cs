@@ -20,7 +20,7 @@ using System;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Used to instruct a controller to wat.

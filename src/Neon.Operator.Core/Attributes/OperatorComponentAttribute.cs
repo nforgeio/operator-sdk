@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Used to tag a type implementing an operator component.

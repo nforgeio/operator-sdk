@@ -17,7 +17,7 @@
 
 using System.Runtime.Serialization;
 
-namespace Neon.Operator.Controllers
+namespace Neon.Operator
 {
     /// <summary>
     /// Enumerates kubernetes watch event types.

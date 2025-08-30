@@ -28,9 +28,9 @@ using KellermanSoftware.CompareNetObjects;
 using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
-using Neon.Operator.Controllers;
+using Neon.K8s;
 
-namespace Neon.Operator.Cache
+namespace Neon.Operator
 {
     internal class ResourceCache<TEntity, TValue> : IResourceCache<TEntity, TValue>
         where TEntity : IKubernetesObject<V1ObjectMeta>
@@ -70,8 +70,11 @@ namespace Neon.Operator.Cache
 
         public TValue Get(string id)
         {
-            var result = cache.GetValueOrDefault(id);
-            
+            if (!cache.TryGetValue(id, out var result))
+            {
+                result = default(TValue);
+            }
+
             if (result == null)
             {
                 metrics.HitsTotal.Inc();
@@ -82,7 +85,15 @@ namespace Neon.Operator.Cache
 
         public bool TryGet(string id, out TValue result)
         {
-            result = cache.GetValueOrDefault(id);
+            if (!cache.TryGetValue(id, out result))
+            {
+                result = default(TValue);
+            }
+
+            if (result == null)
+            {
+                metrics.HitsTotal.Inc();
+            }
 
             if (result == null)
             {

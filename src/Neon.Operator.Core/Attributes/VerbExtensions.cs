@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neon.Operator.Rbac
+namespace Neon.Operator
 {
     /// <summary>
     /// RBAC verb extension methods.

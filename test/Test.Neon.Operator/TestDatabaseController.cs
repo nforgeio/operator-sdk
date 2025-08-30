@@ -23,11 +23,9 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator;
-using Neon.Operator.Controllers;
-using Neon.Operator.Util;
-
 using Neon.K8s;
+using Neon.Operator;
+
 using System.Threading;
 
 namespace Test.Neon.Operator

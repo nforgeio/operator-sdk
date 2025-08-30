@@ -18,9 +18,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Neon.Operator.Controllers;
-using Neon.Operator.Finalizers;
-using Neon.Operator.Webhooks;
+using Neon.Operator;
 
 namespace Neon.Operator.Xunit
 {

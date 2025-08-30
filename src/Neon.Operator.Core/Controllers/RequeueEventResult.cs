@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Controllers
+namespace Neon.Operator
 {
     /// <summary>
     /// Used to indicate that a reconcile event should be requeue.

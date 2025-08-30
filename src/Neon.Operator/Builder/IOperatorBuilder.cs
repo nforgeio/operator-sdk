@@ -22,10 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 using Neon.K8s;
-using Neon.Operator.Controllers;
-using Neon.Operator.Finalizers;
-using Neon.Operator.ResourceManager;
-using Neon.Operator.Webhooks;
 
 namespace Neon.Operator
 {

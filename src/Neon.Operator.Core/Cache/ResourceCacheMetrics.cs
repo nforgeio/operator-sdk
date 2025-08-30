@@ -20,7 +20,7 @@ using k8s.Models;
 
 using Prometheus;
 
-namespace Neon.Operator.Cache
+namespace Neon.Operator
 {
     /// <summary>
     /// Used for maintaining metrics for cached CRDs and resources.

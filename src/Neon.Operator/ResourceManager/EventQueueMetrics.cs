@@ -23,7 +23,7 @@ using k8s.Models;
 
 using Prometheus;
 
-namespace Neon.Operator.EventQueue
+namespace Neon.Operator
 {
     /// <summary>
     /// Used for maintaining event queue metrics.

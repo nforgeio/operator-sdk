@@ -17,7 +17,7 @@
 
 using Prometheus;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Webhook related metrics.

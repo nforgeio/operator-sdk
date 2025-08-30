@@ -18,7 +18,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a resource manager.

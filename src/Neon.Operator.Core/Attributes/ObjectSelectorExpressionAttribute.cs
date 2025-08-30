@@ -21,7 +21,7 @@ using System.Text;
 
 using k8s.Models;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Webhook namespace selector.

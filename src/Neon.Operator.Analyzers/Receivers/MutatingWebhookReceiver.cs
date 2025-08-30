@@ -21,8 +21,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using Neon.Operator.Attributes;
-
 namespace Neon.Operator.Analyzers
 {
     public class MutatingWebhookReceiver : ISyntaxReceiver

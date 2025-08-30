@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// The kubectl tool relies on server-side output formatting. Your cluster's API server decides which columns 

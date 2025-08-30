@@ -25,9 +25,7 @@ using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a mutating webhook.

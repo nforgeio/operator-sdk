@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Http;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Represents a result from an admission webhook.

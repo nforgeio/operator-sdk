@@ -17,7 +17,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Neon.Operator.Webhooks.Ngrok
+namespace Neon.Operator
 {
     /// <summary>
     /// Ngrok tunnel config.

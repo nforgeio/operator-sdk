@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.Controllers
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a error policy result.

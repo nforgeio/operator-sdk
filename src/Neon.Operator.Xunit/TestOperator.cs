@@ -23,7 +23,6 @@ using k8s;
 using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Operator;
-using Neon.Operator.Builder;
 
 // $todo(marcusbooyah): Would it make more sense for this to be in a test project?
 

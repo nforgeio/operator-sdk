@@ -25,11 +25,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
-using Neon.Operator.Builder;
-using Neon.Operator.Controllers;
 using Neon.Tasks;
 
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Manages a resource controller.

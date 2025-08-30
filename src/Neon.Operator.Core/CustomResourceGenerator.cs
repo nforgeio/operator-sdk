@@ -31,8 +31,6 @@ using k8s.Models;
 using Microsoft.Rest.Serialization;
 
 using Neon.Common;
-using Neon.Operator.Attributes;
-using Neon.Operator.Core;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -47,7 +45,7 @@ using NJsonSchema.NewtonsoftJson.Generation;
 
 using YamlDotNet.Serialization;
 
-namespace Neon.Operator.Entities
+namespace Neon.Operator
 {
     /// <summary>
     /// A tool for generating Kubernetes Custom Resources.
@@ -57,7 +55,7 @@ namespace Neon.Operator.Entities
         private readonly JsonSchemaGeneratorSettings jsonSchemaGeneratorSettings;
         private readonly JsonSerializerSettings      serializerSettings;
 
-        private AssemblyScanner                      assemblyScanner;
+        private CoreAssemblyScanner                  assemblyScanner;
         private IEnumerable<string>                  kubernetesTypes;
 
         /// <summary>
@@ -196,7 +194,7 @@ namespace Neon.Operator.Entities
         public List<V1CustomResourceDefinition> GetCustomResourcesFromAssembly(
             string           assemblyPath)
         {
-            this.assemblyScanner ??= new AssemblyScanner();
+            this.assemblyScanner ??= new CoreAssemblyScanner();
             this.kubernetesTypes ??= Assembly.GetAssembly(typeof(V1Pod)).DefinedTypes.Where(t => t.GetCustomAttribute<KubernetesEntityAttribute>() != null).Select(t => t.GetKubernetesCrdName());
             
             assemblyScanner.Add(assemblyPath);

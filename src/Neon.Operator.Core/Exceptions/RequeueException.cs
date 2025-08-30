@@ -17,9 +17,7 @@
 
 using System;
 
-using Neon.Operator.Controllers;
-
-namespace Neon.Operator.Core.Exceptions
+namespace Neon.Operator
 {
     /// <summary>
     /// Represents an exception that indicates the need to requeue an operation.

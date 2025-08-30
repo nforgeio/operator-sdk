@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Core
+namespace Neon.Operator
 {
-    internal class AssemblyScanner
+    internal class CoreAssemblyScanner
     {
         public HashSet<Type> EntityTypes { get; set;}
 
-        public AssemblyScanner()
+        public CoreAssemblyScanner()
         {
             this.EntityTypes = new HashSet<Type>();
         }
@@ -90,8 +88,7 @@ namespace Neon.Operator.Core
                         }
 
                         var finalizerEntityTypes = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType
-                            && @interface.GetGenericTypeDefinition().Name == "IResourceFinalizer`1")
+                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().Name == "IResourceFinalizer`1")
                             .Select(@interface => @interface.GenericTypeArguments[0]);
 
                         foreach (var entityType in finalizerEntityTypes)
@@ -110,8 +107,7 @@ namespace Neon.Operator.Core
                         }
 
                         var mutatingWebhookEntityTypes = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType
-                            && @interface.GetGenericTypeDefinition().Name == "IMutatingWebhook`1")
+                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().Name == "IMutatingWebhook`1")
                             .Select(@interface => @interface.GenericTypeArguments[0]);
 
                         foreach (var entityType in mutatingWebhookEntityTypes)
@@ -130,8 +126,7 @@ namespace Neon.Operator.Core
                         }
 
                         var validatingWebhookEntityTypes = type.GetInterfaces()
-                            .Where(@interface => @interface.IsConstructedGenericType
-                            && @interface.GetGenericTypeDefinition().Name == "IValidatingWebhook`1")
+                            .Where(@interface => @interface.IsConstructedGenericType && @interface.GetGenericTypeDefinition().Name == "IValidatingWebhook`1")
                             .Select(@interface => @interface.GenericTypeArguments[0]);
 
                         foreach (var entityType in validatingWebhookEntityTypes)

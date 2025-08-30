@@ -43,18 +43,18 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
+                <PackageReference Include="Neon.K8s" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" />
                 <PackageReference Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s\Neon.K8s.csproj" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Xunit\Neon.Xunit.csproj" />
             </ItemGroup>
         </Otherwise>
     </Choose>
-    
-    <ItemGroup>
-      <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Core\Neon.Kubernetes.Core.csproj" />
-    </ItemGroup>
 
 </Project>

@@ -18,7 +18,7 @@
 using k8s;
 using k8s.Models;
 
-namespace Neon.Operator.Cache
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a CRD cache.

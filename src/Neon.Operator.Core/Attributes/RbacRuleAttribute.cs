@@ -22,9 +22,7 @@ using System.Reflection;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Rbac;
-
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Used to exclude a component from assembly scanning when building the operator.

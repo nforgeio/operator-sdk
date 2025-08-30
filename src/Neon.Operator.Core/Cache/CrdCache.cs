@@ -32,7 +32,7 @@ using Neon.Diagnostics;
 using OpenTelemetry.Resources;
 using YamlDotNet.Core;
 
-namespace Neon.Operator.Cache
+namespace Neon.Operator
 {
     /// <summary>
     /// Used to cache CRDs for improved performance.
@@ -102,14 +102,24 @@ namespace Neon.Operator.Cache
         {
             Covenant.Requires<ArgumentNullException>(metadata != null, nameof(metadata));
 
-            return cache.GetValueOrDefault(CreateKey(metadata));
+            if (!cache.TryGetValue(CreateKey(metadata), out var resource))
+            {
+                resource = default;
+            }
+
+            return resource;
         }
 
         /// <inheritdoc/>
         public V1APIResource Get<TResource>()
             where TResource : IKubernetesObject<V1ObjectMeta>
         {
-            return cache.GetValueOrDefault(CreateKey(typeof(TResource).GetKubernetesTypeMetadata()));
+            if (!cache.TryGetValue(CreateKey(typeof(TResource).GetKubernetesTypeMetadata()), out var resource))
+            {
+                resource = default;
+            }
+
+            return resource;
         }
 
         /// <inheritdoc/>
@@ -117,7 +127,7 @@ namespace Neon.Operator.Cache
         {
             Covenant.Requires<ArgumentNullException>(resource != null, nameof(resource));
 
-            cache.Remove(CreateKey(group, version, resource.Name), out _);
+            cache.TryRemove(CreateKey(group, version, resource.Name), out _);
         }
 
         /// <inheritdoc/>

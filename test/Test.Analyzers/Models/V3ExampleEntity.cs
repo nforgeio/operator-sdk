@@ -6,9 +6,9 @@ using System.ComponentModel.DataAnnotations;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
+using Neon.Operator;
 
-using RangeAttribute = Neon.Operator.Attributes.RangeAttribute;
+using RangeAttribute = Neon.Operator.RangeAttribute;
 
 namespace Test_Analyzers
 {

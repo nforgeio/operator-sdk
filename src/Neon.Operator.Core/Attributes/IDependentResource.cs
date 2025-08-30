@@ -19,7 +19,7 @@ using System;
 
 using k8s.Models;
 
-namespace Neon.Operator.Attributes
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a dependent resource.

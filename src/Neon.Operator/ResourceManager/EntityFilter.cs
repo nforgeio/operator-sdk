@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <inheritdoc/>
     public class EntityFilter<TController, TEntity> : IEntityFilter<TController, TEntity> 

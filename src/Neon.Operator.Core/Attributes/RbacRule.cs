@@ -22,11 +22,9 @@ using System.Reflection;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
-
 using Newtonsoft.Json;
 
-namespace Neon.Operator.Rbac
+namespace Neon.Operator
 {
     /// <summary>
     /// Models an RBAC rule.

@@ -31,12 +31,11 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Diagnostics;
 using Neon.K8s;
-using Neon.Operator.EventQueue;
 using Neon.Tasks;
 
 using Prometheus;
 
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Implements operator event queues.
@@ -330,7 +329,7 @@ namespace Neon.Operator.ResourceManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task EnqueueAsync(
             WatchEvent<TEntity> @event,
-            WatchEventType?     watchEventType    = null,
+            k8s.WatchEventType? watchEventType    = null,
             CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;
@@ -368,7 +367,7 @@ namespace Neon.Operator.ResourceManager
 
                 switch (@event.ModifiedEventType)
                 {
-                    case Controllers.ModifiedEventType.Finalizing:
+                    case ModifiedEventType.Finalizing:
 
                         logger?.LogDebugEx(() => $"Writing [{@event.Type}] [{resource.Kind}/{resource.Name()}] to finalizer channel.");
 
@@ -407,7 +406,7 @@ namespace Neon.Operator.ResourceManager
         public async Task RequeueAsync(
             WatchEvent<TEntity> @event,
             TimeSpan?           delay             = null, 
-            WatchEventType?     watchEventType    = null,
+            k8s.WatchEventType? watchEventType    = null,
             CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;
@@ -471,7 +470,7 @@ namespace Neon.Operator.ResourceManager
         private async Task EnqueueAfterSleepAsync(
             WatchEvent<TEntity> @event,
             TimeSpan            delay,
-            WatchEventType?     watchEventType    = null,
+            k8s.WatchEventType? watchEventType    = null,
             CancellationToken   cancellationToken = default)
         {
             await SyncContext.Clear;

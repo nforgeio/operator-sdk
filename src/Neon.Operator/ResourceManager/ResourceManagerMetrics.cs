@@ -21,11 +21,9 @@ using System.Diagnostics.Contracts;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Controllers;
-
 using Prometheus;
 
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Specifies metrics for a resource manager.  See the <see cref="ResourceManager{TResource, TController}"/>.

@@ -9,8 +9,8 @@ using Microsoft.CodeAnalysis;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Operator;
 using Neon.Operator.Analyzers;
-using Neon.Operator.Attributes;
 using Neon.Roslyn.Xunit;
 using Neon.Xunit;
 

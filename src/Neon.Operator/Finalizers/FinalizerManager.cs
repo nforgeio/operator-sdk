@@ -32,13 +32,11 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
-using Neon.Operator.Attributes;
-using Neon.Operator.Builder;
 using Neon.Tasks;
 
 using Prometheus;
 
-namespace Neon.Operator.Finalizers
+namespace Neon.Operator
 {
     /// <summary>
     /// Implements a finalizer manager for an entity type.

@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Represents an Admission webhook.

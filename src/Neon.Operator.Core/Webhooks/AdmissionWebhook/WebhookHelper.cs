@@ -23,9 +23,7 @@ using System.Text;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Webhook helper methods.

@@ -21,9 +21,6 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.ResourceManager;
-
 using Prometheus;
 
 namespace Neon.Operator

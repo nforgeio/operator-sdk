@@ -3,8 +3,7 @@ using System.Threading.Tasks;
 
 using k8s.Models;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.Webhooks;
+using Neon.Operator;
 
 namespace TestOperator
 {

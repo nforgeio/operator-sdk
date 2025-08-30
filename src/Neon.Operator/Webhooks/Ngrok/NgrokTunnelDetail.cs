@@ -17,7 +17,7 @@
 
 using Newtonsoft.Json;
 
-namespace Neon.Operator.Webhooks.Ngrok
+namespace Neon.Operator
 {
     /// <summary>
     /// Ngrok tunnel details.

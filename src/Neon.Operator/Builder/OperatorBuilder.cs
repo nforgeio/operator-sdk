@@ -36,19 +36,11 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.K8s;
-using Neon.Operator.Attributes;
-using Neon.Operator.Cache;
-using Neon.Operator.Controllers;
-using Neon.Operator.Entities;
-using Neon.Operator.EventQueue;
-using Neon.Operator.Finalizers;
-using Neon.Operator.ResourceManager;
-using Neon.Operator.Webhooks;
-using Neon.Operator.Webhooks.Ngrok;
+using Neon.Operator;
 
 using Prometheus;
 
-namespace Neon.Operator.Builder
+namespace Neon.Operator
 {
     /// <summary>
     /// <para>

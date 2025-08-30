@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Neon.Operator.Webhooks
+namespace Neon.Operator
 {
     /// <summary>
     /// Represents admission controller operations.

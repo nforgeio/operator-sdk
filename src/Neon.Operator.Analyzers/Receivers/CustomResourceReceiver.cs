@@ -23,7 +23,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using k8s.Models;
-using Neon.Operator.Attributes;
 
 namespace Neon.Operator.Analyzers.Receivers
 {

@@ -26,8 +26,7 @@ using k8s;
 using k8s.Models;
 
 using Neon.K8s;
-using Neon.K8s.Core;
-using Neon.Operator.Util;
+using Neon.Operator;
 using Neon.Operator.Xunit;
 using Neon.Xunit;
 
@@ -43,6 +42,7 @@ namespace Test.Neon.Operator
         public TestOperator(OperatorFixture fixture)
         {
             this.fixture = fixture;
+
             fixture.Operator.AddController<TestResourceController>();
             fixture.Operator.AddController<TestDatabaseController>();
             fixture.RegisterType<V1TestChildResource>();
@@ -164,7 +164,7 @@ namespace Test.Neon.Operator
 
             fixture.AddResource<V1TestDatabase>(resource);
 
-            resource = KubernetesHelper.JsonClone(resource);
+            resource = KubernetesJsonHelper.JsonClone(resource);
 
             resource.Status ??= new TestDatabaseStatus();
             resource.Status.Conditions ??= new List<V1Condition>();
@@ -215,7 +215,7 @@ namespace Test.Neon.Operator
 
             fixture.AddResource<V1TestDatabase>(resource);
 
-            resource = KubernetesHelper.JsonClone(resource);
+            resource = KubernetesJsonHelper.JsonClone(resource);
 
             var patch = OperatorHelper.CreatePatch<V1TestDatabase>();
 
@@ -272,7 +272,7 @@ namespace Test.Neon.Operator
 
             fixture.AddResource<V1TestDatabase>(resource);
 
-            resource = KubernetesHelper.JsonClone(resource);
+            resource = KubernetesJsonHelper.JsonClone(resource);
 
             var patch = OperatorHelper.CreatePatch<V1TestDatabase>();
 
@@ -329,7 +329,7 @@ namespace Test.Neon.Operator
 
             fixture.AddResource(co);
 
-            co = KubernetesHelper.JsonClone(co);
+            co = KubernetesJsonHelper.JsonClone(co);
             co.Status.Status = "bar";
 
             var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
@@ -357,7 +357,7 @@ namespace Test.Neon.Operator
 
             fixture.AddResource(co);
 
-            co               = KubernetesHelper.JsonClone(co);
+            co               = KubernetesJsonHelper.JsonClone(co);
             co.Status        = new TestDatabaseStatus();
             co.Status.Status = "bar";
 

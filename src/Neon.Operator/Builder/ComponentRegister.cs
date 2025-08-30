@@ -21,11 +21,9 @@ using System.Collections.Generic;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Controllers;
-using Neon.Operator.Finalizers;
-using Neon.Operator.Webhooks;
+using Neon.Operator;
 
-namespace Neon.Operator.Builder
+namespace Neon.Operator
 {
     /// <summary>
     /// $todo(marcusbooyah): documentation

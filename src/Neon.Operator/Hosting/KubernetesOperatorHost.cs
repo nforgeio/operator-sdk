@@ -36,9 +36,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
-using Neon.K8s.Core;
 using Neon.K8s.Resources.CertManager;
-using Neon.Operator.Rbac;
 using Neon.Tasks;
 
 namespace Neon.Operator
@@ -108,7 +106,7 @@ namespace Neon.Operator
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = KubeHelper.GetKubernetesClient(loggerFactory: loggerFactory);
+                    k8s = KubernetesHelper.GetKubernetesClient(loggerFactory: loggerFactory);
 
                     ConfigureRbacAsync().RunSynchronously();
                 }
@@ -148,7 +146,7 @@ namespace Neon.Operator
 
                 if (NeonHelper.IsDevWorkstation || Debugger.IsAttached)
                 {
-                    k8s = KubeHelper.GetKubernetesClient(loggerFactory: loggerFactory);
+                    k8s = KubernetesHelper.GetKubernetesClient(loggerFactory: loggerFactory);
 
                     await ConfigureRbacAsync();
                 }
@@ -227,7 +225,7 @@ namespace Neon.Operator
                         }
                     };
 
-                    logger?.LogDebugEx(() => KubernetesHelper.JsonSerialize(certificate));
+                    logger?.LogDebugEx(() => KubernetesJsonHelper.JsonSerialize(certificate));
 
                     await k8s.CustomObjects.UpsertNamespacedCustomObjectAsync(
                         body:               certificate,

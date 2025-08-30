@@ -6,16 +6,14 @@ using k8s.Models;
 
 using Microsoft.Extensions.Logging;
 
-using Neon.Operator.Attributes;
-using Neon.Operator.Controllers;
-using Neon.Operator.Finalizers;
+using Neon.Operator;
 using Neon.Tasks;
 
 namespace TestOperator
 {
-    [RbacRule<V1ExampleEntity>(Verbs = Neon.Operator.Rbac.RbacVerb.All)]
-    [RbacRule<V2ExampleEntity>(Verbs = Neon.Operator.Rbac.RbacVerb.Watch)]
-    [RbacRule(ApiGroup = "foo.testaroo.io", Resource = "foos", Verbs = Neon.Operator.Rbac.RbacVerb.Watch, SubResources = "status,foo", ResourceNames = "bar")]
+    [RbacRule<V1ExampleEntity>(Verbs = Neon.Operator.RbacVerb.All)]
+    [RbacRule<V2ExampleEntity>(Verbs = Neon.Operator.RbacVerb.Watch)]
+    [RbacRule(ApiGroup = "foo.testaroo.io", Resource = "foos", Verbs = Neon.Operator.RbacVerb.Watch, SubResources = "status,foo", ResourceNames = "bar")]
     [ResourceController()]
     public class ExampleController : ResourceControllerBase<V1ExampleEntity>
     {

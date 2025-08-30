@@ -20,9 +20,9 @@ using System.Collections.Generic;
 using k8s;
 using k8s.Models;
 
-using Neon.Operator.Controllers;
+using Neon.K8s;
 
-namespace Neon.Operator.Cache
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes a resource cache.

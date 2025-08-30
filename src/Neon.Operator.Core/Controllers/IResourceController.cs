@@ -19,9 +19,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Operator.Attributes;
-
-namespace Neon.Operator.Controllers
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes the interface used to implement Neon based operator controllers.

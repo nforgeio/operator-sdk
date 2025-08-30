@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.Mvc;
 
 using Neon.Common;
 using Neon.K8s;
-using Neon.K8s.Core;
 using Neon.Tasks;
 
 namespace Neon.Operator.Xunit
@@ -283,7 +282,7 @@ namespace Neon.Operator.Xunit
                 status.Status = "deleted";
                 status.Code = 200;
 
-                return Content(KubernetesHelper.JsonSerialize(status), "application/json");
+                return Content(KubernetesJsonHelper.JsonSerialize(status), "application/json");
             }
 
             throw new TypeNotRegisteredException(Group, Version, Plural);

@@ -17,7 +17,7 @@
 
 using System;
 
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Describes an entity filter for a given controller type.

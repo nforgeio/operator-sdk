@@ -15,18 +15,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Reflection;
 
-using Neon.Operator.Attributes;
+using Neon.Operator;
 using Neon.Operator.OperatorLifecycleManager;
 
 using TestOperator;
 
-[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
+[assembly: AssemblyProduct("OperatorSDK")]
+[assembly: AssemblyCompany("NEONFORGE LLC")]
+[assembly: AssemblyCopyright("Copyright © 2005-2025 by NEONFORGE LLC.  All rights reserved.")]
+
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug")]
+#else
+[assembly: AssemblyConfiguration("Release")]
+#endif
 
 [assembly: Name("test-operator")]
 [assembly: DisplayName("testaroo operator")]
 [assembly: OwnedEntity<V1ExampleEntity>(Description = "This is the description", DisplayName = "Example Operator")]
-[assembly: Description(ShortDescription = "this is the short description", FullDescription = Constants.FullDescription)]
+[assembly: Description(ShortDescription = "this is the short description", FullDescription = TestOperator.Constants.FullDescription)]
 [assembly: Provider(Name = "Example", Url = "www.example.com")]
 [assembly: Maintainer(Name = "Some Corp", Email = "foo@bar.com", GitHub = "foobar", Reviewer = true)]
 [assembly: Version("1.2.3")]

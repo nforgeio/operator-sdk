@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Neon.Operator.Rbac
+namespace Neon.Operator
 {
     /// <summary>
     /// Enumerates the Kubernetes RBAC verbs.

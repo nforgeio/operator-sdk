@@ -39,20 +39,11 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.K8s;
-using Neon.Operator.Cache;
-using Neon.Operator.Controllers;
-using Neon.Operator.Core.Exceptions;
-using Neon.Operator.Entities;
-using Neon.Operator.EventQueue;
-using Neon.Operator.Finalizers;
-using Neon.Operator.Util;
 using Neon.Tasks;
 
 using Prometheus;
 
-using WatchEventType = Neon.Operator.Controllers.WatchEventType;
-
-namespace Neon.Operator.ResourceManager
+namespace Neon.Operator
 {
     /// <summary>
     /// Used by custom Kubernetes operators to manage a collection of custom resources.
