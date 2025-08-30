@@ -60,10 +60,10 @@
     </Choose>
 
     <ItemGroup>
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator\Neon.Operator.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator\Neon.Operator.csproj" />
     </ItemGroup>
 
 </Project>

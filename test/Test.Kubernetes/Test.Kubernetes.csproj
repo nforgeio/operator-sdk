@@ -52,8 +52,8 @@
     </Choose>
 
     <ItemGroup>
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj" />
     </ItemGroup>
 
 </Project>

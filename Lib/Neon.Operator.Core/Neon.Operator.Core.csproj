@@ -55,7 +55,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\neonSDK\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" />
     </ItemGroup>
     
 </Project>

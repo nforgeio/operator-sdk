@@ -17,7 +17,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+      <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.Core\Neon.Operator.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

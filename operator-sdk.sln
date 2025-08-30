@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F167FFE0-5642-4C1F-97CC-8747134CB6F4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{F167FFE0-5642-4C1F-97CC-8747134CB6F4}"
 	ProjectSection(SolutionItems) = preProject
-		src\nuget-icon.png = src\nuget-icon.png
+		Lib\nuget-icon.png = Lib\nuget-icon.png
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0747FE8E-1561-42DC-8845-8D9D038D75C8}"
@@ -25,23 +25,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{74209E85-B0D5-4D77-911F-CC2779695961}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{74209E85-B0D5-4D77-911F-CC2779695961}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-operator", "test\test-operator\test-operator.csproj", "{EFA79EF9-859C-44BE-8358-0CEA35019327}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-operator", "Test\test-operator\test-operator.csproj", "{EFA79EF9-859C-44BE-8358-0CEA35019327}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator", "src\Neon.Operator\Neon.Operator.csproj", "{D19C870C-7B86-487E-B4C8-8CC5AC4E5B4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator", "Lib\Neon.Operator\Neon.Operator.csproj", "{D19C870C-7B86-487E-B4C8-8CC5AC4E5B4B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Analyzers", "src\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj", "{8EE10F3D-38AA-471A-B82C-6A8C8B6377EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Analyzers", "Lib\Neon.Operator.Analyzers\Neon.Operator.Analyzers.csproj", "{8EE10F3D-38AA-471A-B82C-6A8C8B6377EE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Core", "src\Neon.Operator.Core\Neon.Operator.Core.csproj", "{F56982BB-3DA6-4944-B43F-0F09C578EBE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Core", "Lib\Neon.Operator.Core\Neon.Operator.Core.csproj", "{F56982BB-3DA6-4944-B43F-0F09C578EBE9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Templates", "src\Neon.Operator.Templates\Neon.Operator.Templates.csproj", "{81D429C7-3ED1-484A-9B9A-D0F72B6B65F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Templates", "Lib\Neon.Operator.Templates\Neon.Operator.Templates.csproj", "{81D429C7-3ED1-484A-9B9A-D0F72B6B65F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Xunit", "src\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj", "{EE37F498-B064-4AF0-983C-7FD33E356FFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.Xunit", "Lib\Neon.Operator.Xunit\Neon.Operator.Xunit.csproj", "{EE37F498-B064-4AF0-983C-7FD33E356FFB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Analyzers", "test\Test.Analyzers\Test.Analyzers.csproj", "{A9E56C5B-3186-4697-9FBF-B7CD54774A9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Analyzers", "Test\Test.Analyzers\Test.Analyzers.csproj", "{A9E56C5B-3186-4697-9FBF-B7CD54774A9C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Operator", "test\Test.Neon.Operator\Test.Neon.Operator.csproj", "{A8A9248F-3CED-4932-851A-F4CF04769BE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Operator", "Test\Test.Neon.Operator\Test.Neon.Operator.csproj", "{A8A9248F-3CED-4932-851A-F4CF04769BE2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{E25EE7EA-EEC3-4D01-A9ED-20B036E0E81A}"
 	ProjectSection(SolutionItems) = preProject
@@ -56,13 +56,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{E25EE7
 		nuget.config = nuget.config
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kubernetes.Resources", "src\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj", "{037EEE6A-CC11-4D42-954F-2561EA726654}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kubernetes.Resources", "Lib\Neon.Kubernetes.Resources\Neon.Kubernetes.Resources.csproj", "{037EEE6A-CC11-4D42-954F-2561EA726654}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.OperatorLifecycleManager", "src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj", "{5AD8DE6F-2398-4BAB-8181-5EA6E409F545}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Operator.OperatorLifecycleManager", "Lib\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj", "{5AD8DE6F-2398-4BAB-8181-5EA6E409F545}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Kubernetes", "test\Test.Kubernetes\Test.Kubernetes.csproj", "{06381AE0-DA10-4F55-87AF-31EADBD93C4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Kubernetes", "Test\Test.Kubernetes\Test.Kubernetes.csproj", "{06381AE0-DA10-4F55-87AF-31EADBD93C4C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Kubernetes.Core", "test\Test.Kubernetes.Core\Test.Kubernetes.Core.csproj", "{7048F142-D910-4EF1-8AFC-02C500B4851F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Kubernetes.Core", "Test\Test.Kubernetes.Core\Test.Kubernetes.Core.csproj", "{7048F142-D910-4EF1-8AFC-02C500B4851F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

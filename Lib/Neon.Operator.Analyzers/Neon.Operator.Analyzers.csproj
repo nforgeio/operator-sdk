@@ -68,8 +68,8 @@
     </Choose>
 
     <ItemGroup>
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-        <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.Core\Neon.Operator.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+        <ProjectReference Include="$(NO_ROOT)\Lib\Neon.Operator.OperatorLifecycleManager\Neon.Operator.OperatorLifecycleManager.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     </ItemGroup>
 
     <PropertyGroup>
