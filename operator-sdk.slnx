@@ -1,0 +1,48 @@
+<Solution>
+  <Folder Name="/GitHub/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="buildenv.cmd" />
+    <File Path="buildenv.ps1" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="buildenv.cmd" />
+    <File Path="buildenv.ps1" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+    <File Path="publish-dev.ps1" />
+    <File Path="publish-public.ps1" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/nuget-icon.png" />
+    <Project Path="src/Neon.Kubernetes.Core/Neon.Kubernetes.Core.csproj" />
+    <Project Path="src/Neon.Kubernetes.Resources/Neon.Kubernetes.Resources.csproj" />
+    <Project Path="src/Neon.Kubernetes/Neon.Kubernetes.csproj" />
+    <Project Path="src/Neon.Operator.Analyzers/Neon.Operator.Analyzers.csproj" />
+    <Project Path="src/Neon.Operator.Core/Neon.Operator.Core.csproj" />
+    <Project Path="src/Neon.Operator.OperatorLifecycleManager/Neon.Operator.OperatorLifecycleManager.csproj" />
+    <Project Path="src/Neon.Operator.Templates/Neon.Operator.Templates.csproj" />
+    <Project Path="src/Neon.Operator.Xunit/Neon.Operator.Xunit.csproj" />
+    <Project Path="src/Neon.Operator/Neon.Operator.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/test-operator/test-operator.csproj" />
+    <Project Path="test/Test.Analyzers/Test.Analyzers.csproj" />
+    <Project Path="test/Test.Kubernetes.Core/Test.Kubernetes.Core.csproj" />
+    <Project Path="test/Test.Kubernetes/Test.Kubernetes.csproj" />
+    <Project Path="test/Test.Neon.Operator/Test.Neon.Operator.csproj" />
+    <Project Path="test/Test.OLM/Test.OLM.csproj" />
+  </Folder>
+</Solution>

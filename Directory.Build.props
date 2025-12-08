@@ -36,19 +36,12 @@
 		enable sourcelink to reference source code from our GitHub repos.
 		-->
 
-        <ContinuousIntegrationBuild  Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
+        <ContinuousIntegrationBuild Condition="'$(NEON_PUBLIC_SOURCELINK)' == 'true'">true</ContinuousIntegrationBuild>
 
         <!-- Publish defaults -->
 
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
-    </PropertyGroup>
-
-    <PropertyGroup Label="Dotnet versions">
-        <DotNet6Version>6.0.*</DotNet6Version>
-        <DotNet7Version>7.0.*</DotNet7Version>
-        <DotNet8Version>8.0.*</DotNet8Version>
-        <DotNet9Version>9.0.0-*</DotNet9Version>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(SolutionName)' == 'operator-sdk'">
@@ -131,15 +124,5 @@
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     </PropertyGroup>
-
-    <!-- Build breaks for some reason without this, since the .NET 8.0 upgrade -->
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-    </ItemGroup>
 
 </Project>

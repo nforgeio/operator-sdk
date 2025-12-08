@@ -22,8 +22,8 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
-                <PackageReference Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common" />
+                <PackageReference Include="Neon.JsonConverters" />
             </ItemGroup>
         </When>
         <Otherwise>
@@ -35,10 +35,10 @@
     </Choose>
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
-        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="YamlDotNet" Version="15.1.2" />
+        <PackageReference Include="KubernetesClient.Models" />
+        <PackageReference Include="Macross.Json.Extensions" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 
     <ItemGroup>

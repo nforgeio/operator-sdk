@@ -1,0 +1,64 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+        <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+        <NoWarn>NU1507;$(NoWarn)</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <NeonSdkVersion>4.0.19-preview.2</NeonSdkVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.*,)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.*,10.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.*,9.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net7.0'">[7.*,8.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(TargetFramework)' == 'net6.0'">[6.*,7.0)</DotNetVersion>
+        <DotNetVersion Condition="'$(DotNetVersion)' == ''">[10.*,)</DotNetVersion>
+        <EfCoreVersion>[8.*,9.0)</EfCoreVersion>
+        <NpgsqlVersion>[8.*,9.0)</NpgsqlVersion>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageVersion Include="AsyncKeyedLock" Version="7.0.0" />
+        <PackageVersion Include="CompareNETObjects" Version="4.83.0" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+        <PackageVersion Include="FluentAssertions" Version="7.0.0" />
+        <PackageVersion Include="FluentAssertions.Analyzers" Version="0.34.1" />
+        <PackageVersion Include="Fractions" Version="8.0.3" />
+        <PackageVersion Include="KubernetesClient" Version="12.0.16" />
+        <PackageVersion Include="KubernetesClient.Basic" Version="12.0.16" />
+        <PackageVersion Include="KubernetesClient.Models" Version="12.0.16" />
+        <PackageVersion Include="LiquidTestReports.Markdown" Version="1.1.1-beta" />
+        <PackageVersion Include="Macross.Json.Extensions" Version="3.0.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.CodeAnalysis" Version="4.10.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetVersion)" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageVersion Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
+        <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.12.0" />
+        <PackageVersion Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.JsonConverters" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Roslyn" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Roslyn.Xunit" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="NgrokSharp" Version="1.0.13" />
+        <PackageVersion Include="NJsonSchema" Version="10.9.0" />
+        <PackageVersion Include="prometheus-net" Version="8.2.1" />
+        <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
+        <PackageVersion Include="prometheus-net.AspNetCore.HealthChecks" Version="8.2.1" />
+        <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="$(DotNetVersion)" />
+        <PackageVersion Include="System.Text.Encodings.Web" Version="$(DotNetVersion)" />
+        <PackageVersion Include="System.Text.Json" Version="$(DotNetVersion)" />
+        <PackageVersion Include="SystemTextJson.JsonDiffPatch" Version="2.0.0" />
+        <PackageVersion Include="xunit" Version="2.9.0" />
+        <PackageVersion Include="xunit.extensibility.core" Version="2.9.0" />
+        <PackageVersion Include="xunit.extensibility.execution" Version="2.9.0" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageVersion Include="YamlDotNet" Version="15.1.2" />
+    </ItemGroup>
+</Project>

@@ -17,14 +17,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" />
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
-        <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-        <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
-        <PackageReference Include="NJsonSchema" Version="10.9.0" />
-        <PackageReference Include="prometheus-net" Version="8.2.1" PrivateAssets="all" />
-        <PackageReference Include="SystemTextJson.JsonDiffPatch" Version="2.0.0" />
+        <PackageReference Include="KubernetesClient.Basic" />
+        <PackageReference Include="KubernetesClient.Models" />
+        <PackageReference Include="Macross.Json.Extensions" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
+        <PackageReference Include="Microsoft.Rest.ClientRuntime" />
+        <PackageReference Include="NJsonSchema" />
+        <PackageReference Include="prometheus-net" PrivateAssets="all" />
+        <PackageReference Include="SystemTextJson.JsonDiffPatch" />
     </ItemGroup>
 
     <!-- NEONFORGE package or project references -->
@@ -32,7 +32,7 @@
     <Choose>
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
-                <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" />
+                <PackageReference Include="Neon.Common" />
             </ItemGroup>
         </When>
         <Otherwise>

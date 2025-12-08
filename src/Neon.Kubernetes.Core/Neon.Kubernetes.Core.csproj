@@ -17,9 +17,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" />
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
-        <PackageReference Include="YamlDotNet" Version="15.1.2" />
+        <PackageReference Include="KubernetesClient.Basic" />
+        <PackageReference Include="KubernetesClient.Models" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 
     <ItemGroup>
