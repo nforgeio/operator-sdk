@@ -36,7 +36,6 @@
 
     <ItemGroup>
         <PackageReference Include="KubernetesClient.Models" />
-        <PackageReference Include="Macross.Json.Extensions" />
         <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="YamlDotNet" />
     </ItemGroup>

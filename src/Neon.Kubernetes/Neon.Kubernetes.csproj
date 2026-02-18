@@ -19,7 +19,6 @@
     <ItemGroup>
         <PackageReference Include="AsyncKeyedLock" />
         <PackageReference Include="KubernetesClient" />
-        <PackageReference Include="Macross.Json.Extensions" />
     </ItemGroup>
 
     <!-- NEONFORGE package or project references -->
@@ -45,6 +44,7 @@
 
     <ItemGroup>
         <ProjectReference Include="$(NO_ROOT)\src\Neon.Operator.Core\Neon.Operator.Core.csproj" />
+        <ProjectReference Include="..\..\..\neonSDK\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" />
     </ItemGroup>
 
 </Project>

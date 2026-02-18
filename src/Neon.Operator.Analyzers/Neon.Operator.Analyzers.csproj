@@ -24,7 +24,6 @@
 
     <ItemGroup>
         <PackageReference Include="Fractions" GeneratePathProperty="true" />
-        <PackageReference Include="Macross.Json.Extensions" GeneratePathProperty="true" />
         <PackageReference Include="Microsoft.CodeAnalysis" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Newtonsoft.Json" GeneratePathProperty="true" PrivateAssets="all" />
@@ -53,12 +52,14 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" GeneratePathProperty="true" PrivateAssets="all" />
+                <PackageReference Include="Neon.JsonConverters" GeneratePathProperty="true" PrivateAssets="all" />
                 <PackageReference Include="Neon.Roslyn" GeneratePathProperty="true" PrivateAssets="all" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.JsonConverters\Neon.JsonConverters.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
             </ItemGroup>
         </Otherwise>
@@ -79,7 +80,6 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PKGFractions)\lib\netstandard2.0\Fractions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGKubernetesClient_Basic)\lib\netstandard2.0\KubernetesClient.Basic.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGKubernetesClient_Models)\lib\netstandard2.0\KubernetesClient.Models.dll" IncludeRuntimeDependency="false" />
-            <TargetPathWithTargetPlatformMoniker Include="$(PKGMacross_Json_Extensions)\lib\netstandard2.0\Macross.Json.Extensions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Rest_ClientRuntime)\lib\netstandard2.0\Microsoft.Rest.ClientRuntime.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" IncludeRuntimeDependency="false" />
@@ -96,7 +96,6 @@
             <None Include="$(PKGFractions)\lib\netstandard2.0\Fractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGKubernetesClient_Basic)\lib\netstandard2.0\KubernetesClient.Basic.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGKubernetesClient_Models)\lib\netstandard2.0\KubernetesClient.Models.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-            <None Include="$(PKGMacross_Json_Extensions)\lib\netstandard2.0\Macross.Json.Extensions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGMicrosoft_Rest_ClientRuntime)\lib\netstandard2.0\Microsoft.Rest.ClientRuntime.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
             <None Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
