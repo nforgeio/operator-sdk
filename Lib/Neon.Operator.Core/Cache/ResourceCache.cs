@@ -27,8 +27,8 @@ using KellermanSoftware.CompareNetObjects;
 
 using Microsoft.Extensions.Logging;
 
-using Neon.Diagnostics;
 using Neon.K8s;
+using Neon.Diagnostics;
 
 namespace Neon.Operator
 {

@@ -20,8 +20,6 @@ using System.Collections.Generic;
 using k8s;
 using k8s.Models;
 
-using Neon.K8s;
-
 namespace Neon.Operator
 {
     /// <summary>

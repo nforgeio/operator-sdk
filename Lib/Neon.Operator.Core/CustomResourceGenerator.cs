@@ -25,12 +25,13 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
+using Microsoft.Rest.Serialization;
+
 using k8s;
 using k8s.Models;
 
-using Microsoft.Rest.Serialization;
-
 using Neon.Common;
+using Neon.K8s;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -142,7 +143,7 @@ namespace Neon.Operator
             var schema           = GenerateJsonSchema(resourceType);
             var pluralNameGroup  = string.IsNullOrEmpty(entity.Group) ? entity.PluralName : $"{entity.PluralName}.{entity.Group}";
 
-            var implementsStatus = resourceType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStatus<> ));
+            var implementsStatus = resourceType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStatus<>));
 
             var crd = new V1CustomResourceDefinition(
                 apiVersion: $"{V1CustomResourceDefinition.KubeGroup}/{V1CustomResourceDefinition.KubeApiVersion}",

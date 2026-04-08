@@ -22,9 +22,9 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using k8s.Models;
+using Neon.K8s.Models;
 
-namespace Neon.Operator.Analyzers.Receivers
+namespace Neon.Operator.Analyzers
 {
     internal class CustomResourceReceiver : ISyntaxReceiver
     {

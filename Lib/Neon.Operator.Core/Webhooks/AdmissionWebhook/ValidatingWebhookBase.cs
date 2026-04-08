@@ -23,12 +23,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Rest;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -75,6 +75,7 @@ namespace Neon.Operator
             }
 
             var webhookConfig = new V1ValidatingWebhookConfiguration().Initialize();
+
             webhookConfig.Metadata.Name = hook.Name;
 
             if (!useTunnel && operatorSettings.certManagerEnabled)

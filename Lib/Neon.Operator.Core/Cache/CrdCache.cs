@@ -22,12 +22,13 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Text;
 
+using Microsoft.Extensions.Logging;
+
 using k8s;
 using k8s.Models;
 
-using Microsoft.Extensions.Logging;
-
 using Neon.Diagnostics;
+using Neon.K8s;
 
 using OpenTelemetry.Resources;
 using YamlDotNet.Core;

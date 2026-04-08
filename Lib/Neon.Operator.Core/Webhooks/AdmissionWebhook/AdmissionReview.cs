@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using k8s;
+using k8s.Models;
 
 namespace Neon.Operator
 {

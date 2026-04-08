@@ -24,10 +24,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using Neon.Operator.Analyzers.Generators;
+using Neon.Operator.Analyzers;
 using Neon.Roslyn;
 
-using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
+using MetadataLoadContext      = Neon.Roslyn.MetadataLoadContext;
 using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
 namespace Neon.Operator.Analyzers

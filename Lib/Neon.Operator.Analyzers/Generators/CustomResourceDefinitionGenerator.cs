@@ -26,14 +26,13 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 
-using k8s;
-using k8s.Models;
-
 using Microsoft.CodeAnalysis;
 
 using Neon.Common;
+using Neon.K8s;
+using Neon.K8s.Models;
 using Neon.Operator;
-using Neon.Operator.Analyzers.Receivers;
+using Neon.Operator.Analyzers;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn;
 
@@ -42,8 +41,10 @@ using XmlDocumentationProvider = Neon.Roslyn.XmlDocumentationProvider;
 
 namespace Neon.Operator.Analyzers
 {
-    [Generator]
+    [Generator(LanguageNames.CSharp)]
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
     public class CustomResourceDefinitionGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
     {
         private static readonly string[]            IgnoredProperties = { "metadata", "apiversion", "kind" };
         private Dictionary<string, StringBuilder>   logs;
@@ -65,9 +66,9 @@ namespace Neon.Operator.Analyzers
             context.RegisterForSyntaxNotifications(() => new CustomResourceReceiver());
         }
 
-        public System.Reflection.Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        public Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
-            var assemblyName = new System.Reflection.AssemblyName(args.Name);
+            var assemblyName = new AssemblyName(args.Name);
             var assembly     = (Assembly)null;
 
             try

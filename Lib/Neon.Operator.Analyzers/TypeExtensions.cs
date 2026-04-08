@@ -21,9 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using k8s;
-using k8s.Models;
-
+using Neon.K8s.Models;
 using Neon.Roslyn;
 
 namespace Neon.Operator.Analyzers

@@ -27,15 +27,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using k8s;
-using k8s.Autorest;
 using k8s.Models;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Rest;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.K8s;
 
 namespace Neon.Operator
 {
@@ -178,8 +179,7 @@ namespace Neon.Operator
 
             return webhookConfig;
         }
-
-        
+     
         /// <inheritdoc/>
         public virtual async Task CreateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {

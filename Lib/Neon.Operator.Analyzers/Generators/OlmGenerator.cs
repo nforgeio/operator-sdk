@@ -24,25 +24,23 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-using k8s;
-using k8s.Models;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using Neon.Common;
-using Neon.K8s;
+using Neon.K8s.Models;
 using Neon.Operator;
-using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 
-namespace Neon.Operator.Analyzers.Generators
+namespace Neon.Operator.Analyzers
 {
-    [Generator]
+    [Generator(LanguageNames.CSharp)]
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
     public class OlmGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
     {
         internal static readonly DiagnosticDescriptor InstallModeDuplicateError =
             new DiagnosticDescriptor(

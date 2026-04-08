@@ -24,11 +24,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using k8s;
-using k8s.Models;
-
 using Microsoft.CodeAnalysis;
 
+using Neon.K8s.Models;
 using Neon.Operator;
 using Neon.Roslyn;
 
@@ -36,8 +34,10 @@ using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 
 namespace Neon.Operator.Analyzers
 {
-    [Generator]
+    [Generator(LanguageNames.CSharp)]
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
     public class RbacRuleGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
     {
         private Dictionary<string, StringBuilder> logs;
 

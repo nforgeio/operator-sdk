@@ -20,10 +20,10 @@ using System.Text.Json.JsonDiffPatch.Diffs.Formatters;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using k8s;
 using k8s.Models;
-
-using Microsoft.Extensions.Logging;
 
 namespace Neon.Operator
 {

@@ -24,22 +24,22 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 
-using k8s;
-using k8s.Models;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 using Neon.K8s;
+using Neon.K8s.Models;
 
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Neon.Operator.Analyzers
 {
-    [Generator]
+    [Generator(LanguageNames.CSharp)]
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
     public class CrdClassGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
     {
         public void Initialize(GeneratorInitializationContext context)
         {

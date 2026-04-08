@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using k8s;
 using k8s.Models;
 
 namespace Neon.Operator

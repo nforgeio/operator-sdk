@@ -25,10 +25,9 @@
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
         <PackageReference Include="Fractions" Version="8.3.2" GeneratePathProperty="true" />
-        <PackageReference Include="KubernetesClient.Basic" Version="12.0.16" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" GeneratePathProperty="true" PrivateAssets="all" />
+        <!--<PackageReference Include="KubernetesClient" Version="17.0.14" GeneratePathProperty="true" PrivateAssets="all" />-->
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" GeneratePathProperty="true" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.10.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.14.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetVersion)" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" GeneratePathProperty="true" />
@@ -54,14 +53,12 @@
         <When Condition="'$(NeonBuildUseNugets)' == 'true'">
             <ItemGroup>
                 <PackageReference Include="Neon.Common" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
-                <PackageReference Include="Neon.K8s.Core" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
                 <PackageReference Include="Neon.Roslyn" Version="$(NeonSdkPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
             </ItemGroup>
         </When>
         <Otherwise>
             <ItemGroup>
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Common\Neon.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-                <ProjectReference Include="$(NF_ROOT)\Lib\Neon.K8s.Core\Neon.K8s.Core.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
                 <ProjectReference Include="$(NF_ROOT)\Lib\Neon.Roslyn\Neon.Roslyn.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
             </ItemGroup>
         </Otherwise>

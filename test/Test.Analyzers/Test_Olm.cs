@@ -33,7 +33,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.K8s;
 using Neon.Operator;
-using Neon.Operator.Analyzers.Generators;
+using Neon.Operator.Analyzers;
 using Neon.Operator.OperatorLifecycleManager;
 using Neon.Roslyn.Xunit;
 using Neon.Xunit;

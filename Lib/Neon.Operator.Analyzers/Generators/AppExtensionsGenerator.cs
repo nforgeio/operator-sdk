@@ -27,15 +27,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-using Neon.Operator.Analyzers.Receivers;
 using Neon.Roslyn;
 
 using MetadataLoadContext = Neon.Roslyn.MetadataLoadContext;
 
 namespace Neon.Operator.Analyzers
 {
-    [Generator]
+    [Generator(LanguageNames.CSharp)]
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
     public class AppExtensionsGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
     {
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -52,7 +53,7 @@ namespace Neon.Operator.Analyzers
             {
                 var runtimeDependencies = Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll");
                 var targetAssembly      = runtimeDependencies
-                    .FirstOrDefault(ass => Path.GetFileNameWithoutExtension(ass).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
+                    .FirstOrDefault(assembly => Path.GetFileNameWithoutExtension(assembly).Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase));
 
                 if (!String.IsNullOrEmpty(targetAssembly))
                 {
@@ -61,7 +62,7 @@ namespace Neon.Operator.Analyzers
             }
             catch (Exception)
             {
-                // Initentially ignoring this.
+                // Intentionally ignoring this.
             }
 
             return assembly;
@@ -69,7 +70,7 @@ namespace Neon.Operator.Analyzers
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var doesAddOperator     = ((AppExtensionsReceiver)context.SyntaxReceiver)?.DoesAddOperator;
+            var doesAddOperator = ((AppExtensionsReceiver)context.SyntaxReceiver)?.DoesAddOperator;
 
             if (doesAddOperator == false)
             {

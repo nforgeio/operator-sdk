@@ -17,9 +17,8 @@
 
 using FluentAssertions;
 
-using k8s.Models;
-
 using Neon.K8s;
+using Neon.K8s.Models;
 using Neon.Xunit;
 
 namespace TestKubernetesCore
@@ -32,7 +31,7 @@ namespace TestKubernetesCore
         {
             var v1Status = new V1Status { Message = "test message", Status = "test status" };
 
-            var json = KubernetesJsonHelper.JsonSerialize(v1Status);
+            var json = KubernetesJson.Serialize(v1Status);
 
             json.Should().Be($@"""test message""");
         }
@@ -46,7 +45,7 @@ namespace TestKubernetesCore
                 Status = new V1NamespaceStatus() { Phase = "test termating" },
             };
 
-            var json = KubernetesJsonHelper.JsonSerialize(corev1Namespace);
+            var json = KubernetesJson.Serialize(corev1Namespace);
 
             json.Should().Be($@"{{""metadata"":{{""name"":""test name""}},""status"":{{""phase"":""test termating""}}}}");
         }

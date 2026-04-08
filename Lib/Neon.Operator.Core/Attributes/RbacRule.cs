@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-using k8s;
 using k8s.Models;
 
 using Newtonsoft.Json;

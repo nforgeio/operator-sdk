@@ -22,7 +22,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Neon.Operator.Analyzers.Receivers
+namespace Neon.Operator.Analyzers
 {
     internal class ServiceExtensionsReceiver : ISyntaxReceiver
     {

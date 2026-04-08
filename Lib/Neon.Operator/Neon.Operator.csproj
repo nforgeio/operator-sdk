@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net8.0; net9.0</TargetFrameworks>
@@ -18,8 +18,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="KubernetesClient" Version="12.0.16" />
-        <PackageReference Include="KubernetesClient.Models" Version="12.0.16" />
+        <PackageReference Include="KubernetesClient.Classic" Version="17.0.14" />
         <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="$(DotNetVersion)" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DotNetVersion)" />
         <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
