@@ -14,8 +14,8 @@
         <DotNetVersion Condition="'$(TargetFramework)' == 'net7.0'">[7.*,8.0)</DotNetVersion>
         <DotNetVersion Condition="'$(TargetFramework)' == 'net6.0'">[6.*,7.0)</DotNetVersion>
         <DotNetVersion Condition="'$(DotNetVersion)' == ''">[10.*,)</DotNetVersion>
-        <EfCoreVersion>[8.*,9.0)</EfCoreVersion>
-        <NpgsqlVersion>[8.*,9.0)</NpgsqlVersion>
+        <EfCoreVersion>[10.*,)</EfCoreVersion>
+        <NpgsqlVersion>[10.*,)</NpgsqlVersion>
     </PropertyGroup>
     
     <ItemGroup>
