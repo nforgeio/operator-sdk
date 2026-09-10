@@ -32,8 +32,8 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Operator.Builder;
 using Neon.Net;
+using Neon.Operator.Builder;
 using Neon.Tasks;
 
 using NgrokSharp;
@@ -121,6 +121,8 @@ namespace Neon.Operator.Webhooks.Ngrok
         /// <inheritdoc/>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            await SyncContext.Clear;
+
             try
             {
                 await KillExistingNgrokProcessesAsync();

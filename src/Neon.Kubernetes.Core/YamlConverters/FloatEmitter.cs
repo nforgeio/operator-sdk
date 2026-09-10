@@ -20,9 +20,9 @@ using System.Collections.Generic;
 using System.Text;
 
 using YamlDotNet.Core;
-using YamlDotNet.Serialization.EventEmitters;
-using YamlDotNet.Serialization;
 using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.EventEmitters;
 
 namespace Neon.K8s.Core.YamlConverters
 {

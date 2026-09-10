@@ -554,6 +554,8 @@ namespace Neon.Operator.ResourceManager
                 Task.Run(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         // Stop the watcher.
 
                         watcherTcs.Cancel();
@@ -591,6 +593,8 @@ namespace Neon.Operator.ResourceManager
                 Task.Run(
                     async () =>
                     {
+                        await SyncContext.Clear;
+
                         logger?.LogInformationEx(() => $"{typeof(TController)}[{typeof(TEntity)}] LEADER-IS: {identity}");
 
                         // Inform the controller.
@@ -692,6 +696,8 @@ namespace Neon.Operator.ResourceManager
             var actionAsync =
                 async (WatchEvent<TEntity> @event) =>
                 {
+                    await SyncContext.Clear;
+
                     using (var activity = TraceContext.ActivitySource?.StartActivity("ActionAsync"))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
@@ -1100,6 +1106,8 @@ namespace Neon.Operator.ResourceManager
             var enqueueAsync =
                 async (WatchEvent<TEntity> @event) =>
                 {
+                    await SyncContext.Clear;
+
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueResourceEvent", ActivityKind.Server))
                     {
                         try
@@ -1183,6 +1191,8 @@ namespace Neon.Operator.ResourceManager
             var enqueueDependentAsync =
                 async (dynamic @event) =>
                 {
+                    await SyncContext.Clear;
+
                     using (var activity = TraceContext.ActivitySource?.StartActivity("EnqueueDependentResourceEvent", ActivityKind.Server))
                     {
                         cancellationToken.ThrowIfCancellationRequested();

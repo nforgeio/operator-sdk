@@ -174,6 +174,8 @@ namespace Neon.Operator.Finalizers
                     await NeonHelper.WaitForAsync(
                         async () =>
                         {
+                            await SyncContext.Clear;
+
                             try
                             {
                                 if (string.IsNullOrEmpty(entity.Metadata.NamespaceProperty))

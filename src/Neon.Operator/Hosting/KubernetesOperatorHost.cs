@@ -133,6 +133,8 @@ namespace Neon.Operator
         /// <inheritdoc/>
         public async Task RunAsync()
         {
+            await SyncContext.Clear;
+
             OperatorSettings = OperatorSettings ?? new OperatorSettings();
 
             if (CertManagerOptions != null)
@@ -174,6 +176,8 @@ namespace Neon.Operator
 
         private async Task CheckOlmCertificateAsync()
         {
+            await SyncContext.Clear;
+
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
             if (File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.cert") && File.Exists("/tmp/k8s-webhook-server/serving-certs/tls.key"))
@@ -189,6 +193,8 @@ namespace Neon.Operator
 
         private async Task CheckCertificateAsync()
         {
+            await SyncContext.Clear;
+
             using var activity = TraceContext.ActivitySource?.StartActivity();
 
             logger?.LogInformationEx(() => "Checking webhook certificate.");
@@ -283,6 +289,8 @@ namespace Neon.Operator
 
         private async Task ConfigureRbacAsync()
         {
+            await SyncContext.Clear;
+
             var rbac = new RbacBuilder(Host.Services, @namespace: OperatorSettings.PodNamespace);
 
             rbac.Build();

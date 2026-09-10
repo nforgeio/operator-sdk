@@ -611,7 +611,8 @@ namespace Neon.Operator.Analyzers
                     }
 
                     props.Properties.Add(GetPropertyName(prop), MapProperty(namedTypeSymbols, prop, additionalColumns, $"{jsonPath}.{GetPropertyName(prop)}"));
-                };
+                }
+                ;
 
                 props.Required = type.GetProperties()
                     .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() != null)

@@ -44,6 +44,7 @@ using NJsonSchema.Generation;
 using NJsonSchema.Generation.TypeMappers;
 
 using YamlDotNet.Serialization;
+using Neon.Tasks;
 
 namespace Neon.Operator.Entities
 {
@@ -244,6 +245,8 @@ namespace Neon.Operator.Entities
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WriteToFile(V1CustomResourceDefinition resourceDefinition, string path)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentNullException>(resourceDefinition != null, nameof(resourceDefinition));
             Covenant.Requires<ArgumentNullException>(path != null, nameof(path));
 

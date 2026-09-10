@@ -56,7 +56,8 @@ namespace Neon.Operator.Finalizers
                 if (name.Length > Constants.MaxLabelLength)
                 {
                     name = name.Substring(0, Constants.MaxLabelLength);
-                };
+                }
+                ;
 
                 return name;
             }

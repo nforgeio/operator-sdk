@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <NeonSdkVersion>4.0.19-preview.2</NeonSdkVersion>
+        <NeonSdkVersion>4.0.20</NeonSdkVersion>
         <DotNetVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.*,)</DotNetVersion>
         <DotNetVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.*,10.0)</DotNetVersion>
         <DotNetVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.*,9.0)</DotNetVersion>
@@ -19,10 +19,10 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageVersion Include="AsyncKeyedLock" Version="7.0.0" />
+        <PackageVersion Include="AsyncKeyedLock" Version="8.0.*" />
         <PackageVersion Include="CompareNETObjects" Version="4.83.0" />
         <PackageVersion Include="coverlet.collector" Version="6.0.2" />
-        <PackageVersion Include="FluentAssertions" Version="7.0.0" />
+        <PackageVersion Include="FluentAssertions" Version="8.*" />
         <PackageVersion Include="FluentAssertions.Analyzers" Version="0.34.1" />
         <PackageVersion Include="Fractions" Version="8.0.3" />
         <PackageVersion Include="KubernetesClient" Version="12.0.16" />
@@ -45,12 +45,12 @@
         <PackageVersion Include="Neon.Roslyn" Version="$(NeonSdkPackageVersion)" />
         <PackageVersion Include="Neon.Roslyn.Xunit" Version="$(NeonSdkPackageVersion)" />
         <PackageVersion Include="Neon.Xunit" Version="$(NeonSdkPackageVersion)" />
-        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.*" />
         <PackageVersion Include="NgrokSharp" Version="1.0.13" />
         <PackageVersion Include="NJsonSchema" Version="10.9.0" />
-        <PackageVersion Include="prometheus-net" Version="8.2.1" />
-        <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
-        <PackageVersion Include="prometheus-net.AspNetCore.HealthChecks" Version="8.2.1" />
+        <PackageVersion Include="prometheus-net" Version="8.*" />
+        <PackageVersion Include="prometheus-net.AspNetCore" Version="8.*" />
+        <PackageVersion Include="prometheus-net.AspNetCore.HealthChecks" Version="8.*" />
         <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="$(DotNetVersion)" />
         <PackageVersion Include="System.Text.Encodings.Web" Version="$(DotNetVersion)" />
         <PackageVersion Include="System.Text.Json" Version="$(DotNetVersion)" />

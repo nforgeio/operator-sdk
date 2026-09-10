@@ -19,11 +19,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Text.Json.Serialization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -223,6 +223,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var newDeployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(
@@ -244,6 +246,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         deployment = await k8s.AppsV1.ReadNamespacedDeploymentAsync(
@@ -303,6 +307,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var newDeployment = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(
@@ -324,6 +330,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         statefulset = await k8s.AppsV1.ReadNamespacedStatefulSetAsync(
@@ -383,6 +391,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var newDeployment = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(
@@ -404,6 +414,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         daemonset = await k8s.AppsV1.ReadNamespacedDaemonSetAsync(
@@ -599,6 +611,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var deployments = await k8sAppsV1.ListNamespacedDeploymentAsync(
@@ -682,6 +696,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var statefulsets = await k8sAppsV1.ListNamespacedStatefulSetAsync(
@@ -764,6 +780,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var daemonsets = await k8sAppsV1.ListNamespacedDaemonSetAsync(
@@ -826,6 +844,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     try
                     {
                         var pod = await k8sCoreV1.ReadNamespacedPodAsync(
@@ -878,6 +898,8 @@ namespace Neon.K8s
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     cancellationToken.ThrowIfCancellationRequested();
 
                     try
@@ -980,6 +1002,8 @@ namespace Neon.K8s
 
             var handler = new ExecAsyncCallback(async (_stdIn, _stdOut, _stdError) =>
             {
+                await SyncContext.Clear;
+
                 stdOut = Encoding.UTF8.GetString(await _stdOut.ReadToEndAsync());
                 stdErr = Encoding.UTF8.GetString(await _stdError.ReadToEndAsync());
             });
@@ -1030,6 +1054,8 @@ namespace Neon.K8s
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     return await k8s.NamespacedPodExecAsync(
                         name:               name,
                         namespaceParameter: namespaceParameter,
@@ -1072,6 +1098,8 @@ namespace Neon.K8s
 
             where T : IKubernetesObject<V1ObjectMeta>, new()
         {
+            await SyncContext.Clear;
+
             using (var watcher = new Watcher<T>(k8s, logger))
             {
                 await watcher.WatchAsync(actionAsync,
@@ -1128,6 +1156,8 @@ namespace Neon.K8s
             await Parallel.ForEachAsync(namespaces, new ParallelOptions() { MaxDegreeOfParallelism = podListConcurency },
                 async (@namespace, cancellationToken) =>
                 {
+                    await SyncContext.Clear;
+
                     var namespacedPods = await k8sCoreV1.ListNamespacedPodAsync(@namespace.Name(), cancellationToken: cancellationToken);
 
                     lock (pods)

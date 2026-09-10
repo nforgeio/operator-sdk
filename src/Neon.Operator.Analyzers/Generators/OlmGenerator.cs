@@ -776,7 +776,8 @@ ADD ./metadata/annotations.yaml /metadata/annotations.yaml
         public static WebhookAdmissionType ToWebhookAdmissionType(OperatorComponentType componentType) => componentType switch
         {
             OperatorComponentType.ValidationWebhook => WebhookAdmissionType.ValidatingAdmissionWebhook,
-            OperatorComponentType.MutationWebhook => WebhookAdmissionType.MutatingAdmissionWebhook,_ => throw new ArgumentException()
+            OperatorComponentType.MutationWebhook => WebhookAdmissionType.MutatingAdmissionWebhook,
+            _ => throw new ArgumentException()
         };
 
         private int AddIfNullOrEmpty<T>(object arg, List<Type> types, int requiredCount)

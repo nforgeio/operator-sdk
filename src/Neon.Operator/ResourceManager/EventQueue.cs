@@ -97,6 +97,8 @@ namespace Neon.Operator.ResourceManager
             Metrics.DefaultRegistry.AddBeforeCollectCallback(
                 async cancel =>
                 {
+                    await SyncContext.Clear;
+
                     var values = currentEvents.Values.Select(v => (DateTime.UtcNow - v).TotalSeconds);
 
                     metrics.UnfinishedWorkSeconds.IncTo(values.Sum());

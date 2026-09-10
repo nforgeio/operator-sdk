@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.K8s.PortForward
 {
@@ -111,6 +112,8 @@ namespace Neon.K8s.PortForward
             var forwardingTask = Task.Run(
                 async () =>
                 {
+                    await SyncContext.Clear;
+
                     using (var portListener = new PortListener(localPort, localAddress, loggerFactory, cancellationToken))
                     {
                         var podName = "";
@@ -128,6 +131,8 @@ namespace Neon.K8s.PortForward
                                 RemoteConnectionFactory remoteConnectionFactory =
                                     async () =>
                                     {
+                                        await SyncContext.Clear;
+
                                         logger?.LogDebugEx(() => $"Creating socket forwarding: {localPort} --> {remotePort}");
 
                                         var retry = new LinearRetryPolicy(typeof(WebSocketException), maxAttempts: 3, retryInterval: TimeSpan.FromMilliseconds(100));

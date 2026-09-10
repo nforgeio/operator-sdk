@@ -32,6 +32,7 @@ using Neon.Operator.Xunit;
 using Neon.Xunit;
 
 using Xunit;
+using Neon.Tasks;
 
 namespace Test.Neon.Operator
 {
@@ -49,12 +50,15 @@ namespace Test.Neon.Operator
             fixture.RegisterType<V1TestDatabase>();
             fixture.RegisterType<V1StatefulSet>();
             fixture.RegisterType<V1Service>();
+            fixture.RegisterType<V1Pod>();
             fixture.Start();
         }
 
         [Fact]
         public async Task CreateTestObjectAsync()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestResourceController>();
@@ -75,6 +79,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task CreateStatefulSetAsync()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestDatabaseController>();
@@ -128,7 +134,7 @@ namespace Test.Neon.Operator
             resourceList.Resources.Should().HaveCount(1);
 
             resourceList = await fixture.KubernetesClient.CoreV1.GetAPIResourcesAsync();
-            resourceList.Resources.Should().HaveCount(1);
+            resourceList.Resources.Should().HaveCount(2);
         }
 
         [Fact]
@@ -357,6 +363,77 @@ namespace Test.Neon.Operator
             await fixture.KubernetesClient.CustomObjects.ReplaceNamespacedCustomObjectStatusAsync(co, co.Namespace());
 
             fixture.GetResource<V1TestDatabase>(co.Name(), co.Namespace()).Status.Status.Should().Be("bar");
+        }
+
+        [Fact]
+        public async Task TestMetadataIsPopulated()
+        {
+            fixture.ClearResources();
+
+            var co = new V1TestDatabase().Initialize();
+
+            co.Metadata.Name = "test";
+            co.Metadata.NamespaceProperty = "test";
+            co.Spec = new TestDatabaseSpec()
+            {
+                Image = "",
+                Servers = 1,
+            };
+
+            fixture.AddResource(co);
+            co = fixture.GetResource<V1TestDatabase>(co.Name(), co.Namespace());
+            co.Metadata.Uid.Should().NotBeNullOrEmpty();
+            co.Generation().Should().Be(1);
+            co.CreationTimestamp().Should().NotBeNull();
+            co.Metadata.GenerateName.Should().NotBeNullOrWhiteSpace();
+
+            var k8s = fixture.KubernetesClient;
+
+            var pod = new V1Pod().Initialize();
+            pod.Metadata.Name = "test-pod";
+            pod.Metadata.NamespaceProperty = "test";
+
+            pod.Spec = new V1PodSpec()
+            {
+                Containers = new List<V1Container>()
+                {
+                    new V1Container()
+                    {
+                        Name = "test-container",
+                        Image = "nginx:latest"
+                    }
+                }
+            };
+
+            pod = await k8s.CoreV1.CreateNamespacedPodAsync(pod, pod.Namespace());
+
+            var uid1 = pod.Uid();
+            uid1.Should().NotBeNullOrEmpty();
+            pod.Generation().Should().Be(1);
+            pod.CreationTimestamp().Should().NotBeNull();
+            pod.Metadata.GenerateName.Should().NotBeNullOrWhiteSpace();
+
+            pod = new V1Pod().Initialize();
+            pod.Metadata.Name = "test-pod-2";
+            pod.Metadata.NamespaceProperty = "test";
+
+            pod.Spec = new V1PodSpec()
+            {
+                Containers = new List<V1Container>()
+                {
+                    new V1Container()
+                    {
+                        Name = "test-container",
+                        Image = "nginx:latest"
+                    }
+                }
+            };
+
+            pod = await k8s.CoreV1.CreateNamespacedPodAsync(pod, pod.Namespace());
+
+            var uid2 = pod.Uid();
+            uid2.Should().NotBeNullOrEmpty();
+            uid2.Should().NotBe(uid1);
         }
     }
 }

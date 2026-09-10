@@ -31,8 +31,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-using Neon.Operator.Analyzers.Receivers;
 using Neon.Common;
+using Neon.Operator.Analyzers.Receivers;
 using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
 using Neon.Roslyn;

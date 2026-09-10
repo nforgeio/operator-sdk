@@ -30,6 +30,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Diagnostics;
 
 using OpenTelemetry.Resources;
+
 using YamlDotNet.Core;
 
 namespace Neon.Operator.Cache

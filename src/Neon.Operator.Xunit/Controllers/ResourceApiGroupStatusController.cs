@@ -188,6 +188,12 @@ namespace Neon.Operator.Xunit
 
                 existing.Status = ((dynamic)instance).Status;
 
+                resource = testApiServer.Resources
+                    .Where(r => r.Kind == typeMetadata.Kind)
+                    .Where(r => r.Metadata.Name == Name)
+                    .Where(r => r.Metadata.NamespaceProperty == Namespace)
+                    .FirstOrDefault();
+
                 return Ok(resource);
             }
 

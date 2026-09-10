@@ -110,6 +110,26 @@ namespace Neon.Operator.Xunit
                 resource.Metadata.Uid = Guid.NewGuid().ToString();
             }
 
+            if (resource.CreationTimestamp() == null)
+            {
+                resource.Metadata.CreationTimestamp = DateTime.UtcNow;
+            }
+
+            if (resource.Generation() == null)
+            {
+                resource.Metadata.Generation = 1;
+            }
+
+            if (resource.Metadata.GenerateName.IsNullOrWhiteSpace() && !resource.Kind.IsNullOrWhiteSpace())
+            {
+                resource.Metadata.GenerateName = $"{resource.Kind.ToLower()}-{Guid.NewGuid().ToString("N").Substring(0, 5)}-";
+            }
+
+            if (resource.Metadata.GenerateName != null && resource.Metadata.Name == null)
+            {
+                resource.Metadata.Name = $"{resource.Metadata.GenerateName}{Guid.NewGuid().ToString("N").Substring(0, 5)}";
+            }
+
             return resource;
         }
     }

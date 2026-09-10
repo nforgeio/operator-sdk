@@ -160,6 +160,12 @@ namespace Neon.Operator.Xunit
 
                 testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
 
+                resource = testApiServer.Resources
+                    .Where(r => r.Kind == typeMetadata.Kind)
+                    .Where(r => r.Metadata.Name == ((IKubernetesObject<V1ObjectMeta>)instance).Metadata.Name)
+                    .Where(r => r.Metadata.NamespaceProperty == Namespace)
+                    .FirstOrDefault();
+
                 return Ok(resource);
             }
 
@@ -200,6 +206,12 @@ namespace Neon.Operator.Xunit
 
                 testApiServer.Resources.Remove(existing);
                 testApiServer.AddResource(Group, Version, Plural, typeMetadata.Kind, instance, Namespace);
+
+                resource = testApiServer.Resources
+                    .Where(r => r.Kind == typeMetadata.Kind)
+                    .Where(r => r.Metadata.Name == Name)
+                    .Where(r => r.Metadata.NamespaceProperty == Namespace)
+                    .FirstOrDefault();
 
                 return Ok(resource);
             }

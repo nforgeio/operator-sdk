@@ -37,6 +37,7 @@ using Microsoft.Extensions.Logging;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Operator.Attributes;
+using Neon.Tasks;
 
 namespace Neon.Operator.Webhooks
 {
@@ -184,6 +185,8 @@ namespace Neon.Operator.Webhooks
         /// <inheritdoc/>
         public virtual async Task CreateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var operatorSettings   = serviceProvider.GetRequiredService<OperatorSettings>();
             var certManagerOptions = serviceProvider.GetService<CertManagerOptions>();
             var k8s                = serviceProvider.GetService<IBasicKubernetes>();
@@ -238,6 +241,8 @@ namespace Neon.Operator.Webhooks
         /// <inheritdoc/>
         public async virtual Task<MutationResult> CreateAsync(TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(MutationResult.NoChanges());
         }
 
