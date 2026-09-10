@@ -24,6 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Operator;
 using Neon.Operator.Builder;
+using Neon.Tasks;
 
 // $todo(marcusbooyah): Would it make more sense for this to be in a test project?
 
@@ -107,6 +108,8 @@ namespace Neon.Operator.Xunit
         /// <inheritdoc/>
         public async Task StartAsync()
         {
+            await SyncContext.Clear;
+
             await host.RunAsync();
         }
 

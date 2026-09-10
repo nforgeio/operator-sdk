@@ -32,6 +32,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
+using Neon.Tasks;
+
 namespace Neon.Operator.Xunit
 {
     /// <summary>
@@ -87,6 +89,8 @@ namespace Neon.Operator.Xunit
 
             app.Use(next => async context =>
             {
+                await SyncContext.Clear;
+
                 // This is a no-op, but very convenient for setting a breakpoint to see per-request details.
                 await next(context);
             });

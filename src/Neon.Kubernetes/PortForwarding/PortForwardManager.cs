@@ -140,6 +140,8 @@ namespace Neon.K8s.PortForward
                                         return await retry.InvokeAsync(
                                             async () =>
                                             {
+                                                await SyncContext.Clear;
+
                                                 return await k8s.WebSocketNamespacedPodPortForwardAsync(
                                                     name:                 podName,
                                                     @namespace:           @namespace,
@@ -193,6 +195,8 @@ namespace Neon.K8s.PortForward
             Dictionary<string, List<string>> customHeaders     = null,
             CancellationToken                cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort), $"Invalid TCP port: {localPort}");
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort), $"Invalid TCP port: {remotePort}");
 

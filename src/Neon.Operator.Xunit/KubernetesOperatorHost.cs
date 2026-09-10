@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 
 using Neon.Operator;
+using Neon.Tasks;
 
 namespace Neon.Operator.Xunit
 {
@@ -76,6 +77,8 @@ namespace Neon.Operator.Xunit
         /// <inheritdoc/>
         public async Task RunAsync()
         {
+            await SyncContext.Clear;
+
             await Task.CompletedTask;
 
             throw new NotImplementedException();

@@ -255,6 +255,8 @@ namespace Neon.Operator.Webhooks
         /// <inheritdoc/>
         public async virtual Task<MutationResult> UpdateAsync(TEntity oldEntity, TEntity newEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(MutationResult.NoChanges());
         }
 
@@ -267,6 +269,8 @@ namespace Neon.Operator.Webhooks
         /// <inheritdoc/>
         public async virtual Task<MutationResult> DeleteAsync(TEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(MutationResult.NoChanges());
         }
 

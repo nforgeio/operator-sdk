@@ -201,6 +201,8 @@ namespace Neon.K8s.PortForward
 
         private async Task EnsureRemoteStartAsync()
         {
+            await SyncContext.Clear;
+
             if (remote != null)
             {
                 return;
