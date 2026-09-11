@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Neon.Operator;
 using Neon.Operator.Attributes;
 using Neon.Operator.Rbac;
+using Neon.Tasks;
 
 namespace TestOperator
 {
@@ -18,6 +19,8 @@ namespace TestOperator
     {
         public static async Task Main(string[] args)
         {
+            await SyncContext.Clear;
+
             var k8s = KubernetesOperatorHost
                .CreateDefaultBuilder()
                .ConfigureOperator(configure =>

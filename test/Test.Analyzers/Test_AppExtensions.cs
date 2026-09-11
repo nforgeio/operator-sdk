@@ -26,6 +26,7 @@ using Neon.Operator.Analyzers;
 using Neon.Operator.Attributes;
 
 using Neon.Roslyn.Xunit;
+using Neon.Tasks;
 using Neon.Xunit;
 
 namespace Test.Analyzers
@@ -36,7 +37,7 @@ namespace Test.Analyzers
         [Fact]
         public async Task TestUseKubernetesOperator()
         {
-            await Task.CompletedTask;
+            await SyncContext.Clear;
 
             var source = @"
 using Microsoft.AspNetCore.Builder;

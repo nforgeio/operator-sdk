@@ -5,6 +5,7 @@ using k8s.Models;
 
 using Neon.Operator.Attributes;
 using Neon.Operator.Webhooks;
+using Neon.Tasks;
 
 namespace TestOperator
 {
@@ -23,6 +24,8 @@ namespace TestOperator
 
         public override async Task<MutationResult> CreateAsync(V1ExampleEntity entity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             if (modified)
             {
                 return await Task.FromResult(MutationResult.Modified(entity));
@@ -33,6 +36,8 @@ namespace TestOperator
 
         public override async Task<MutationResult> UpdateAsync(V1ExampleEntity entity, V1ExampleEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             if (modified)
             {
                 return await Task.FromResult(MutationResult.Modified(entity));

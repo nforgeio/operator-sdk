@@ -123,6 +123,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TestApiResourceList()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var meta = typeof(V1TestDatabase).GetKubernetesTypeMetadata();
@@ -140,6 +142,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TestPatchStatus()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestDatabaseController>();
@@ -195,6 +199,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TestPatchNullStatus()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestDatabaseController>();
@@ -252,6 +258,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TechPatchDictionary()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var controller = fixture.Operator.GetController<TestDatabaseController>();
@@ -312,6 +320,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TestStatusUpdate()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var co = new V1TestDatabase().Initialize();
@@ -341,6 +351,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TestNullStatusUpdate()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var co = new V1TestDatabase().Initialize();
@@ -368,6 +380,8 @@ namespace Test.Neon.Operator
         [Fact]
         public async Task TestMetadataIsPopulated()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var co = new V1TestDatabase().Initialize();

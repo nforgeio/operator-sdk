@@ -29,6 +29,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Operator.Controllers;
 using Neon.Operator.Xunit;
+using Neon.Tasks;
 using Neon.Xunit;
 
 using Test.Neon.Operator;
@@ -63,6 +64,8 @@ namespace TestKubeOperator
 
         public override async Task<ResourceControllerResult> ReconcileAsync(V1TestResource entity, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var config = await K8s.CoreV1.ReadNamespacedConfigMapAsync(name: "foo", namespaceParameter: "bar");
 
             await base.ReconcileAsync(entity);
@@ -88,6 +91,8 @@ namespace TestKubeOperator
         [Fact]
         public async Task FooExists()
         {
+            await SyncContext.Clear;
+
             var controller = fixture.Operator.GetController<TestDiController>();
 
             var config = new V1ConfigMap().Initialize();

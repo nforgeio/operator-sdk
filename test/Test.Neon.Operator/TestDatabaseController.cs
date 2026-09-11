@@ -51,6 +51,8 @@ namespace Test.Neon.Operator
         /// <inheritdoc/>
         public override async Task<ResourceControllerResult> ReconcileAsync(V1TestDatabase resource, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             var patch = OperatorHelper.CreatePatch<V1TestDatabase>();
 
             patch.Replace(path => path.Status, new TestDatabaseStatus());

@@ -27,6 +27,7 @@ using k8s.Models;
 using Neon.K8s;
 using Neon.K8s.Resources.CertManager;
 using Neon.Operator.Xunit;
+using Neon.Tasks;
 using Neon.Xunit;
 
 namespace TestKubernetes
@@ -46,6 +47,8 @@ namespace TestKubernetes
         [Fact]
         public async Task TestGetCustomObjectReturnsNull()
         {
+            await SyncContext.Clear;
+
             var cert = new V1Certificate().Initialize();
             cert.EnsureMetadata();
             cert.Metadata.Name = "test-cert";

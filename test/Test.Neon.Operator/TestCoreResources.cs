@@ -26,6 +26,7 @@ using k8s.Models;
 using Neon.K8s.Core;
 using Neon.Operator.Util;
 using Neon.Operator.Xunit;
+using Neon.Tasks;
 using Neon.Xunit;
 
 using Test.Neon.Operator;
@@ -305,6 +306,8 @@ namespace TestKubeOperator
         [Fact]
         public async Task TestCreateJob()
         {
+            await SyncContext.Clear;
+
             fixture.ClearResources();
 
             var job = new V1Job().Initialize();

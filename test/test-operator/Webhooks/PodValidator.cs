@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using k8s.Models;
 
 using Neon.Operator.Webhooks;
+using Neon.Tasks;
 
 namespace TestOperator
 {
@@ -20,11 +21,15 @@ namespace TestOperator
     {
         public override async Task<ValidationResult> CreateAsync(V1ExampleEntity entity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(ValidationResult.Success());
         }
 
         public override async Task<ValidationResult> UpdateAsync(V1ExampleEntity entity, V1ExampleEntity oldEntity, bool dryRun, CancellationToken cancellationToken = default)
         {
+            await SyncContext.Clear;
+
             return await Task.FromResult(ValidationResult.Success());
         }
     }
